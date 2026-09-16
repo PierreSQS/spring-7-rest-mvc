@@ -9,6 +9,9 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * Modified by Pierrot on 17-09-2026
+ */
 @DataJpaTest
 class BootstrapDataTest {
 
@@ -26,8 +29,8 @@ class BootstrapDataTest {
     }
 
     @Test
-    void Testrun() throws Exception {
-        bootstrapData.run(null);
+    void testRun() {
+        bootstrapData.run();
 
         assertThat(beerRepository.count()).isEqualTo(3);
         assertThat(customerRepository.count()).isEqualTo(3);

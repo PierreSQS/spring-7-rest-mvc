@@ -8,6 +8,7 @@ import java.util.UUID;
 
 /**
  * Created by jt, Spring Framework Guru.
+ * Modified by Pierrot on 17-09-2026
  */
 public interface BeerService {
 

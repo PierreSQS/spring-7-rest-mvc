@@ -11,10 +11,11 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Arrays;
+import java.util.List;
 
 /**
  * Created by jt, Spring Framework Guru.
+ * Modified by Pierrot on 17-09-2026
  */
 @Component
 @RequiredArgsConstructor
@@ -23,7 +24,7 @@ public class BootstrapData implements CommandLineRunner {
     private final CustomerRepository customerRepository;
 
     @Override
-    public void run(String... args) throws Exception {
+    public void run(String... args) {
         loadBeerData();
         loadCustomerData();
     }
@@ -91,7 +92,7 @@ public class BootstrapData implements CommandLineRunner {
                     .updateDate(LocalDateTime.now())
                     .build();
 
-            customerRepository.saveAll(Arrays.asList(customer1, customer2, customer3));
+            customerRepository.saveAll(List.of(customer1, customer2, customer3));
         }
 
     }

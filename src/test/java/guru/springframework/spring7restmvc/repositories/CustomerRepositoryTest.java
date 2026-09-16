@@ -7,6 +7,9 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * Modified by Pierrot on 17-09-2026
+ */
 @DataJpaTest
 class CustomerRepositoryTest {
 

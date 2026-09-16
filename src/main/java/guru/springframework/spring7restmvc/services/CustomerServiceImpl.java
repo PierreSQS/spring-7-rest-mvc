@@ -9,11 +9,12 @@ import java.util.*;
 
 /**
  * Created by jt, Spring Framework Guru.
+ * Modified by Pierrot on 17-09-2026
  */
 @Service
 public class CustomerServiceImpl implements CustomerService {
 
-    private Map<UUID, CustomerDTO> customerMap;
+    private final Map<UUID, CustomerDTO> customerMap;
 
     public CustomerServiceImpl() {
         CustomerDTO customer1 = CustomerDTO.builder()
