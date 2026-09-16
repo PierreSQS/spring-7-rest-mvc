@@ -11,6 +11,7 @@ import java.util.UUID;
 
 /**
  * Created by jt, Spring Framework Guru.
+ * Modified by Pierrot on 17-09-2026
  */
 @Getter
 @Setter
@@ -20,14 +21,11 @@ import java.util.UUID;
 @NoArgsConstructor
 public class Customer {
     @Id
-    @GeneratedValue(generator = "UUID")
     @UuidGenerator
-    @Column(length = 36, columnDefinition = "varchar", updatable = false, nullable = false)
-    @JdbcTypeCode(SqlTypes.CHAR)
+    @Column(length = 36)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     private UUID id;
     private String name;
-
-    @Column(length = 255)
     private String email;
 
     @Version
