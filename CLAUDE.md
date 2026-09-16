@@ -8,7 +8,7 @@ Course project for John Thompson's "Spring Framework 6: Beginner to Guru" (Udemy
 
 ## Commands
 
-The development machine runs Windows, so use `.\mvnw.cmd` in PowerShell or `./mvnw` in a POSIX shell. The Maven wrapper pins Maven 3.8.6.
+The development machine runs Windows, so use `.\mvnw.cmd` in PowerShell or `./mvnw` in a POSIX shell. The Maven wrapper pins Maven 3.8.6. Build with **JDK 21**: the machine's `JAVA_HOME` is JDK 25, and with the Lombok version managed by Boot 3.4.0 compilation fails with `ExceptionInInitializerError: com.sun.tools.javac.code.TypeTag :: UNKNOWN`. Set `$env:JAVA_HOME = 'C:\Pierrot\03_Tools\Oracle_Open_JDKs\jdk-21.0.2'` for the shell first.
 
 ```powershell
 .\mvnw.cmd clean package                          # build and run unit tests
@@ -33,7 +33,7 @@ The project has no linter or formatter configured.
 
 ## Architecture
 
-Package root: `guru.springframework.spring6restmvc`. Each resource (Beer, Customer) is built from the same set of layers:
+Package root: `guru.springframework.spring7restmvc` (main class `Spring7RestMvcApplication`). Each resource (Beer, Customer) is built from the same set of layers:
 
 - `controller`: `@RestController`s with path constants (`BEER_PATH = "/api/v1/beer"`, `BEER_PATH_ID`) that tests reuse. Handlers return `ResponseEntity` (201 with a `Location` header on POST, 204 on PUT/PATCH/DELETE). A missing entity throws `NotFoundException`, which carries `@ResponseStatus(404)`. `CustomErrorController` (`@ControllerAdvice`) turns `MethodArgumentNotValidException` into a 400 with a list of `{field: message}` maps, and JPA `TransactionSystemException` into a plain 400.
 - `model`: DTOs (`BeerDTO`, `CustomerDTO`) with Bean Validation annotations, validated in controllers via `@Validated`. This is the API contract.
