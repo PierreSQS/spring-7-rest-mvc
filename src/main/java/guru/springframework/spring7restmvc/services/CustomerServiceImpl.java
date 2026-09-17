@@ -42,18 +42,21 @@ public class CustomerServiceImpl implements CustomerService {
                 .build();
 
         customerMap = new HashMap<>();
-        customerMap.put(customer1.getId(), customer1);
-        customerMap.put(customer2.getId(), customer2);
-        customerMap.put(customer3.getId(), customer3);
+        customerMap.put(customer1.id(), customer1);
+        customerMap.put(customer2.id(), customer2);
+        customerMap.put(customer3.id(), customer3);
     }
 
     @Override
     public Optional<CustomerDTO> patchCustomerById(UUID customerId, CustomerDTO customer) {
-        CustomerDTO existing = customerMap.get(customerId);
+        CustomerDTO.CustomerDTOBuilder patched = customerMap.get(customerId).toBuilder();
 
-        if (StringUtils.hasText(customer.getName())) {
-            existing.setName(customer.getName());
+        if (StringUtils.hasText(customer.name())) {
+            patched.name(customer.name());
         }
+
+        CustomerDTO existing = patched.build();
+        customerMap.put(customerId, existing);
 
         return Optional.of(existing);
     }
@@ -67,8 +70,11 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public Optional<CustomerDTO> updateCustomerById(UUID customerId, CustomerDTO customer) {
-        CustomerDTO existing = customerMap.get(customerId);
-        existing.setName(customer.getName());
+        CustomerDTO existing = customerMap.get(customerId).toBuilder()
+                .name(customer.name())
+                .build();
+
+        customerMap.put(customerId, existing);
         return Optional.of(existing);
     }
 
@@ -80,10 +86,10 @@ public class CustomerServiceImpl implements CustomerService {
                 .version(1)
                 .updateDate(LocalDateTime.now())
                 .createdDate(LocalDateTime.now())
-                .name(customer.getName())
+                .name(customer.name())
                 .build();
 
-        customerMap.put(savedCustomer.getId(), savedCustomer);
+        customerMap.put(savedCustomer.id(), savedCustomer);
 
         return savedCustomer;
     }

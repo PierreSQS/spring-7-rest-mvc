@@ -2,10 +2,7 @@ package guru.springframework.spring7restmvc.model;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -15,29 +12,30 @@ import java.util.UUID;
  * Created by jt, Spring Framework Guru.
  * Modified by Pierrot on 17-09-2026
  */
-@Builder
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class BeerDTO {
-    private UUID id;
-    private Integer version;
+@Builder(toBuilder = true)
+public record BeerDTO(
 
-    @NotBlank
-    @NotNull
-    private String beerName;
+        UUID id,
 
-    @NotNull
-    private BeerStyle beerStyle;
+        Integer version,
 
-    @NotNull
-    @NotBlank
-    private String upc;
-    private Integer quantityOnHand;
+        @NotBlank
+        @NotNull
+        String beerName,
 
-    @NotNull
-    private BigDecimal price;
-    private LocalDateTime createdDate;
-    private LocalDateTime updateDate;
+        @NotNull
+        BeerStyle beerStyle,
 
+        @NotNull
+        @NotBlank
+        String upc,
+
+        Integer quantityOnHand,
+
+        @NotNull
+        BigDecimal price,
+
+        LocalDateTime createdDate,
+
+        LocalDateTime updateDate) {
 }

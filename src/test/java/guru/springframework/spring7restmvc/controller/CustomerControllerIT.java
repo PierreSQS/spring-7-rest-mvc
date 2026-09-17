@@ -61,11 +61,12 @@ class CustomerControllerIT {
     @Test
     void updateExistingBeer() {
         Customer customer = customerRepository.findAll().getFirst();
-        CustomerDTO customerDTO = customerMapper.customerToCustomerDto(customer);
-        customerDTO.setId(null);
-        customerDTO.setVersion(null);
         final String customerName = "UPDATED";
-        customerDTO.setName(customerName);
+        CustomerDTO customerDTO = customerMapper.customerToCustomerDto(customer).toBuilder()
+                .id(null)
+                .version(null)
+                .name(customerName)
+                .build();
 
         ResponseEntity<Void> responseEntity = customerController.updateCustomerByID(customer.getId(), customerDTO);
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(204));

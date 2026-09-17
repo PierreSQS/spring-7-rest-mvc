@@ -98,11 +98,12 @@ class BeerControllerIT {
     @Test
     void updateExistingBeer() {
         Beer beer = beerRepository.findAll().getFirst();
-        BeerDTO beerDTO = beerMapper.beerToBeerDto(beer);
-        beerDTO.setId(null);
-        beerDTO.setVersion(null);
         final String beerName = "UPDATED";
-        beerDTO.setBeerName(beerName);
+        BeerDTO beerDTO = beerMapper.beerToBeerDto(beer).toBuilder()
+                .id(null)
+                .version(null)
+                .beerName(beerName)
+                .build();
 
         ResponseEntity<Void> responseEntity = beerController.updateById(beer.getId(), beerDTO);
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(204));

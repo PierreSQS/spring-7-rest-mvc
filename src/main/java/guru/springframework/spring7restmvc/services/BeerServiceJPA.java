@@ -48,11 +48,11 @@ public class BeerServiceJPA implements BeerService {
         AtomicReference<Optional<BeerDTO>> atomicReference = new AtomicReference<>();
 
         beerRepository.findById(beerId).ifPresentOrElse(foundBeer -> {
-            foundBeer.setBeerName(beer.getBeerName());
-            foundBeer.setBeerStyle(beer.getBeerStyle());
-            foundBeer.setUpc(beer.getUpc());
-            foundBeer.setPrice(beer.getPrice());
-            foundBeer.setQuantityOnHand(beer.getQuantityOnHand());
+            foundBeer.setBeerName(beer.beerName());
+            foundBeer.setBeerStyle(beer.beerStyle());
+            foundBeer.setUpc(beer.upc());
+            foundBeer.setPrice(beer.price());
+            foundBeer.setQuantityOnHand(beer.quantityOnHand());
             atomicReference.set(Optional.of(beerMapper
                     .beerToBeerDto(beerRepository.save(foundBeer))));
         }, () -> atomicReference.set(Optional.empty()));
@@ -74,20 +74,20 @@ public class BeerServiceJPA implements BeerService {
         AtomicReference<Optional<BeerDTO>> atomicReference = new AtomicReference<>();
 
         beerRepository.findById(beerId).ifPresentOrElse(foundBeer -> {
-            if (StringUtils.hasText(beer.getBeerName())){
-                foundBeer.setBeerName(beer.getBeerName());
+            if (StringUtils.hasText(beer.beerName())){
+                foundBeer.setBeerName(beer.beerName());
             }
-            if (beer.getBeerStyle() != null){
-                foundBeer.setBeerStyle(beer.getBeerStyle());
+            if (beer.beerStyle() != null){
+                foundBeer.setBeerStyle(beer.beerStyle());
             }
-            if (StringUtils.hasText(beer.getUpc())){
-                foundBeer.setUpc(beer.getUpc());
+            if (StringUtils.hasText(beer.upc())){
+                foundBeer.setUpc(beer.upc());
             }
-            if (beer.getPrice() != null){
-                foundBeer.setPrice(beer.getPrice());
+            if (beer.price() != null){
+                foundBeer.setPrice(beer.price());
             }
-            if (beer.getQuantityOnHand() != null){
-                foundBeer.setQuantityOnHand(beer.getQuantityOnHand());
+            if (beer.quantityOnHand() != null){
+                foundBeer.setQuantityOnHand(beer.quantityOnHand());
             }
             atomicReference.set(Optional.of(beerMapper
                     .beerToBeerDto(beerRepository.save(foundBeer))));

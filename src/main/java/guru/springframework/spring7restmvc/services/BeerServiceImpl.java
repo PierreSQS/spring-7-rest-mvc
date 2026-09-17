@@ -59,34 +59,37 @@ public class BeerServiceImpl implements BeerService {
                 .updateDate(LocalDateTime.now())
                 .build();
 
-        beerMap.put(beer1.getId(), beer1);
-        beerMap.put(beer2.getId(), beer2);
-        beerMap.put(beer3.getId(), beer3);
+        beerMap.put(beer1.id(), beer1);
+        beerMap.put(beer2.id(), beer2);
+        beerMap.put(beer3.id(), beer3);
     }
 
     @Override
     public Optional<BeerDTO> patchBeerById(UUID beerId, BeerDTO beer) {
-        BeerDTO existing = beerMap.get(beerId);
+        BeerDTO.BeerDTOBuilder patched = beerMap.get(beerId).toBuilder();
 
-        if (StringUtils.hasText(beer.getBeerName())){
-            existing.setBeerName(beer.getBeerName());
+        if (StringUtils.hasText(beer.beerName())){
+            patched.beerName(beer.beerName());
         }
 
-        if (beer.getBeerStyle() != null) {
-            existing.setBeerStyle(beer.getBeerStyle());
+        if (beer.beerStyle() != null) {
+            patched.beerStyle(beer.beerStyle());
         }
 
-        if (beer.getPrice() != null) {
-            existing.setPrice(beer.getPrice());
+        if (beer.price() != null) {
+            patched.price(beer.price());
         }
 
-        if (beer.getQuantityOnHand() != null){
-            existing.setQuantityOnHand(beer.getQuantityOnHand());
+        if (beer.quantityOnHand() != null){
+            patched.quantityOnHand(beer.quantityOnHand());
         }
 
-        if (StringUtils.hasText(beer.getUpc())) {
-            existing.setUpc(beer.getUpc());
+        if (StringUtils.hasText(beer.upc())) {
+            patched.upc(beer.upc());
         }
+
+        BeerDTO existing = patched.build();
+        beerMap.put(beerId, existing);
 
         return Optional.of(existing);
     }
@@ -100,11 +103,14 @@ public class BeerServiceImpl implements BeerService {
 
     @Override
     public Optional<BeerDTO> updateBeerById(UUID beerId, BeerDTO beer) {
-        BeerDTO existing = beerMap.get(beerId);
-        existing.setBeerName(beer.getBeerName());
-        existing.setPrice(beer.getPrice());
-        existing.setUpc(beer.getUpc());
-        existing.setQuantityOnHand(beer.getQuantityOnHand());
+        BeerDTO existing = beerMap.get(beerId).toBuilder()
+                .beerName(beer.beerName())
+                .price(beer.price())
+                .upc(beer.upc())
+                .quantityOnHand(beer.quantityOnHand())
+                .build();
+
+        beerMap.put(beerId, existing);
         return Optional.of(existing);
     }
 
@@ -129,14 +135,14 @@ public class BeerServiceImpl implements BeerService {
                 .version(1)
                 .createdDate(LocalDateTime.now())
                 .updateDate(LocalDateTime.now())
-                .beerName(beer.getBeerName())
-                .beerStyle(beer.getBeerStyle())
-                .quantityOnHand(beer.getQuantityOnHand())
-                .upc(beer.getUpc())
-                .price(beer.getPrice())
+                .beerName(beer.beerName())
+                .beerStyle(beer.beerStyle())
+                .quantityOnHand(beer.quantityOnHand())
+                .upc(beer.upc())
+                .price(beer.price())
                 .build();
 
-        beerMap.put(savedBeer.getId(), savedBeer);
+        beerMap.put(savedBeer.id(), savedBeer);
 
         return savedBeer;
     }
