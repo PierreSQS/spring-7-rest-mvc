@@ -18,7 +18,7 @@ class CustomerRepositoryTest {
 
     @Test
     void testSaveCustomer() {
-        Customer customer = customerRepository.save(Customer.builder()
+        Customer customer = customerRepository.saveAndFlush(Customer.builder()
                         .name("New Name")
                 .build());
 
