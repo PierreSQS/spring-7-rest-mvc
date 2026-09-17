@@ -120,8 +120,10 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <!-- load Mockito as an agent up front; self-attaching is on its way out in newer JDKs -->
-                    <argLine>-javaagent:${org.mockito:mockito-core:jar}</argLine>
+                    <!-- load Mockito as an agent up front; self-attaching is on its way out in newer JDKs.
+                         -Xshare:off turns off class data sharing, which the agent on the bootstrap
+                         classpath makes unusable anyway, and silences the JVM warning about it. -->
+                    <argLine>-javaagent:${org.mockito:mockito-core:jar} -Xshare:off</argLine>
                 </configuration>
             </plugin>
             <plugin>
