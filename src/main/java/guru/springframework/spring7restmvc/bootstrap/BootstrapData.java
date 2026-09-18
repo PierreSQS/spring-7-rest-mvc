@@ -6,6 +6,7 @@ import guru.springframework.spring7restmvc.model.BeerStyle;
 import guru.springframework.spring7restmvc.repositories.BeerRepository;
 import guru.springframework.spring7restmvc.repositories.CustomerRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
@@ -14,8 +15,9 @@ import java.util.List;
 
 /**
  * Created by jt, Spring Framework Guru.
- * Modified by Pierrot on 17-09-2026
+ * Modified by Pierrot on 18-09-2026
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class BootstrapData implements CommandLineRunner {
@@ -57,6 +59,10 @@ public class BootstrapData implements CommandLineRunner {
             beerRepository.save(beer1);
             beerRepository.save(beer2);
             beerRepository.save(beer3);
+
+            log.info("### {} beers loaded into the DB", beerRepository.count());
+        } else {
+            log.info("### Beers are present in the DB. Bootstrap skipped");
         }
 
     }
@@ -80,6 +86,10 @@ public class BootstrapData implements CommandLineRunner {
                     .build();
 
             customerRepository.saveAll(List.of(customer1, customer2, customer3));
+
+            log.info("### {} customers loaded into the DB", customerRepository.count());
+        } else {
+            log.info("### Customers are present in the DB. Bootstrap skipped");
         }
 
     }
