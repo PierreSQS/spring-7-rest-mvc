@@ -20,9 +20,9 @@ The development machine runs Windows, so use `.\mvnw.cmd` in PowerShell or `./mv
 .\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=localmysql"   # run against local MySQL
 ```
 
-The project has no linter or formatter configured. Surefire and Failsafe both pass Mockito as a `-javaagent` (its path comes from the `dependency:properties` goal), because self-attaching is being phased out in newer JDKs; each forks its own JVM, so each needs its own `argLine`.
+The project has no linter or formatter configured. Surefire and Failsafe both pass Mockito as a `-javaagent` (its path comes from the `dependency:properties` goal), because self-attaching is being phased out in newer JDKs. Each forks its own JVM, so each needs an `argLine`; both use the shared pom property `test.jvm.argLine`, so change it there only.
 
-**Two test runners:** Surefire runs `*Test`/`*Tests` classes in `mvn test`; Failsafe runs `*IT` classes in `mvn verify` (its version and goals come from the Spring Boot parent's `pluginManagement`, the pom only declares the plugin plus the agent `argLine`). So `mvn test` needs no Docker; `mvn verify` runs `BeerControllerIT` and `CustomerControllerIT` (`@SpringBootTest` against the default H2 context) and `MySqlIT` (MySQL container). The controller ITs depend on the seed data from `BootstrapData`: for example, `testListBeers` expects exactly 3 beers.
+**Two test runners:** Surefire runs `*Test`/`*Tests` classes in `mvn test`; Failsafe runs `*IT` classes in `mvn verify` (its version and goals come from the Spring Boot parent's `pluginManagement`, the pom only declares the plugin plus `argLine` = `${test.jvm.argLine}`). So `mvn test` needs no Docker; `mvn verify` runs `BeerControllerIT` and `CustomerControllerIT` (`@SpringBootTest` against the default H2 context) and `MySqlIT` (MySQL container). The controller ITs depend on the seed data from `BootstrapData`: for example, `testListBeers` expects exactly 3 beers.
 
 ## Profiles and database
 

@@ -17,6 +17,12 @@
         <java.version>25</java.version>
         <org.mapstruct.version>1.6.3</org.mapstruct.version>
         <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
+        <!-- JVM arguments for the test JVMs of both Surefire and Failsafe (each forks its own JVM):
+             load Mockito as an agent up front, since self-attaching is on its way out in newer JDKs;
+             -Xshare:off turns off class data sharing, which the agent on the bootstrap classpath makes
+             unusable anyway, and silences the JVM warning about it.
+             ${org.mockito:mockito-core:jar} is set by the dependency:properties goal. -->
+        <test.jvm.argLine>-javaagent:${org.mockito:mockito-core:jar} -Xshare:off</test.jvm.argLine>
     </properties>
     <dependencies>
         <dependency>
@@ -135,10 +141,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <!-- load Mockito as an agent up front; self-attaching is on its way out in newer JDKs.
-                         -Xshare:off turns off class data sharing, which the agent on the bootstrap
-                         classpath makes unusable anyway, and silences the JVM warning about it. -->
-                    <argLine>-javaagent:${org.mockito:mockito-core:jar} -Xshare:off</argLine>
+                    <argLine>${test.jvm.argLine}</argLine>
                 </configuration>
             </plugin>
             <!-- runs the *IT classes during 'mvn verify'; version, goals (integration-test, verify)
@@ -147,8 +150,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <configuration>
-                    <!-- Failsafe forks its own JVM, so it needs the same Mockito agent line as Surefire -->
-                    <argLine>-javaagent:${org.mockito:mockito-core:jar} -Xshare:off</argLine>
+                    <argLine>${test.jvm.argLine}</argLine>
                 </configuration>
             </plugin>
             <plugin>
