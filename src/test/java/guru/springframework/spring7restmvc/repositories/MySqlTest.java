@@ -7,11 +7,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.mysql.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import javax.sql.DataSource;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -23,11 +22,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Testcontainers
 @SpringBootTest
 @ActiveProfiles("localmysql")
-public class MySqlTest {
+class MySqlTest {
 
     @Container
-    static MySQLContainer<?> mySQLContainer = new MySQLContainer<>("mysql:9.2");
+    static MySQLContainer mySQLContainer = new MySQLContainer("mysql:9.2");
 
+    // Point the Spring datasource at the container (random port, generated credentials),
+    // overriding the url/username/password from the localmysql profile
     @DynamicPropertySource
     static void mySqlProperties(DynamicPropertyRegistry registry) {
         registry.add("spring.datasource.username", mySQLContainer::getUsername);
@@ -36,15 +37,12 @@ public class MySqlTest {
     }
 
     @Autowired
-    DataSource dataSource;
-
-    @Autowired
     BeerRepository beerRepository;
 
     @Test
     void testListBeers() {
         List<Beer> beers = beerRepository.findAll();
 
-        assertThat(beers.size()).isGreaterThan(0);
+        assertThat(beers).hasSizeGreaterThan(0);
     }
 }
