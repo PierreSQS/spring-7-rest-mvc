@@ -7,7 +7,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
-import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.context.annotation.Import;
 
 import java.util.List;
@@ -19,8 +18,6 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Modified by Pierrot on 18-09-2026
  */
 @DataJpaTest
-// keep the container's datasource instead of letting @DataJpaTest swap in an embedded H2
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 // the JPA slice only loads JPA components, so BootstrapData has to be imported explicitly
 @Import(BootstrapData.class)
 class MySqlTest extends MySqlContainerBase {
