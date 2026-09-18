@@ -20,7 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 // the JPA slice only loads JPA components, so BootstrapData has to be imported explicitly
 // once imported, it runs as a CommandLineRunner when the test context starts and seeds the data
 @Import(BootstrapData.class)
-class MySqlTest extends MySqlContainerBase {
+class MySqlIT extends MySqlContainerBase {
 
     @Autowired
     BeerRepository beerRepository;

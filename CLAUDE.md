@@ -11,18 +11,18 @@ Course project for John Thompson's "Spring Framework 6: Beginner to Guru" (Udemy
 The development machine runs Windows, so use `.\mvnw.cmd` in PowerShell or `./mvnw` in a POSIX shell. The Maven wrapper (script-only, no `maven-wrapper.jar`) pins Maven 3.9.16. Build with **JDK 25**, which is the machine's default `JAVA_HOME`.
 
 ```powershell
-.\mvnw.cmd clean package                          # build and run unit tests
-.\mvnw.cmd test                                   # unit tests only (see note on *IT below)
-.\mvnw.cmd test -Dtest=BeerControllerTest         # single test class
+.\mvnw.cmd clean verify                           # everything: unit tests (Surefire) + *IT tests (Failsafe, needs Docker)
+.\mvnw.cmd test                                   # unit tests only - fast, no Docker
+.\mvnw.cmd test -Dtest=BeerControllerTest         # single unit test class
 .\mvnw.cmd test -Dtest=BeerControllerTest#testPatchBeer   # single test method
-.\mvnw.cmd test -Dtest=BeerControllerIT           # integration test class (must be named explicitly)
+.\mvnw.cmd verify "-Dit.test=MySqlIT"             # single *IT class (unit tests still run first)
 .\mvnw.cmd spring-boot:run                        # run with H2 in memory (default profile)
 .\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=localmysql"   # run against local MySQL
 ```
 
 The project has no linter or formatter configured. Surefire passes Mockito as a `-javaagent` (its path comes from the `dependency:properties` goal), because self-attaching is being phased out in newer JDKs.
 
-**`*IT` tests are not run by `mvn test`/`package`.** No failsafe plugin is configured, and Surefire's default includes (`*Test`, `*Tests`, `Test*`, `*TestCase`) don't match `*IT`. Run them with `-Dtest=...`. They are `@SpringBootTest` tests against the default H2 context, and they depend on the seed data from `BootstrapData`: for example, `testListBeers` expects exactly 3 beers.
+**Two test runners:** Surefire runs `*Test`/`*Tests` classes in `mvn test`; Failsafe runs `*IT` classes in `mvn verify` (its version and goals come from the Spring Boot parent's `pluginManagement`, the pom only declares the plugin). So `mvn test` needs no Docker; `mvn verify` runs `BeerControllerIT` and `CustomerControllerIT` (`@SpringBootTest` against the default H2 context) and `MySqlIT` (MySQL container). The controller ITs depend on the seed data from `BootstrapData`: for example, `testListBeers` expects exactly 3 beers.
 
 ## Profiles and database
 
@@ -44,6 +44,6 @@ Package root: `guru.springframework.spring7restmvc` (main class `Spring7RestMvcA
 
 Boot 4 splits test support into modules (`spring-boot-starter-webmvc-test`, `-data-jpa-test`, ...), so imports are `org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest` and `org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest`, and `ObjectMapper` is `tools.jackson.databind.ObjectMapper`.
 
-Tests that need a real MySQL extend `MySqlContainerBase` (test root package). It starts **one** `mysql:8.4` container per JVM (singleton, shared by all subclasses, removed by Testcontainers' Ryuk at JVM exit), exposes it with `@ServiceConnection` (Boot derives the datasource url and credentials from the container, so no `spring.datasource.*` wiring is needed), and activates the test-only `testcontainers` profile (`src/test/resources/application-testcontainers.properties`: Flyway on, `ddl-auto=validate`, nothing else). `@Testcontainers(disabledWithoutDocker = true)` makes subclasses skip rather than fail without Docker. `repositories/MySqlTest` is such a subclass: a `@DataJpaTest`. It needs no `@AutoConfigureTestDatabase`: in Boot 4.1 its default is `replace = NON_TEST`, which keeps a datasource supplied by the test (`@ServiceConnection` or `@DynamicPropertySource`) instead of swapping in H2. The slice only loads JPA components, so it `@Import`s `BootstrapData`, which then runs as a `CommandLineRunner` when the test context starts and seeds the data (it logs `### ... loaded` or `### ... Bootstrap skipped`). Its name ends in `Test`, so it runs in every `mvn test`.
+Tests that need a real MySQL extend `MySqlContainerBase` (test root package). It starts **one** `mysql:8.4` container per JVM (singleton, shared by all subclasses, removed by Testcontainers' Ryuk at JVM exit), exposes it with `@ServiceConnection` (Boot derives the datasource url and credentials from the container, so no `spring.datasource.*` wiring is needed), and activates the test-only `testcontainers` profile (`src/test/resources/application-testcontainers.properties`: Flyway on, `ddl-auto=validate`, nothing else). `@Testcontainers(disabledWithoutDocker = true)` makes subclasses skip rather than fail without Docker. `repositories/MySqlIT` is such a subclass: a `@DataJpaTest`. It needs no `@AutoConfigureTestDatabase`: in Boot 4.1 its default is `replace = NON_TEST`, which keeps a datasource supplied by the test (`@ServiceConnection` or `@DynamicPropertySource`) instead of swapping in H2. The slice only loads JPA components, so it `@Import`s `BootstrapData`, which then runs as a `CommandLineRunner` when the test context starts and seeds the data (it logs `### ... loaded` or `### ... Bootstrap skipped`). Its name ends in `IT`, so Failsafe runs it in `mvn verify`, not in `mvn test`.
 
-Test styles: `*ControllerTest` uses `@WebMvcTest` with `@MockitoBean` services. Boot 4 no longer initializes Mockito `@Captor` fields, so these classes also need `@ExtendWith(MockitoExtension.class)`. `*IT` tests are full-context tests that call controllers directly, with `@Transactional @Rollback` on tests that change data. `*RepositoryTest` and `BootstrapDataTest` use `@DataJpaTest`.
+Test styles: `*ControllerTest` uses `@WebMvcTest` with `@MockitoBean` services. Boot 4 no longer initializes Mockito `@Captor` fields, so these classes also need `@ExtendWith(MockitoExtension.class)`. `*ControllerIT` tests are full-context tests that call controllers directly, with `@Transactional @Rollback` on tests that change data. `*RepositoryTest` and `BootstrapDataTest` use `@DataJpaTest`.
