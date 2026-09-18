@@ -44,4 +44,6 @@ Package root: `guru.springframework.spring7restmvc` (main class `Spring7RestMvcA
 
 Boot 4 splits test support into modules (`spring-boot-starter-webmvc-test`, `-data-jpa-test`, ...), so imports are `org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest` and `org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest`, and `ObjectMapper` is `tools.jackson.databind.ObjectMapper`.
 
+`repositories/MySqlTest` runs against a real MySQL 9.2 container (Testcontainers, `@ActiveProfiles("localmysql")`, so Flyway and `ddl-auto=validate` are exercised). It **needs Docker running**, and because its name ends in `Test` it runs in every `mvn test`. The container's random port and credentials are wired in with `@DynamicPropertySource`, overriding the profile's `3307/restdb` settings.
+
 Test styles: `*ControllerTest` uses `@WebMvcTest` with `@MockitoBean` services. Boot 4 no longer initializes Mockito `@Captor` fields, so these classes also need `@ExtendWith(MockitoExtension.class)`. `*IT` tests are full-context tests that call controllers directly, with `@Transactional @Rollback` on tests that change data. `*RepositoryTest` and `BootstrapDataTest` use `@DataJpaTest`.
