@@ -12,7 +12,7 @@
     <artifactId>spring-7-rest-mvc</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>spring-7-rest-mvc</name>
-    <description>spring-7-rest-mvc</description>
+    <description>Spring 7 Rest MVC</description>
     <properties>
         <java.version>25</java.version>
         <org.mapstruct.version>1.6.3</org.mapstruct.version>
