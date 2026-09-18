@@ -16,6 +16,7 @@ The development machine runs Windows, so use `.\mvnw.cmd` in PowerShell or `./mv
 .\mvnw.cmd test -Dtest=BeerControllerTest         # single unit test class
 .\mvnw.cmd test -Dtest=BeerControllerTest#testPatchBeer   # single test method
 .\mvnw.cmd verify "-Dit.test=MySqlIT"             # single *IT class (unit tests still run first)
+.\mvnw.cmd verify -DskipITs                       # full build with unit tests only, e.g. when Docker is off
 .\mvnw.cmd spring-boot:run                        # run with H2 in memory (default profile)
 .\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=localmysql"   # run against local MySQL
 ```
