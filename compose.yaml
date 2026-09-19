@@ -1,11 +1,22 @@
 services:
   mysql:
-    container_name: 'mysql-jt_spring6_sect11_chap123'
-    image: 'mysql:latest'
+    container_name: 'mysql-jt_spring7_sec16_chap168'
+    image: 'mysql:9.5'
     environment:
-      - 'MYSQL_DATABASE=jt_spring6_sect11_chap123_db'
-      - 'MYSQL_PASSWORD=secret'
-      - 'MYSQL_ROOT_PASSWORD=Galerien3?'
+      - 'MYSQL_DATABASE=jt_spring7_sec16_chap168_db'
+      # the passwords live in the .env file next to this one, which is not in Git (see .env.example);
+      # ':?' makes Compose fail with that message instead of starting MySQL without a password
+      - 'MYSQL_PASSWORD=${MYSQL_PASSWORD:?set MYSQL_PASSWORD in the .env file}'
+      - 'MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:?set MYSQL_ROOT_PASSWORD in the .env file}'
       - 'MYSQL_USER=myuser'
     ports:
       - '3308:3306'
+    volumes:
+      # named volume for the MySQL data directory: it survives removing the container, and it can
+      # always be found again by its name (an anonymous volume is lost with its container)
+      - 'jt-spring7-rest-data:/var/lib/mysql'
+
+volumes:
+  jt-spring7-rest-data:
+    # without this, Compose would prefix the project name: 'spring-7-rest-mvc_jt-spring7-rest-data'
+    name: 'jt-spring7-rest-data'

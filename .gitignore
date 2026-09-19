@@ -31,3 +31,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Local secrets ###
+# passwords for compose.yaml - never commit them, the template is .env.example
+.env
