@@ -33,7 +33,8 @@ class BeerRepositoryTest {
         assertThatThrownBy(() -> beerRepository.saveAndFlush(beer),
                 "saving a beer with a %d-character name (max 50) should fail bean validation",
                 beer.getBeerName().length())
-                .isInstanceOf(ConstraintViolationException.class);
+                .isInstanceOf(ConstraintViolationException.class)
+                .hasMessageContaining("Beer name must not exceed 50 characters");
     }
 
     @Test
