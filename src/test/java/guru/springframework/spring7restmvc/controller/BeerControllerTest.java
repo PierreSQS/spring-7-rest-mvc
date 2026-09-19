@@ -111,8 +111,9 @@ class BeerControllerTest {
     void testUpdateBeerBlankName() throws Exception {
         BeerDTO beer = beerServiceImpl.listBeers().getFirst();
         beer.setBeerName("");
-        given(beerService.updateBeerById(any(), any())).willReturn(Optional.of(beer));
 
+        // no stubbing of beerService: @Validated on updateById rejects the body
+        // before the controller method runs, so the service is never called
         mockMvc.perform(put(BeerController.BEER_PATH_ID, beer.getId())
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -143,8 +144,8 @@ class BeerControllerTest {
 
         BeerDTO beerDTO = BeerDTO.builder().build();
 
-        given(beerService.saveNewBeer(any(BeerDTO.class))).willReturn(beerServiceImpl.listBeers().get(1));
-
+        // no stubbing of beerService: @Validated on handlePost rejects the body
+        // before the controller method runs, so the service is never called
         mockMvc.perform(post(BeerController.BEER_PATH)
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
