@@ -94,8 +94,8 @@ The `localmysql` profile declares **no** `spring.datasource.*` of its own: url, 
 | Detail | Behavior |
 |---|---|
 | Project isolation | Keep the Compose project name `spring-7-rest-mvc-sb411` and the fixed `container_name` `mysql-spring7-rest-sec13-chap145`: both name this lecture, so Docker cannot mix the container up with one from another lesson. |
-| Graceful shutdown | `spring.docker.compose.stop.command=down` with `stop.arguments=-v` makes Boot run `docker compose down -v`, removing the container, network and data volume. The next start migrates and seeds a fresh database. |
-| Forced termination | No shutdown hook runs; the container and its data can remain. |
+| Graceful shutdown | `spring.docker.compose.stop.command=down` with `stop.arguments=-v` makes Boot run `docker compose down -v`, removing the container, network and the named data volume. The next start migrates and seeds a fresh database. |
+| Forced termination | No shutdown hook runs; the container and its data remain. The data directory is the **named** volume `mysql-spring7-rest-sec13-chap145-data` (declared in `compose.yaml` with an explicit `name:`, so Compose adds no project prefix), so a leftover can be inspected or removed by name instead of being an anonymous hash. |
 | Changed credentials or database name | MySQL initialization variables only affect an empty volume. To reinitialize, remove the old container and volume with `docker compose down -v`; this deletes its data. |
 
 ### Standalone MySQL (legacy, no longer wired up)
