@@ -25,7 +25,7 @@ public abstract class MySqlContainerBase {
     // @ServiceConnection lets Spring Boot derive the datasource connection details (url, username,
     // password) from the container itself, replacing the spring.datasource.* properties.
     @ServiceConnection
-    protected static final MySQLContainer MY_SQL_CONTAINER = new MySQLContainer("mysql:8.4");
+    protected static final MySQLContainer MY_SQL_CONTAINER = new MySQLContainer("mysql:9.5");
 
     static {
         MY_SQL_CONTAINER.start();

@@ -4,7 +4,7 @@ name: 'spring-7-rest-mvc-sb411'
 
 services:
   mysql:
-    image: 'mysql:latest'
+    image: 'mysql:9.5'
     environment:
       - 'MYSQL_DATABASE=jt_spring7_rest_sect13_chap145_db'
       # user name and passwords live in the .env file next to this one, which is not in Git

@@ -80,11 +80,10 @@ controller -> services -> repositories -> entities
 | Environment | Database / connection | Schema management | Configuration |
 |---|---|---|---|
 | Default application and H2 tests | In-memory H2; Compose disabled via `spring.docker.compose.enabled=false` (it is on by default once `spring-boot-docker-compose` is on the classpath, and this line applies to every profile that does not override it) | Hibernate generates schema; Flyway off | `src/main/resources/application.properties` |
-| `localmysql` with Compose | `mysql:latest`, host port **3308**, database `jt_spring7_rest_sect13_chap145_db` | Flyway on; `ddl-auto=validate` | `application-localmysql.properties` (`spring.docker.compose.enabled=true`) and `compose.yaml` |
-| `localmysql` with Compose disabled | `127.0.0.1:3307/restdb`, user/password `restadmin`/`restadmin` | Flyway on; `ddl-auto=validate` | Fallback `spring.datasource.*` in the local profile |
-| `testcontainers` (tests only) | Shared `mysql:8.4` container; connection supplied by `@ServiceConnection` | Flyway on; `ddl-auto=validate` | `src/test/resources/application-testcontainers.properties` |
+| `localmysql` with Compose | `mysql:9.5` (pinned, not `latest`), host port **3308**, database `jt_spring7_rest_sect13_chap145_db` | Flyway on; `ddl-auto=validate` | `application-localmysql.properties` (`spring.docker.compose.enabled=true`) and `compose.yaml` |
+| `testcontainers` (tests only) | Shared `mysql:9.5` container; connection supplied by `@ServiceConnection` | Flyway on; `ddl-auto=validate` | `src/test/resources/application-testcontainers.properties` |
 
-Compose connection details **override** the local profile's `spring.datasource.*`. Port **3308** belongs to Compose; **3307** is the standalone MySQL fallback. The `localmysql` profile also configures a Hikari pool named `RestDB-Pool` (max 5 connections) and logs formatted SQL with its bind values.
+The `localmysql` profile declares **no** `spring.datasource.*` of its own: url, user and password all come from Compose, so the profile only works with Compose enabled. It does configure a Hikari pool named `RestDB-Pool` (max 5 connections) and logs formatted SQL with its bind values.
 
 ### Compose setup and lifecycle
 
@@ -99,9 +98,9 @@ Compose connection details **override** the local profile's `spring.datasource.*
 | Forced termination | No shutdown hook runs; the container and its data can remain. |
 | Changed credentials or database name | MySQL initialization variables only affect an empty volume. To reinitialize, remove the old container and volume with `docker compose down -v`; this deletes its data. |
 
-### Standalone MySQL setup
+### Standalone MySQL (legacy, no longer wired up)
 
-With Compose disabled, first run `src/scripts/mysql-init.sql` as MySQL root to create the database and `restadmin` user. Its `mysql_native_password` authentication is intended for MySQL 8.0; it is disabled or removed in 8.4+/9.x. Flyway error `1045` (`Access denied`) usually indicates a missing user or incorrect password.
+`src/scripts/mysql-init.sql` creates a `restdb` database and a `restadmin` user on a MySQL installed on the machine (port 3307). Earlier lessons connected the `localmysql` profile to it; that datasource configuration is gone, so using it again means adding `spring.datasource.*` back and setting `spring.docker.compose.enabled=false`. Its `mysql_native_password` authentication works on MySQL 8.0 but is disabled or removed in 8.4+/9.x. Flyway error `1045` (`Access denied`) usually means a missing user or a wrong password.
 
 ### Migration rule
 
@@ -127,7 +126,7 @@ Surefire selects `*Test` / `*Tests`; Failsafe selects `*IT`. `verify` runs unit 
 
 ### MySQL integration tests
 
-- Extend `MySqlContainerBase` in the test root package. It starts one `mysql:8.4` container per JVM, shared by subclasses and removed by Testcontainers' Ryuk at JVM exit.
+- Extend `MySqlContainerBase` in the test root package. It starts one `mysql:9.5` container per JVM, shared by subclasses and removed by Testcontainers' Ryuk at JVM exit.
 - The base class activates `testcontainers` and supplies connection details through `@ServiceConnection`; no manual datasource wiring is needed.
 - `repositories/MySqlIT` imports `BootstrapData` with `@Import` so the JPA slice seeds its data; it logs `### ... loaded` or `### ... Bootstrap skipped`. It needs no `@AutoConfigureTestDatabase`: Boot 4.1's `NON_TEST` replacement policy retains the test-supplied datasource.
 - **Missing Docker must fail these tests, not skip them.** Use `test` for checks without Docker, or explicitly opt out of integration tests with `-DskipITs`.
@@ -150,4 +149,5 @@ Traps of this stack (Boot 4.1 / Spring 7 / Hibernate 7 / Jackson 3 / Java 25). C
 | Test support modules | Boot 4 splits them (`spring-boot-starter-webmvc-test`, `-data-jpa-test`, ...), so `@WebMvcTest` and `@DataJpaTest` live under `org.springframework.boot.<module>.test.autoconfigure` - let the IDE resolve them rather than guessing. |
 | Container credentials | `MYSQL_USER`, `MYSQL_PASSWORD` and `MYSQL_DATABASE` are only applied to an **empty** data volume. Renaming any of them without `docker compose down -v` produces `Access denied`. |
 | Port 3308 | Shared with containers of other lessons; only one can run at a time. |
+| Flyway warning on MySQL 9.5 | `Using MySQL 9.5 which is newer than the version Flyway has been verified with` - expected, the migrations apply normally. Both the Compose service and the Testcontainers image are pinned to `mysql:9.5`; keep them equal so local runs and tests validate on the same server. |
 | Version-specific claims | The stack is bleeding edge. Verify against the JARs in `~/.m2` or current docs instead of recalling an API, and prove behaviour by running the tests. |
