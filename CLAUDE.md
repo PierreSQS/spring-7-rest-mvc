@@ -1,50 +1,153 @@
-# CLAUDE.md
+# Repository guide
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for Claude Code when working on this repository.
 
-## Project
+---
 
-Course project for John Thompson's "Spring Framework 6: Beginner to Guru" (Udemy). It is a REST API for beers and customers, built on Spring Boot 4.1 (Spring Framework 7, Hibernate 7, Jackson 3) with Java 25, Spring Data JPA, MapStruct, Lombok, and Flyway. Work is done branch by branch, one lesson at a time: each branch (for example `78-fly-add-column`) is merged forward into the next, and commit messages refer to course sections (`Sec11_Chap124-XX: ...`).
+## 1. Project at a glance
 
-## Commands
+A beer and customer REST API built alongside John Thompson's **Spring Framework 6: Beginner to Guru** course on Udemy.
 
-The development machine runs Windows, so use `.\mvnw.cmd` in PowerShell or `./mvnw` in a POSIX shell. The Maven wrapper (script-only, no `maven-wrapper.jar`) pins Maven 3.9.16. Build with **JDK 25**, which is the machine's default `JAVA_HOME`.
+| Area | Reference |
+|---|---|
+| Runtime | Java 25, Spring Boot 4.1, Spring Framework 7 |
+| Persistence / JSON | Hibernate 7, Jackson 3 |
+| Libraries | Spring Data JPA, MapStruct, Lombok, Flyway |
+| Root package | `guru.springframework.spring7restmvc` |
+| Entry point | `Spring7RestMvcApplication` |
+| Branches | One per lesson (e.g. `78-fly-add-column`), merged forward into the next |
+| Commits | Include the course section: `Sec11_Chap124-XX: ...` |
 
-```powershell
-.\mvnw.cmd clean verify                           # everything: unit tests (Surefire) + *IT tests (Failsafe, needs Docker)
-.\mvnw.cmd test                                   # unit tests only - fast, no Docker
-.\mvnw.cmd test -Dtest=BeerControllerTest         # single unit test class
-.\mvnw.cmd test -Dtest=BeerControllerTest#testPatchBeer   # single test method
-.\mvnw.cmd verify "-Dit.test=MySqlIT"             # single *IT class (unit tests still run first)
-.\mvnw.cmd verify -DskipITs                       # full build with unit tests only, e.g. when Docker is off
-.\mvnw.cmd spring-boot:run                        # run with H2 in memory (default profile)
-.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=localmysql"   # run against MySQL from compose.yaml (needs Docker)
+---
+
+## 2. Build, test and run
+
+Use **JDK 25** (`JAVA_HOME`) and the Maven wrapper, which pins **Maven 3.9.16**. Commands below use PowerShell; replace `.\mvnw.cmd` with `./mvnw` in a POSIX shell.
+
+| Task | Command | Docker |
+|---|---|---|
+| Unit tests | `.\mvnw.cmd test` | No |
+| One test class | `.\mvnw.cmd test "-Dtest=BeerControllerTest"` | No |
+| One test method | `.\mvnw.cmd test "-Dtest=BeerControllerTest#testPatchBeer"` | No |
+| Full verification | `.\mvnw.cmd clean verify` | Yes |
+| One integration test class, plus unit tests | `.\mvnw.cmd verify "-Dit.test=MySqlIT"` | Yes |
+| Build without integration tests | `.\mvnw.cmd verify -DskipITs` | No |
+| Run with H2 | `.\mvnw.cmd spring-boot:run` | No |
+| Run with Compose MySQL | `.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=localmysql"` | Yes |
+
+No linter or formatter is configured.
+
+---
+
+## 3. Architecture and implementation rules
+
+Beer and Customer follow the same structure:
+
+```text
+controller -> services -> repositories -> entities
+                  |
+               mappers <-> model (DTOs)
 ```
 
-The project has no linter or formatter configured. Surefire and Failsafe both pass Mockito as a `-javaagent` (its path comes from the `dependency:properties` goal), because self-attaching is being phased out in newer JDKs. Each forks its own JVM, so each needs an `argLine`; both use the shared pom property `test.jvm.argLine`, so change it there only.
+| Package | Responsibility | Rules to preserve |
+|---|---|---|
+| `controller` | REST endpoints returning `ResponseEntity` | Reuse path constants such as `BEER_PATH` (`/api/v1/beer`) and `BEER_PATH_ID`; tests reference them. Validate DTOs with `@Validated`. |
+| `model` | API contracts: `BeerDTO`, `CustomerDTO` | Keep the Bean Validation annotations, and the constructor annotations Jackson 3 needs (see section 6). |
+| `entities` | JPA models with persistence constraints | Use `@UuidGenerator` and `@JdbcTypeCode(SqlTypes.VARCHAR)` for UUIDs stored as `varchar(36)`. Store `BeerStyle` as `SMALLINT`, matching migrations. |
+| `mappers` | MapStruct entity/DTO conversion | Generated mappers are Spring beans through `-Amapstruct.defaultComponentModel=spring`. |
+| `repositories` | Spring Data JPA repositories | `BeerRepository`, `CustomerRepository`; plain `JpaRepository` interfaces, no custom implementations. |
+| `services` | Resource operations | `*ServiceJPA` is `@Primary`. Keep the earlier map-based `*ServiceImpl` beans: controller tests also instantiate them for sample DTOs. |
+| `bootstrap` | Initial data via `BootstrapData` | The `CommandLineRunner` seeds 3 beers and 3 customers when their tables are empty. |
 
-**Two test runners:** Surefire runs `*Test`/`*Tests` classes in `mvn test`; Failsafe runs `*IT` classes in `mvn verify` (its version and goals come from the Spring Boot parent's `pluginManagement`, the pom only declares the plugin plus `argLine` = `${test.jvm.argLine}`). So `mvn test` needs no Docker; `mvn verify` runs `BeerControllerIT` and `CustomerControllerIT` (`@SpringBootTest` against the default H2 context) and `MySqlIT` (MySQL container). The controller ITs depend on the seed data from `BootstrapData`: for example, `testListBeers` expects exactly 3 beers.
+**Persistence:** keep `@Version` for optimistic locking. Let `@CreationTimestamp` and `@UpdateTimestamp` populate `createdDate` and `updateDate`; do not assign them manually. Open-in-view is disabled; the model has no lazy associations.
 
-## Profiles and database
+**Annotation processing:** `pom.xml` registers Lombok, lombok-mapstruct-binding and mapstruct-processor for `default-compile`. MapStruct's version is pinned explicitly because Boot does not manage it.
 
-- **Default profile** (`application.properties`): H2 in memory, Flyway **disabled**, Hibernate generates the schema, `spring.jpa.open-in-view=false` (there are no lazy associations), and Docker Compose **off** (`spring.docker.compose.enabled=false` - it is on by default once `spring-boot-docker-compose` is on the classpath, and this line applies to every profile that doesn't override it). Tests use this profile.
-- **`localmysql` profile** (`application-localmysql.properties`): sets `spring.docker.compose.enabled=true`, so Spring Boot's Docker Compose support starts the `mysql` service from `compose.yaml` when the app starts and connects to it: `mysql:latest`, host port **3308**, database `jt_spring7_rest_sect13_chap145_db`. The user name and the passwords are **not** in `compose.yaml`: it reads `${MYSQL_USER}`, `${MYSQL_PASSWORD}` and `${MYSQL_ROOT_PASSWORD}` from the `.env` file next to it, which is in `.gitignore` - after a fresh clone, copy `.env.example` to `.env` and fill it in, otherwise Compose refuses to start with the message from the `:?` default. The `MYSQL_*` values only take effect when the container's data volume is created: after changing them, remove the old container and its volume (`docker compose down -v`), otherwise the old user and database stay and login fails. Boot waits until the container is healthy, and on shutdown **removes** it: `spring.docker.compose.stop.command=down` plus `spring.docker.compose.stop.arguments=-v` turn the default `docker compose stop` into `docker compose down -v`, so container, network and data volume are gone afterwards and every start begins with an empty database (Flyway migrates, `BootstrapData` seeds). This only happens on a **graceful** shutdown (Ctrl+C, IDE stop button); a killed process runs no shutdown hook and leaves the container behind. The Compose connection details **replace** the profile's own `spring.datasource.*` values (`127.0.0.1:3307`, `restdb`, `restadmin`/`restadmin`), which only apply again if Compose is switched off. `compose.yaml` sets its own project name, `spring-7-rest-mvc-sb411`: the default name is the folder name, and an older Compose container of project `spring-7-rest-mvc` would otherwise be recreated (it happened once). Flyway is **enabled** and `ddl-auto=validate`, so the entity mappings must exactly match the schema produced by the migrations. It also sets up a Hikari pool called `RestDB-Pool` and SQL/bind-value logging.
-- `src/scripts/mysql-init.sql` (only for the local 3307 MySQL, i.e. with Compose switched off) creates the database and the `restadmin` user, and must be run as MySQL root first. It uses `IDENTIFIED WITH mysql_native_password`, which works on MySQL 8.0 but is disabled or removed in 8.4+/9.x. If startup fails with `Access denied ... (Error 1045)` from Flyway, the user is usually missing or has the wrong password.
-- Flyway migrations are in `src/main/resources/db/migration` (`V<n>__description.sql`). Whenever you change an entity column, add a new migration (don't edit an applied one). Otherwise the `validate` check fails under `localmysql`, even though H2 still starts fine.
+### HTTP behavior
 
-## Architecture
+| Outcome | Response |
+|---|---|
+| Successful POST | `201` with a `Location` header |
+| Successful PUT / PATCH / DELETE | `204` |
+| Missing entity | `NotFoundException`, annotated with `@ResponseStatus(404)` |
+| Invalid request DTO | `CustomErrorController` (`@ControllerAdvice`) handles `MethodArgumentNotValidException`: `400` with a list of `{field: message}` maps |
+| JPA transaction validation failure | `CustomErrorController` handles `TransactionSystemException`: plain `400` |
 
-Package root: `guru.springframework.spring7restmvc` (main class `Spring7RestMvcApplication`). Each resource (Beer, Customer) is built from the same set of layers:
+---
 
-- `controller`: `@RestController`s with path constants (`BEER_PATH = "/api/v1/beer"`, `BEER_PATH_ID`) that tests reuse. Handlers return `ResponseEntity` (201 with a `Location` header on POST, 204 on PUT/PATCH/DELETE). A missing entity throws `NotFoundException`, which carries `@ResponseStatus(404)`. `CustomErrorController` (`@ControllerAdvice`) turns `MethodArgumentNotValidException` into a 400 with a list of `{field: message}` maps, and JPA `TransactionSystemException` into a plain 400.
-- `model`: DTOs (`BeerDTO`, `CustomerDTO`) with Bean Validation annotations, validated in controllers via `@Validated`. This is the API contract. They need `@NoArgsConstructor @AllArgsConstructor` next to `@Builder`: Jackson 3 does not use Lombok's package-private builder constructor to deserialize request bodies.
-- `entities`: JPA entities with their own validation constraints. UUID IDs are generated by `@UuidGenerator` and stored as `varchar(36)` (`@JdbcTypeCode(SqlTypes.VARCHAR)`) and `BeerStyle` as `SMALLINT`, to match the MySQL migrations. Both use `@Version` for optimistic locking, and `createdDate`/`updateDate` are filled by Hibernate's `@CreationTimestamp`/`@UpdateTimestamp` - do not set them by hand.
-- `mappers`: MapStruct interfaces that convert between entities and DTOs. The compiler arg `-Amapstruct.defaultComponentModel=spring` makes them Spring beans, and `pom.xml` registers lombok, lombok-mapstruct-binding and mapstruct-processor as annotation processors for `default-compile`. MapStruct is not managed by Boot, so its version is pinned in `pom.xml`.
-- `services`: each resource has **two** implementations of its service interface. `*ServiceJPA` is `@Primary` and does the real work; `*ServiceImpl` is the earlier in-memory, map-based version from previous lessons. It stays a bean and is also instantiated directly in `@WebMvcTest` controller tests as a source of sample DTOs.
-- `bootstrap/BootstrapData`: a `CommandLineRunner` that seeds 3 beers and 3 customers when the tables are empty.
+## 4. Database environments
 
-Boot 4 splits test support into modules (`spring-boot-starter-webmvc-test`, `-data-jpa-test`, ...), so imports are `org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest` and `org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest`, and `ObjectMapper` is `tools.jackson.databind.ObjectMapper`.
+| Environment | Database / connection | Schema management | Configuration |
+|---|---|---|---|
+| Default application and H2 tests | In-memory H2; Compose disabled via `spring.docker.compose.enabled=false` (it is on by default once `spring-boot-docker-compose` is on the classpath, and this line applies to every profile that does not override it) | Hibernate generates schema; Flyway off | `src/main/resources/application.properties` |
+| `localmysql` with Compose | `mysql:latest`, host port **3308**, database `jt_spring7_rest_sect13_chap145_db` | Flyway on; `ddl-auto=validate` | `application-localmysql.properties` (`spring.docker.compose.enabled=true`) and `compose.yaml` |
+| `localmysql` with Compose disabled | `127.0.0.1:3307/restdb`, user/password `restadmin`/`restadmin` | Flyway on; `ddl-auto=validate` | Fallback `spring.datasource.*` in the local profile |
+| `testcontainers` (tests only) | Shared `mysql:8.4` container; connection supplied by `@ServiceConnection` | Flyway on; `ddl-auto=validate` | `src/test/resources/application-testcontainers.properties` |
 
-Tests that need a real MySQL extend `MySqlContainerBase` (test root package). It starts **one** `mysql:8.4` container per JVM (singleton, shared by all subclasses, removed by Testcontainers' Ryuk at JVM exit), exposes it with `@ServiceConnection` (Boot derives the datasource url and credentials from the container, so no `spring.datasource.*` wiring is needed), and activates the test-only `testcontainers` profile (`src/test/resources/application-testcontainers.properties`: Flyway on, `ddl-auto=validate`, nothing else). Without a running Docker daemon the subclasses **fail on purpose** rather than being skipped: they only run in `mvn verify`, so a missing Docker must not hide behind a green build (`mvn test` never needs Docker). `repositories/MySqlIT` is such a subclass: a `@DataJpaTest`. It needs no `@AutoConfigureTestDatabase`: in Boot 4.1 its default is `replace = NON_TEST`, which keeps a datasource supplied by the test (`@ServiceConnection` or `@DynamicPropertySource`) instead of swapping in H2. The slice only loads JPA components, so it `@Import`s `BootstrapData`, which then runs as a `CommandLineRunner` when the test context starts and seeds the data (it logs `### ... loaded` or `### ... Bootstrap skipped`). Its name ends in `IT`, so Failsafe runs it in `mvn verify`, not in `mvn test`. Docker Compose is never involved in tests: `spring.docker.compose.skip.in-tests` defaults to `true`.
+Compose connection details **override** the local profile's `spring.datasource.*`. Port **3308** belongs to Compose; **3307** is the standalone MySQL fallback. The `localmysql` profile also configures a Hikari pool named `RestDB-Pool` (max 5 connections) and logs formatted SQL with its bind values.
 
-Test styles: `*ControllerTest` uses `@WebMvcTest` with `@MockitoBean` services. Boot 4 no longer initializes Mockito `@Captor` fields, so these classes also need `@ExtendWith(MockitoExtension.class)`. `*ControllerIT` tests are full-context tests that call controllers directly, with `@Transactional @Rollback` on tests that change data. `*RepositoryTest` and `BootstrapDataTest` use `@DataJpaTest`.
+### Compose setup and lifecycle
+
+1. Copy `.env.example` to `.env` beside `compose.yaml`.
+2. Fill in `MYSQL_USER`, `MYSQL_PASSWORD` and `MYSQL_ROOT_PASSWORD`. The file is Git-ignored; Compose rejects missing values.
+3. Start with the `localmysql` command above. Boot waits for the container to become healthy.
+
+| Detail | Behavior |
+|---|---|
+| Project isolation | Keep Compose project name `spring-7-rest-mvc-sb411` to avoid collisions with containers from other lessons. |
+| Graceful shutdown | `spring.docker.compose.stop.command=down` with `stop.arguments=-v` makes Boot run `docker compose down -v`, removing the container, network and data volume. The next start migrates and seeds a fresh database. |
+| Forced termination | No shutdown hook runs; the container and its data can remain. |
+| Changed credentials or database name | MySQL initialization variables only affect an empty volume. To reinitialize, remove the old container and volume with `docker compose down -v`; this deletes its data. |
+
+### Standalone MySQL setup
+
+With Compose disabled, first run `src/scripts/mysql-init.sql` as MySQL root to create the database and `restadmin` user. Its `mysql_native_password` authentication is intended for MySQL 8.0; it is disabled or removed in 8.4+/9.x. Flyway error `1045` (`Access denied`) usually indicates a missing user or incorrect password.
+
+### Migration rule
+
+**Add a new migration whenever an entity column changes; never edit an applied migration.**
+
+Store migrations in `src/main/resources/db/migration` using `V<n>__description.sql`. H2 can still start successfully when the MySQL schema is out of sync; `localmysql` validates it and fails.
+
+---
+
+## 5. Testing conventions
+
+### Test selection
+
+| Test pattern | Setup | Runner | Docker |
+|---|---|---|---|
+| `*ControllerTest` | `@WebMvcTest` with `@MockitoBean` services | Surefire (`test`) | No |
+| `*RepositoryTest`, `BootstrapDataTest` | `@DataJpaTest` | Surefire (`test`) | No |
+| `*ControllerIT` | `@SpringBootTest` with H2, controllers called directly; `BeerControllerIT` adds `@AutoConfigureMockMvc`. Data-changing tests are `@Transactional` | Failsafe (`verify`) | No |
+| `Spring7RestMvcApplicationTests` | `@SpringBootTest` context check | Surefire (`test`) | No |
+| `MySqlIT` | `@DataJpaTest`, extends `MySqlContainerBase` | Failsafe (`verify`) | Yes |
+
+Surefire selects `*Test` / `*Tests`; Failsafe selects `*IT`. `verify` runs unit tests first, then `BeerControllerIT`, `CustomerControllerIT` and `MySqlIT`. Controller integration tests depend on seed data: `testListBeers` expects exactly **3 beers**.
+
+### MySQL integration tests
+
+- Extend `MySqlContainerBase` in the test root package. It starts one `mysql:8.4` container per JVM, shared by subclasses and removed by Testcontainers' Ryuk at JVM exit.
+- The base class activates `testcontainers` and supplies connection details through `@ServiceConnection`; no manual datasource wiring is needed.
+- `repositories/MySqlIT` imports `BootstrapData` with `@Import` so the JPA slice seeds its data; it logs `### ... loaded` or `### ... Bootstrap skipped`. It needs no `@AutoConfigureTestDatabase`: Boot 4.1's `NON_TEST` replacement policy retains the test-supplied datasource.
+- **Missing Docker must fail these tests, not skip them.** Use `test` for checks without Docker, or explicitly opt out of integration tests with `-DskipITs`.
+- Docker Compose is not involved in tests (`spring.docker.compose.skip.in-tests=true` by default).
+
+---
+
+## 6. Gotchas
+
+Traps of this stack (Boot 4.1 / Spring 7 / Hibernate 7 / Jackson 3 / Java 25). Check here before assuming an API behaves as in earlier versions.
+
+| Topic | Rule |
+|---|---|
+| JSON | **Use `JsonMapper` (`tools.jackson.databind.json.JsonMapper`), never the old `ObjectMapper`.** Jackson 3 keeps `ObjectMapper` alive, but this codebase moved off it everywhere - do not reintroduce it, not even in a new test. |
+| Jackson and Lombok | DTOs need `@NoArgsConstructor` and `@AllArgsConstructor` next to `@Builder`: Jackson 3 ignores Lombok's package-private builder constructor when deserializing. |
+| Mockito as an agent | Both runners load Mockito through `-javaagent` (JAR path from the `dependency:properties` goal), since self-attaching is being phased out in newer JDKs. Each forks its own JVM, so **change JVM arguments only in the shared `test.jvm.argLine` property in `pom.xml`**. |
+| Mockito `@Captor` | Boot 4 no longer initializes `@Captor` fields, so a `@WebMvcTest` class using captors also needs `@ExtendWith(MockitoExtension.class)`. |
+| `@Rollback` | Redundant: Spring rolls back `@Transactional` tests by default. Do not add it. |
+| Failsafe configuration | Version and execution goals come from the Spring Boot parent's `pluginManagement`; the pom only adds the plugin and its `argLine`. |
+| Test support modules | Boot 4 splits them (`spring-boot-starter-webmvc-test`, `-data-jpa-test`, ...), so `@WebMvcTest` and `@DataJpaTest` live under `org.springframework.boot.<module>.test.autoconfigure` - let the IDE resolve them rather than guessing. |
+| Container credentials | `MYSQL_USER`, `MYSQL_PASSWORD` and `MYSQL_DATABASE` are only applied to an **empty** data volume. Renaming any of them without `docker compose down -v` produces `Access denied`. |
+| Port 3308 | Shared with containers of other lessons; only one can run at a time. |
+| Version-specific claims | The stack is bleeding edge. Verify against the JARs in `~/.m2` or current docs instead of recalling an API, and prove behaviour by running the tests. |
