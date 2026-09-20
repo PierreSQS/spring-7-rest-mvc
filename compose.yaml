@@ -4,10 +4,11 @@ name: 'spring-7-rest-mvc-sb411'
 
 services:
   mysql:
+    container_name: 'mysql-spring7-rest-sec13-chap145'
     image: 'mysql:9.5'
     environment:
-      - 'MYSQL_DATABASE=jt_spring7_rest_sect13_chap145_db'
-      # user name and passwords live in the .env file next to this one, which is not in Git
+      - 'MYSQL_DATABASE=jt_spring7_rest_sec13_chap145_db'
+      # username and passwords live in the .env file next to this one, which is not in Git
       # (see .env.example); ':?' makes Compose fail with that message instead of starting MySQL
       # without a password
       - 'MYSQL_PASSWORD=${MYSQL_PASSWORD:?set MYSQL_PASSWORD in the .env file}'

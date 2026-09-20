@@ -80,7 +80,7 @@ controller -> services -> repositories -> entities
 | Environment | Database / connection | Schema management | Configuration |
 |---|---|---|---|
 | Default application and H2 tests | In-memory H2; Compose disabled via `spring.docker.compose.enabled=false` (it is on by default once `spring-boot-docker-compose` is on the classpath, and this line applies to every profile that does not override it) | Hibernate generates schema; Flyway off | `src/main/resources/application.properties` |
-| `localmysql` with Compose | `mysql:9.5` (pinned, not `latest`), host port **3308**, database `jt_spring7_rest_sect13_chap145_db` | Flyway on; `ddl-auto=validate` | `application-localmysql.properties` (`spring.docker.compose.enabled=true`) and `compose.yaml` |
+| `localmysql` with Compose | `mysql:9.5` (pinned, not `latest`), host port **3308**, container `mysql-spring7-rest-sec13-chap145`, database `jt_spring7_rest_sec13_chap145_db` | Flyway on; `ddl-auto=validate` | `application-localmysql.properties` (`spring.docker.compose.enabled=true`) and `compose.yaml` |
 | `testcontainers` (tests only) | Shared `mysql:9.5` container; connection supplied by `@ServiceConnection` | Flyway on; `ddl-auto=validate` | `src/test/resources/application-testcontainers.properties` |
 
 The `localmysql` profile declares **no** `spring.datasource.*` of its own: url, user and password all come from Compose, so the profile only works with Compose enabled. It does configure a Hikari pool named `RestDB-Pool` (max 5 connections) and logs formatted SQL with its bind values.
@@ -93,7 +93,7 @@ The `localmysql` profile declares **no** `spring.datasource.*` of its own: url, 
 
 | Detail | Behavior |
 |---|---|
-| Project isolation | Keep Compose project name `spring-7-rest-mvc-sb411` to avoid collisions with containers from other lessons. |
+| Project isolation | Keep the Compose project name `spring-7-rest-mvc-sb411` and the fixed `container_name` `mysql-spring7-rest-sec13-chap145`: both name this lecture, so Docker cannot mix the container up with one from another lesson. |
 | Graceful shutdown | `spring.docker.compose.stop.command=down` with `stop.arguments=-v` makes Boot run `docker compose down -v`, removing the container, network and data volume. The next start migrates and seeds a fresh database. |
 | Forced termination | No shutdown hook runs; the container and its data can remain. |
 | Changed credentials or database name | MySQL initialization variables only affect an empty volume. To reinitialize, remove the old container and volume with `docker compose down -v`; this deletes its data. |
