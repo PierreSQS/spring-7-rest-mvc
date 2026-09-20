@@ -7,11 +7,12 @@ services:
     image: 'mysql:latest'
     environment:
       - 'MYSQL_DATABASE=jt_spring7_rest_sect13_chap145_db'
-      # the passwords live in the .env file next to this one, which is not in Git (see .env.example);
-      # ':?' makes Compose fail with that message instead of starting MySQL without a password
+      # user name and passwords live in the .env file next to this one, which is not in Git
+      # (see .env.example); ':?' makes Compose fail with that message instead of starting MySQL
+      # without a password
       - 'MYSQL_PASSWORD=${MYSQL_PASSWORD:?set MYSQL_PASSWORD in the .env file}'
       - 'MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:?set MYSQL_ROOT_PASSWORD in the .env file}'
-      - 'MYSQL_USER=Pierrot'
+      - 'MYSQL_USER=${MYSQL_USER:?set MYSQL_USER in the .env file}'
     ports:
       # host port 3308 -> container port 3306
       - '3308:3306'
