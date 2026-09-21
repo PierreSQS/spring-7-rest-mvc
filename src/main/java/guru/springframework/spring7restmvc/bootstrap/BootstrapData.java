@@ -60,19 +60,31 @@ public class BootstrapData implements CommandLineRunner {
         }
     }
 
-    private static BeerStyle beerStyleOf(String csvStyle) {
-        return switch (csvStyle) {
-            case "American Pale Lager" -> BeerStyle.LAGER;
-            case "American Pale Ale (APA)", "American Black Ale", "Belgian Dark Ale", "American Blonde Ale" ->
-                    BeerStyle.ALE;
-            case "American IPA", "American Double / Imperial IPA", "Belgian IPA" -> BeerStyle.IPA;
-            case "American Porter" -> BeerStyle.PORTER;
-            case "Oatmeal Stout", "American Stout" -> BeerStyle.STOUT;
-            case "Saison / Farmhouse Ale" -> BeerStyle.SAISON;
-            case "Fruit / Vegetable Beer", "Winter Warmer", "Berliner Weissbier" -> BeerStyle.WHEAT;
-            case "English Pale Ale" -> BeerStyle.PALE_ALE;
-            default -> BeerStyle.PILSNER;
-        };
+    /**
+     * Classifies one of the 100 style names of the CSV as one of the ten {@link BeerStyle}s, by the
+     * first keyword that matches. Order matters: "American Double / Imperial IPA" is an IPA, and
+     * "American Pale Wheat Ale" a wheat beer rather than a pale ale.
+     * <p>
+     * The keywords are ASCII on purpose. The dataset is double-encoded, so "M&auml;rzen" reaches us as
+     * {@code MÃ¤rzen} - matching on {@code RZEN} survives that, matching on {@code MÄRZEN} would not.
+     */
+    static BeerStyle beerStyleOf(String csvStyle) {
+        String style = csvStyle.toUpperCase();
+
+        if (style.contains("IPA")) return BeerStyle.IPA;
+        if (style.contains("STOUT")) return BeerStyle.STOUT;
+        if (style.contains("PORTER")) return BeerStyle.PORTER;
+        if (style.contains("GOSE")) return BeerStyle.GOSE;
+        if (style.contains("SAISON") || style.contains("FARMHOUSE")) return BeerStyle.SAISON;
+        if (style.contains("WHEAT") || style.contains("WITBIER") || style.contains("WEISS")
+                || style.contains("WEIZEN") || style.contains("HEFE")) return BeerStyle.WHEAT;
+        if (style.contains("PALE ALE")) return BeerStyle.PALE_ALE;
+        if (style.contains("PILSNER") || style.contains("PILSENER") || style.contains("PILS")) return BeerStyle.PILSNER;
+        if (style.contains("LAGER") || style.contains("BOCK") || style.contains("RZEN")
+                || style.contains("OKTOBERFEST") || style.contains("HELLES") || style.contains("DUNKEL")
+                || style.contains("SCHWARZ") || style.contains("VIENNA")) return BeerStyle.LAGER;
+
+        return BeerStyle.ALE;
     }
 
     /** Two of the 2410 names are longer than the column, which would fail the @Size validation. */
