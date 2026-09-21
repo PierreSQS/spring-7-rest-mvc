@@ -14,7 +14,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 @DataJpaTest
 @Import({BootstrapData.class, BeerCsvServiceImpl.class})
@@ -27,36 +27,40 @@ class BeerRepositoryTest {
     void testGetBeerListByName() {
         List<Beer> list = beerRepository.findAllByBeerNameIsLikeIgnoreCase("%IPA%");
 
-        assertThat(list.size()).isEqualTo(336);
+        long expected = beerRepository.findAll().stream()
+                .filter(beer -> beer.getBeerName().toUpperCase().contains("IPA"))
+                .count();
+
+        assertThat(list)
+                .isNotEmpty()
+                .hasSize((int) expected)
+                .allSatisfy(beer -> assertThat(beer.getBeerName()).containsIgnoringCase("IPA"));
     }
 
     @Test
     void testSaveBeerNameTooLong() {
+        Beer tooLongName = Beer.builder()
+                .beerName("a".repeat(51))
+                .beerStyle(BeerStyle.PALE_ALE)
+                .upc("234234234234")
+                .price(new BigDecimal("11.99"))
+                .build();
 
-        assertThrows(ConstraintViolationException.class, () -> {
-            Beer savedBeer = beerRepository.save(Beer.builder()
-                    .beerName("My Beer 0123345678901233456789012334567890123345678901233456789012334567890123345678901233456789")
-                    .beerStyle(BeerStyle.PALE_ALE)
-                    .upc("234234234234")
-                    .price(new BigDecimal("11.99"))
-                    .build());
-
-            beerRepository.flush();
-        });
+        assertThatExceptionOfType(ConstraintViolationException.class)
+                .isThrownBy(() -> beerRepository.saveAndFlush(tooLongName))
+                .withMessageContaining("Beer name must not exceed 50 characters");
     }
 
     @Test
     void testSaveBeer() {
-        Beer savedBeer = beerRepository.save(Beer.builder()
-                        .beerName("My Beer")
-                        .beerStyle(BeerStyle.PALE_ALE)
-                        .upc("234234234234")
-                        .price(new BigDecimal("11.99"))
+        Beer savedBeer = beerRepository.saveAndFlush(Beer.builder()
+                .beerName("My Beer")
+                .beerStyle(BeerStyle.PALE_ALE)
+                .upc("234234234234")
+                .price(new BigDecimal("11.99"))
                 .build());
 
-        beerRepository.flush();
-
-        assertThat(savedBeer).isNotNull();
         assertThat(savedBeer.getId()).isNotNull();
+        assertThat(savedBeer.getCreatedDate()).isNotNull();
     }
 }

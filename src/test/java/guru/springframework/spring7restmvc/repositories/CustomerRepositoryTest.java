@@ -7,6 +7,9 @@ import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * Modified by Pierrot on 17-09-2026
+ */
 @DataJpaTest
 class CustomerRepositoryTest {
 
@@ -15,7 +18,7 @@ class CustomerRepositoryTest {
 
     @Test
     void testSaveCustomer() {
-        Customer customer = customerRepository.save(Customer.builder()
+        Customer customer = customerRepository.saveAndFlush(Customer.builder()
                         .name("New Name")
                 .build());
 
