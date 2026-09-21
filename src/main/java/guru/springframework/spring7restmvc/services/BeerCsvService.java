@@ -1,13 +1,14 @@
 package guru.springframework.spring7restmvc.services;
 
 import guru.springframework.spring7restmvc.model.BeerCSVRecord;
+import org.springframework.core.io.Resource;
 
-import java.io.File;
 import java.util.List;
 
 /**
- * Created by jt, Spring Framework Guru.
+ * Reads a beer CSV file into {@link BeerCSVRecord}s.
  */
 public interface BeerCsvService {
-    List<BeerCSVRecord> convertCSV(File csvFile);
+
+    List<BeerCSVRecord> convertCSV(Resource csvResource);
 }

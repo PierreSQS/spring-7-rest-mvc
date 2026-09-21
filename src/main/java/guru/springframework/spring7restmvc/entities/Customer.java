@@ -2,7 +2,9 @@ package guru.springframework.spring7restmvc.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
 
@@ -11,6 +13,7 @@ import java.util.UUID;
 
 /**
  * Created by jt, Spring Framework Guru.
+ * Modified by Pierrot on 17-09-2026
  */
 @Getter
 @Setter
@@ -20,18 +23,19 @@ import java.util.UUID;
 @NoArgsConstructor
 public class Customer {
     @Id
-    @GeneratedValue(generator = "UUID")
     @UuidGenerator
-    @Column(length = 36, columnDefinition = "varchar", updatable = false, nullable = false)
-    @JdbcTypeCode(SqlTypes.CHAR)
+    @Column(length = 36)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     private UUID id;
     private String name;
-
-    @Column(length = 255)
     private String email;
 
     @Version
     private Integer version;
+    @CreationTimestamp
+    @Column(updatable = false)
     private LocalDateTime createdDate;
+
+    @UpdateTimestamp
     private LocalDateTime updateDate;
 }

@@ -1,29 +1,26 @@
 package guru.springframework.spring7restmvc.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import tools.jackson.databind.annotation.JsonDeserialize;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
  * Created by jt, Spring Framework Guru.
+ * Modified by Pierrot on 17-09-2026
  */
-@JsonDeserialize(builder = CustomerDTO.CustomerDTOBuilder.class)
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class CustomerDTO {
-    @JsonProperty("id")
     private UUID id;
-
-    @JsonProperty("name")
     private String name;
-
-    @JsonProperty("version")
+    private String email;
     private Integer version;
-
     private LocalDateTime createdDate;
     private LocalDateTime updateDate;
 }

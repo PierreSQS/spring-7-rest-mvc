@@ -106,7 +106,7 @@ class BeerControllerIT {
 
     @Test
     void testPatchBeerBadName() throws Exception {
-        Beer beer = beerRepository.findAll().get(0);
+        Beer beer = beerRepository.findAll().getFirst();
 
         Map<String, Object> beerMap = new HashMap<>();
         beerMap.put("beerName", "New Name 1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890");
@@ -130,7 +130,7 @@ class BeerControllerIT {
     @Transactional
     @Test
     void deleteByIdFound() {
-        Beer beer = beerRepository.findAll().get(0);
+        Beer beer = beerRepository.findAll().getFirst();
 
         ResponseEntity responseEntity = beerController.deleteById(beer.getId());
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(204));
