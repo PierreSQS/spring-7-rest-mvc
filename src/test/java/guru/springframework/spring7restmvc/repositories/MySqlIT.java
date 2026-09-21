@@ -3,6 +3,7 @@ package guru.springframework.spring7restmvc.repositories;
 import guru.springframework.spring7restmvc.MySqlContainerBase;
 import guru.springframework.spring7restmvc.bootstrap.BootstrapData;
 import guru.springframework.spring7restmvc.entities.Beer;
+import guru.springframework.spring7restmvc.services.BeerCsvServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
@@ -19,7 +20,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DataJpaTest
 // the JPA slice only loads JPA components, so BootstrapData has to be imported explicitly
 // once imported, it runs as a CommandLineRunner when the test context starts and seeds the data
-@Import(BootstrapData.class)
+// BeerCsvServiceImpl comes with it: BootstrapData needs it to load the CSV, and a @Service is
+// not part of the JPA slice either
+@Import({BootstrapData.class, BeerCsvServiceImpl.class})
 class MySqlIT extends MySqlContainerBase {
 
     @Autowired
