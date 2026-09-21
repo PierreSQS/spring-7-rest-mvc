@@ -63,6 +63,8 @@ class BeerControllerTest {
         Map<String, Object> beerMap = new HashMap<>();
         beerMap.put("beerName", "New Name");
 
+        given(beerService.patchBeerById(any(), any())).willReturn(Optional.of(beer));
+
         mockMvc.perform(patch(BeerController.BEER_PATH_ID, beer.getId())
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
@@ -73,6 +75,20 @@ class BeerControllerTest {
 
         assertThat(beer.getId()).isEqualTo(uuidArgumentCaptor.getValue());
         assertThat(beerMap.get("beerName")).isEqualTo(beerArgumentCaptor.getValue().getBeerName());
+    }
+
+    @Test
+    void testPatchBeerNotFound() throws Exception {
+        Map<String, Object> beerMap = new HashMap<>();
+        beerMap.put("beerName", "New Name");
+
+        given(beerService.patchBeerById(any(), any())).willReturn(Optional.empty());
+
+        mockMvc.perform(patch(BeerController.BEER_PATH_ID, UUID.randomUUID())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(beerMap)))
+                .andExpect(status().isNotFound());
     }
 
     @Test
