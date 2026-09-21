@@ -89,9 +89,14 @@ public class BootstrapData implements CommandLineRunner {
 
     /** Two of the 2410 names are longer than the column, which would fail the @Size validation. */
     private static String truncateBeerName(String beerName) {
-        return beerName.length() <= MAX_BEER_NAME_LENGTH
-                ? beerName
-                : beerName.substring(0, MAX_BEER_NAME_LENGTH - 3) + "...";
+        if (beerName.length() <= MAX_BEER_NAME_LENGTH) {
+            return beerName;
+        }
+
+        String truncated = beerName.substring(0, MAX_BEER_NAME_LENGTH - 3) + "...";
+        log.warn("### Beer name longer than {} characters, stored as '{}': {}",
+                MAX_BEER_NAME_LENGTH, truncated, beerName);
+        return truncated;
     }
 
     private void loadBeerData() {
