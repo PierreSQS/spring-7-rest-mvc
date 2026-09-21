@@ -23,7 +23,7 @@ class BeerCsvServiceImplTest {
 
     /**
      * Pins the charset: read with the platform default of a German Windows (cp1252) the name would
-     * come out as "Garce SelÃƒÂ©".
+     * come out as "Garce SelÃ©".
      */
     @Test
     void decodesTheFileAsUtf8() {
@@ -33,7 +33,7 @@ class BeerCsvServiceImplTest {
                 .filteredOn(beerCSVRecord -> beerCSVRecord.getRow() == 13)
                 .singleElement()
                 .extracting(BeerCSVRecord::getBeer)
-                .isEqualTo("Garce SelÃ©");
+                .isEqualTo("Garce Selé");
     }
 
     @Test

@@ -65,8 +65,8 @@ public class BootstrapData implements CommandLineRunner {
      * first keyword that matches. Order matters: "American Double / Imperial IPA" is an IPA, and
      * "American Pale Wheat Ale" a wheat beer rather than a pale ale.
      * <p>
-     * The keywords are ASCII on purpose. The dataset is double-encoded, so "M&auml;rzen" reaches us as
-     * {@code MÃ¤rzen} - matching on {@code RZEN} survives that, matching on {@code MÄRZEN} would not.
+     * The keywords are ASCII on purpose: {@code RZEN} matches "M&auml;rzen" whatever the file's encoding
+     * does to the umlaut, which the dataset used to mangle into {@code MÃ¤rzen}.
      */
     static BeerStyle beerStyleOf(String csvStyle) {
         String style = csvStyle.toUpperCase();

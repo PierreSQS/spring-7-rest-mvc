@@ -37,12 +37,11 @@ class BeerStyleMappingTest {
             "American Double / Imperial IPA,  IPA",
             "American Pale Wheat Ale,         WHEAT",
 
-            // the dataset is double-encoded, so these are the strings Java actually sees.
-            // "MÃ¤rzen" stands alone here on purpose: the real value also contains OKTOBERFEST,
-            // which would match even if the RZEN keyword were broken.
-            "MÃ¤rzen,                         LAGER",
-            "MÃ¤rzen / Oktoberfest,           LAGER",
-            "KÃ¶lsch,                         ALE",
+            // accented names of the dataset. "Märzen" stands alone here on purpose: the real value
+            // also contains OKTOBERFEST, which would match even if the RZEN keyword were broken.
+            "Märzen,                          LAGER",
+            "Märzen / Oktoberfest,            LAGER",
+            "Kölsch,                          ALE",
     })
     void csvKeyBeerStyleMatchesEnumBeerStyle(String csvStyle, BeerStyle expected) {
         assertThat(BootstrapData.beerStyleOf(csvStyle)).isEqualTo(expected);
