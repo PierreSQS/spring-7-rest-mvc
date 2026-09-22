@@ -6,7 +6,6 @@ import guru.springframework.spring7restmvc.repositories.CustomerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -62,12 +61,7 @@ public class CustomerServiceJPA implements CustomerService {
     @Override
     public Optional<CustomerDTO> patchCustomerById(UUID customerId, CustomerDTO customer) {
         return customerRepository.findById(customerId).map(foundCustomer -> {
-            if (StringUtils.hasText(customer.getName())){
-                foundCustomer.setName(customer.getName());
-            }
-            if (StringUtils.hasText(customer.getEmail())){
-                foundCustomer.setEmail(customer.getEmail());
-            }
+            customerMapper.updateCustomerFromDto(customer, foundCustomer);
             return customerMapper.customerToCustomerDto(customerRepository.save(foundCustomer));
         });
     }

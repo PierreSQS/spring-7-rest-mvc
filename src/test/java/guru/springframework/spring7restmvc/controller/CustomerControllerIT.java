@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -103,6 +104,26 @@ class CustomerControllerIT {
         Customer patchedCustomer = customerRepository.findById(customer.getId()).orElseThrow();
         assertThat(patchedCustomer.getEmail()).isEqualTo(customerEmail);
         assertThat(patchedCustomer.getName()).isEqualTo(originalName);
+    }
+
+    @Transactional
+    @Test
+    void patchLeavesTheIdAndTheCreatedDateAlone() {
+        Customer customer = getFirstCustomer();
+        LocalDateTime createdDate = customer.getCreatedDate();
+        CustomerDTO customerDTO = CustomerDTO.builder()
+                .id(UUID.randomUUID())
+                .createdDate(LocalDateTime.now().minusYears(1))
+                .name("PATCHED")
+                .build();
+
+        customerController.patchCustomerById(customer.getId(), customerDTO);
+
+        // the mapper ignores id, version and the timestamps, so a request body cannot overwrite them
+        Customer patchedCustomer = customerRepository.findById(customer.getId()).orElseThrow();
+        assertThat(patchedCustomer.getName()).isEqualTo("PATCHED");
+        assertThat(patchedCustomer.getCreatedDate()).isEqualTo(createdDate);
+        assertThat(customerRepository.findById(customerDTO.getId())).isEmpty();
     }
 
     @Transactional
