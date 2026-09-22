@@ -19,7 +19,7 @@ import java.util.List;
 
 /**
  * Created by jt, Spring Framework Guru.
- * Modified by Pierrot on 18-09-2026
+ * Modified by Pierrot on 22-09-2026
  */
 @Slf4j
 @Component
@@ -141,17 +141,14 @@ public class BootstrapData implements CommandLineRunner {
         if (customerRepository.count() == 0) {
             Customer customer1 = Customer.builder()
                     .name("Customer 1")
-                    .version(1)
                     .build();
 
             Customer customer2 = Customer.builder()
                     .name("Customer 2")
-                    .version(1)
                     .build();
 
             Customer customer3 = Customer.builder()
                     .name("Customer 3")
-                    .version(1)
                     .build();
 
             customerRepository.saveAll(List.of(customer1, customer2, customer3));

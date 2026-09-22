@@ -13,7 +13,7 @@ import java.util.UUID;
 
 /**
  * Created by jt, Spring Framework Guru.
- * Modified by Pierrot on 17-09-2026
+ * Modified by Pierrot on 22-09-2026
  */
 
 @RequiredArgsConstructor
@@ -28,7 +28,9 @@ public class CustomerController {
     public ResponseEntity<Void> patchCustomerById(@PathVariable("customerId") UUID customerId,
                                                 @RequestBody CustomerDTO customer){
 
-        customerService.patchCustomerById(customerId, customer);
+        if (customerService.patchCustomerById(customerId, customer).isEmpty()){
+            throw new NotFoundException();
+        }
 
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }

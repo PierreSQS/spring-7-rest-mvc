@@ -1,5 +1,6 @@
 package guru.springframework.spring7restmvc.bootstrap;
 
+import guru.springframework.spring7restmvc.entities.Customer;
 import guru.springframework.spring7restmvc.repositories.BeerRepository;
 import guru.springframework.spring7restmvc.repositories.CustomerRepository;
 import guru.springframework.spring7restmvc.services.BeerCsvService;
@@ -14,7 +15,7 @@ import org.springframework.core.io.ClassPathResource;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Modified by Pierrot on 17-09-2026
+ * Modified by Pierrot on 22-09-2026
  */
 
 @Slf4j
@@ -45,5 +46,13 @@ class BootstrapDataTest {
         // every CSV record becomes a beer, on top of the three written by hand
         assertThat(beersInDB).isEqualTo(HANDWRITTEN_ROWS + csvRecords);
         assertThat(customerRepository.count()).isEqualTo(HANDWRITTEN_ROWS);
+    }
+
+    @Test
+    void testCustomersStartAtFirstVersion() {
+        // Hibernate starts @Version at 0 for a persisted entity
+        assertThat(customerRepository.findAll())
+                .extracting(Customer::getVersion)
+                .containsOnly(0);
     }
 }

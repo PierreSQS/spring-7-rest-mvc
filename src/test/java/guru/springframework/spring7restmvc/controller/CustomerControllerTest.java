@@ -27,7 +27,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * Modified by Pierrot on 17-09-2026
+ * Modified by Pierrot on 22-09-2026
  */
 @ExtendWith(MockitoExtension.class)
 @WebMvcTest(CustomerController.class)
@@ -57,6 +57,8 @@ class CustomerControllerTest {
 
         Map<String, Object> customerMap = Map.of("name", "New Name");
 
+        given(customerService.patchCustomerById(any(), any())).willReturn(Optional.of(customer));
+
         mockMvc.perform(patch(CustomerController.CUSTOMER_PATH_ID, customer.getId())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonMapper.writeValueAsString(customerMap)))
@@ -68,6 +70,18 @@ class CustomerControllerTest {
         assertThat(uuidArgumentCaptor.getValue()).isEqualTo(customer.getId());
         assertThat(customerArgumentCaptor.getValue().getName())
                 .isEqualTo(customerMap.get("name"));
+    }
+
+    @Test
+    void testPatchCustomerNotFound() throws Exception {
+        Map<String, Object> customerMap = Map.of("name", "New Name");
+
+        given(customerService.patchCustomerById(any(), any())).willReturn(Optional.empty());
+
+        mockMvc.perform(patch(CustomerController.CUSTOMER_PATH_ID, UUID.randomUUID())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper.writeValueAsString(customerMap)))
+                .andExpect(status().isNotFound());
     }
 
     @Test

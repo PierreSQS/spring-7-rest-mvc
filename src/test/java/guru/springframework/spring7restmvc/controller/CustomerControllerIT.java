@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * Modified by Pierrot on 17-09-2026
+ * Modified by Pierrot on 22-09-2026
  */
 @SpringBootTest
 class CustomerControllerIT {
@@ -67,13 +67,42 @@ class CustomerControllerIT {
         Customer customer = getFirstCustomer();
         CustomerDTO customerDTO = customerMapper.customerToCustomerDto(customer);
         final String customerName = "UPDATED";
+        final String customerEmail = "updated@example.com";
         customerDTO.setName(customerName);
+        customerDTO.setEmail(customerEmail);
 
         ResponseEntity<Void> responseEntity = customerController.updateCustomerByID(customer.getId(), customerDTO);
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
         Customer updatedCustomer = customerRepository.findById(customer.getId()).orElseThrow();
         assertThat(updatedCustomer.getName()).isEqualTo(customerName);
+        assertThat(updatedCustomer.getEmail()).isEqualTo(customerEmail);
+    }
+
+    @Test
+    void testPatchNotFound() {
+        UUID customerId = UUID.randomUUID();
+        CustomerDTO customerDTO = CustomerDTO.builder().build();
+
+        assertThatThrownBy(() -> customerController.patchCustomerById(customerId, customerDTO))
+                .isInstanceOf(NotFoundException.class);
+    }
+
+    @Transactional
+    @Test
+    void patchExistingCustomerEmail() {
+        Customer customer = getFirstCustomer();
+        String originalName = customer.getName();
+        final String customerEmail = "patched@example.com";
+        CustomerDTO customerDTO = CustomerDTO.builder().email(customerEmail).build();
+
+        ResponseEntity<Void> responseEntity = customerController.patchCustomerById(customer.getId(), customerDTO);
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+
+        // PATCH only touches the fields it carries: the email changes, the name stays
+        Customer patchedCustomer = customerRepository.findById(customer.getId()).orElseThrow();
+        assertThat(patchedCustomer.getEmail()).isEqualTo(customerEmail);
+        assertThat(patchedCustomer.getName()).isEqualTo(originalName);
     }
 
     @Transactional
