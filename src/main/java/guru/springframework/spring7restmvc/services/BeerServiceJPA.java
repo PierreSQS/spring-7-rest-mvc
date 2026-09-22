@@ -13,10 +13,10 @@ import org.springframework.util.StringUtils;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Created by jt, Spring Framework Guru.
+ * Modified by Pierrot on 22-09-2026
  */
 @Service
 @Primary
@@ -63,8 +63,7 @@ public class BeerServiceJPA implements BeerService {
 
     @Override
     public Optional<BeerDTO> getBeerById(UUID id) {
-        return Optional.ofNullable(beerMapper.beerToBeerDto(beerRepository.findById(id)
-                .orElse(null)));
+        return beerRepository.findById(id).map(beerMapper::beerToBeerDto);
     }
 
     @Override
@@ -74,19 +73,14 @@ public class BeerServiceJPA implements BeerService {
 
     @Override
     public Optional<BeerDTO> updateBeerById(UUID beerId, BeerDTO beer) {
-        AtomicReference<Optional<BeerDTO>> atomicReference = new AtomicReference<>();
-
-        beerRepository.findById(beerId).ifPresentOrElse(foundBeer -> {
+        return beerRepository.findById(beerId).map(foundBeer -> {
             foundBeer.setBeerName(beer.getBeerName());
             foundBeer.setBeerStyle(beer.getBeerStyle());
             foundBeer.setUpc(beer.getUpc());
             foundBeer.setPrice(beer.getPrice());
             foundBeer.setQuantityOnHand(beer.getQuantityOnHand());
-            atomicReference.set(Optional.of(beerMapper
-                    .beerToBeerDto(beerRepository.save(foundBeer))));
-        }, () -> atomicReference.set(Optional.empty()));
-
-        return atomicReference.get();
+            return beerMapper.beerToBeerDto(beerRepository.save(foundBeer));
+        });
     }
 
     @Override
@@ -100,9 +94,7 @@ public class BeerServiceJPA implements BeerService {
 
     @Override
     public Optional<BeerDTO> patchBeerById(UUID beerId, BeerDTO beer) {
-        AtomicReference<Optional<BeerDTO>> atomicReference = new AtomicReference<>();
-
-        beerRepository.findById(beerId).ifPresentOrElse(foundBeer -> {
+        return beerRepository.findById(beerId).map(foundBeer -> {
             if (StringUtils.hasText(beer.getBeerName())){
                 foundBeer.setBeerName(beer.getBeerName());
             }
@@ -118,10 +110,7 @@ public class BeerServiceJPA implements BeerService {
             if (beer.getQuantityOnHand() != null){
                 foundBeer.setQuantityOnHand(beer.getQuantityOnHand());
             }
-            atomicReference.set(Optional.of(beerMapper
-                    .beerToBeerDto(beerRepository.save(foundBeer))));
-        }, () -> atomicReference.set(Optional.empty()));
-
-        return atomicReference.get();
+            return beerMapper.beerToBeerDto(beerRepository.save(foundBeer));
+        });
     }
 }
