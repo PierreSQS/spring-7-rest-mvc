@@ -1,6 +1,7 @@
 package guru.springframework.spring7restmvc.entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -27,7 +28,11 @@ public class Customer {
     @Column(length = 36)
     @JdbcTypeCode(SqlTypes.VARCHAR)
     private UUID id;
+
+    /** A PATCH or PUT carrying an empty name must fail rather than silently keep the old one. */
+    @NotBlank
     private String name;
+
     private String email;
 
     @Version

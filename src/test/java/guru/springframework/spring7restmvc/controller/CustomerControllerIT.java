@@ -7,23 +7,37 @@ import guru.springframework.spring7restmvc.repositories.CustomerRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * Modified by Pierrot on 22-09-2026
  */
 @SpringBootTest
+@AutoConfigureMockMvc
 class CustomerControllerIT {
+
+    @Autowired
+    MockMvc mockMvc;
+
+    @Autowired
+    JsonMapper jsonMapper;
 
     @Autowired
     CustomerRepository customerRepository;
@@ -124,6 +138,21 @@ class CustomerControllerIT {
         assertThat(patchedCustomer.getName()).isEqualTo("PATCHED");
         assertThat(patchedCustomer.getCreatedDate()).isEqualTo(createdDate);
         assertThat(customerRepository.findById(customerDTO.getId())).isEmpty();
+    }
+
+    @Test
+    void testPatchCustomerBlankName() throws Exception {
+        Customer customer = getFirstCustomer();
+
+        // @NotBlank on the entity: an empty name is rejected instead of silently ignored
+        mockMvc.perform(patch(CustomerController.CUSTOMER_PATH_ID, customer.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(jsonMapper.writeValueAsString(Map.of("name", " "))))
+                .andExpect(status().isBadRequest());
+
+        assertThat(customerRepository.findById(customer.getId()).orElseThrow().getName())
+                .isEqualTo(customer.getName());
     }
 
     @Transactional

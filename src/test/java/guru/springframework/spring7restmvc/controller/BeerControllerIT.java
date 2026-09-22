@@ -19,6 +19,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.HashMap;
 import java.util.List;
@@ -46,6 +47,9 @@ class BeerControllerIT {
 
     @Autowired
     ObjectMapper objectMapper;
+
+    @Autowired
+    JsonMapper jsonMapper;
 
     @Autowired
     WebApplicationContext wac;
@@ -117,6 +121,21 @@ class BeerControllerIT {
                         .content(objectMapper.writeValueAsString(beerMap)))
                 .andExpect(status().isBadRequest());
 
+    }
+
+    @Test
+    void testPatchBeerBlankName() throws Exception {
+        Beer beer = beerRepository.findAll().getFirst();
+
+        // @NotBlank on the entity: an empty name is rejected instead of silently ignored
+        mockMvc.perform(patch(BeerController.BEER_PATH_ID, beer.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(jsonMapper.writeValueAsString(Map.of("beerName", " "))))
+                .andExpect(status().isBadRequest());
+
+        assertThat(beerRepository.findById(beer.getId()).orElseThrow().getBeerName())
+                .isEqualTo(beer.getBeerName());
     }
 
     @Test
