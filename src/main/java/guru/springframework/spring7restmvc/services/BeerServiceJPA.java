@@ -1,10 +1,10 @@
 package guru.springframework.spring7restmvc.services;
 
+import guru.springframework.spring7restmvc.entities.Beer;
 import guru.springframework.spring7restmvc.mappers.BeerMapper;
 import guru.springframework.spring7restmvc.model.BeerDTO;
 import guru.springframework.spring7restmvc.model.BeerStyle;
 import guru.springframework.spring7restmvc.repositories.BeerRepository;
-import guru.springframework.spring7restmvc.entities.Beer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 /**
  * Created by jt, Spring Framework Guru.
@@ -47,7 +46,7 @@ public class BeerServiceJPA implements BeerService {
 
         return beerList.stream()
                 .map(beerMapper::beerToBeerDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private List<Beer> listBeersByNameAndStyle(String beerName, BeerStyle beerStyle) {
@@ -85,9 +84,7 @@ public class BeerServiceJPA implements BeerService {
             foundBeer.setQuantityOnHand(beer.getQuantityOnHand());
             atomicReference.set(Optional.of(beerMapper
                     .beerToBeerDto(beerRepository.save(foundBeer))));
-        }, () -> {
-            atomicReference.set(Optional.empty());
-        });
+        }, () -> atomicReference.set(Optional.empty()));
 
         return atomicReference.get();
     }
@@ -123,9 +120,7 @@ public class BeerServiceJPA implements BeerService {
             }
             atomicReference.set(Optional.of(beerMapper
                     .beerToBeerDto(beerRepository.save(foundBeer))));
-        }, () -> {
-            atomicReference.set(Optional.empty());
-        });
+        }, () -> atomicReference.set(Optional.empty()));
 
         return atomicReference.get();
     }

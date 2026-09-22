@@ -4,6 +4,7 @@ import guru.springframework.spring7restmvc.repositories.BeerRepository;
 import guru.springframework.spring7restmvc.repositories.CustomerRepository;
 import guru.springframework.spring7restmvc.services.BeerCsvService;
 import guru.springframework.spring7restmvc.services.BeerCsvServiceImpl;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
@@ -15,6 +16,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Modified by Pierrot on 17-09-2026
  */
+
+@Slf4j
 @DataJpaTest
 @Import({BootstrapData.class, BeerCsvServiceImpl.class})
 class BootstrapDataTest {
@@ -31,17 +34,16 @@ class BootstrapDataTest {
     @Autowired
     BeerCsvService beerCsvService;
 
-    @Autowired
-    BootstrapData bootstrapData;
-
     @Test
     void testRun() {
         int csvRecords = beerCsvService.convertCSV(new ClassPathResource("csvdata/beers.csv")).size();
 
-        bootstrapData.run();
+        long beersInDB = beerRepository.count();
+        log.info("Data in the DB = {}", beersInDB);
+        log.info("Data in the CSV File = {}", csvRecords);
 
         // every CSV record becomes a beer, on top of the three written by hand
-        assertThat(beerRepository.count()).isEqualTo(HANDWRITTEN_ROWS + csvRecords);
+        assertThat(beersInDB).isEqualTo(HANDWRITTEN_ROWS + csvRecords);
         assertThat(customerRepository.count()).isEqualTo(HANDWRITTEN_ROWS);
     }
 }
