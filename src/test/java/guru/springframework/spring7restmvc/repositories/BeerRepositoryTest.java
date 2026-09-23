@@ -26,14 +26,13 @@ class BeerRepositoryTest {
 
     @Test
     void testGetBeerListByName() {
-        PageRequest pageRequest = PageRequest.of(0, 25);
-        List<Beer> list = beerRepository.findAllByBeerNameIsLikeIgnoreCase("%IPA%", pageRequest);
+        PageRequest firstPage = PageRequest.of(0, 25);
 
-        long expected = 25;
+        List<Beer> list = beerRepository.findAllByBeerNameIsLikeIgnoreCase("%IPA%", firstPage);
 
+        // far more than 25 beers carry IPA in their name, so the page comes back full
         assertThat(list)
-                .isNotEmpty()
-                .hasSize((int) expected)
+                .hasSize(firstPage.getPageSize())
                 .allSatisfy(beer -> assertThat(beer.getBeerName()).containsIgnoringCase("IPA"));
     }
 

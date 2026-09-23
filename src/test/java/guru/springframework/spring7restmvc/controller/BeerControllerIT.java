@@ -23,6 +23,11 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.hamcrest.Matchers.containsStringIgnoringCase;
+import static org.hamcrest.Matchers.everyItem;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -36,7 +41,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 class BeerControllerIT {
 
-    /** Beers per page, small enough that the search above fills several pages. */
+    /** What a request without paging parameters gets: {@code BeerServiceJPA.DEFAULT_PAGE_SIZE}. */
+    private static final int DEFAULT_PAGE_SIZE = 25;
+
+    /** Asked for explicitly where a test pages on purpose; different from the default above. */
     private static final int PAGE_SIZE = 50;
 
     @Autowired
@@ -55,9 +63,8 @@ class BeerControllerIT {
     MockMvc mockMvc;
 
     /**
-     * Written before the feature exists: the search returns 25
-     * beers, and asking for the second page of 50 must answer with 50 of them, not with all of them.
-     * Until the controller and the service read the two parameters, this test fails on the size.
+     * The search finds far more beers than one page holds, so asking for the second page of 50 must
+     * answer with exactly 50 of them - and with beers that match the search, not just any 50.
      */
     @Test
     void testListBeersByStyleAndNameShowInventoryTrue2() throws Exception {
@@ -69,7 +76,9 @@ class BeerControllerIT {
                         .queryParam("pageSize", String.valueOf(PAGE_SIZE)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.size()").value(PAGE_SIZE))
-                .andExpect(jsonPath("$.[0].quantityOnHand").isNotEmpty());
+                .andExpect(jsonPath("$..beerName", everyItem(containsStringIgnoringCase("IPA"))))
+                .andExpect(jsonPath("$..beerStyle", everyItem(is(BeerStyle.IPA.name()))))
+                .andExpect(jsonPath("$..quantityOnHand", everyItem(notNullValue())));
     }
 
     @Test
@@ -79,8 +88,10 @@ class BeerControllerIT {
                         .queryParam("beerStyle", BeerStyle.IPA.name())
                         .queryParam("showInventory", "true"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()").value(25))
-                .andExpect(jsonPath("$.[0].quantityOnHand").isNotEmpty());
+                .andExpect(jsonPath("$.size()").value(DEFAULT_PAGE_SIZE))
+                .andExpect(jsonPath("$..beerName", everyItem(containsStringIgnoringCase("IPA"))))
+                .andExpect(jsonPath("$..beerStyle", everyItem(is(BeerStyle.IPA.name()))))
+                .andExpect(jsonPath("$..quantityOnHand", everyItem(notNullValue())));
     }
 
     @Test
@@ -90,8 +101,11 @@ class BeerControllerIT {
                         .queryParam("beerStyle", BeerStyle.IPA.name())
                         .queryParam("showInventory", "false"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()").value(25))
-                .andExpect(jsonPath("$.[0].quantityOnHand").isEmpty());
+                .andExpect(jsonPath("$.size()").value(DEFAULT_PAGE_SIZE))
+                .andExpect(jsonPath("$..beerName", everyItem(containsStringIgnoringCase("IPA"))))
+                .andExpect(jsonPath("$..beerStyle", everyItem(is(BeerStyle.IPA.name()))))
+                // showInventory=false keeps the field but empties it
+                .andExpect(jsonPath("$..quantityOnHand", everyItem(nullValue())));
     }
 
     @Test
@@ -100,7 +114,9 @@ class BeerControllerIT {
                         .queryParam("beerName", "IPA")
                         .queryParam("beerStyle", BeerStyle.IPA.name()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()").value(25));
+                .andExpect(jsonPath("$.size()").value(DEFAULT_PAGE_SIZE))
+                .andExpect(jsonPath("$..beerName", everyItem(containsStringIgnoringCase("IPA"))))
+                .andExpect(jsonPath("$..beerStyle", everyItem(is(BeerStyle.IPA.name()))));
     }
 
     @Test
@@ -108,7 +124,8 @@ class BeerControllerIT {
         mockMvc.perform(get(BeerController.BEER_PATH)
                         .queryParam("beerStyle", BeerStyle.IPA.name()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()").value(25));
+                .andExpect(jsonPath("$.size()").value(DEFAULT_PAGE_SIZE))
+                .andExpect(jsonPath("$..beerStyle", everyItem(is(BeerStyle.IPA.name()))));
     }
 
     @Test
@@ -116,7 +133,8 @@ class BeerControllerIT {
         mockMvc.perform(get(BeerController.BEER_PATH)
                         .queryParam("beerName", "IPA"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()").value(25));
+                .andExpect(jsonPath("$.size()").value(DEFAULT_PAGE_SIZE))
+                .andExpect(jsonPath("$..beerName", everyItem(containsStringIgnoringCase("IPA"))));
     }
 
     @Test
@@ -237,7 +255,7 @@ class BeerControllerIT {
         List<BeerDTO> dtos = beerController.listBeers(null, null, false, null, null);
 
         // every CSV record becomes a beer, on top of the three written by hand
-        assertThat(dtos).hasSize(25);
+        assertThat(dtos).hasSize(DEFAULT_PAGE_SIZE);
     }
 
     @Transactional
