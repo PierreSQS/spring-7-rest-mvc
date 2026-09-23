@@ -42,22 +42,29 @@ assertion is `everyItem(nullValue())`. Found by running the tests, not by readin
 
 ---
 
-## 3. Open - the return type
+## 3. Applied - the return type
 
 | # | Improvement | Why | Status |
 |---|---|---|---|
-| 10 | `Page<Beer>` / `Page<BeerDTO>` instead of `List` along the whole chain | A `List` carries the rows of one page and nothing else. The client cannot learn that there are 336 matches over 14 pages, so it cannot render "page 2 of 14" or decide whether a next page exists. A `Page` carries `content`, `totalElements`, `totalPages`, `first`, `last` - Spring Data runs one extra counting query for it | ⏭ discussed, deliberately postponed |
+| 10 | `Page<Beer>` / `Page<BeerDTO>` instead of `List` along the whole chain | A `List` carries the rows of one page and nothing else. The client could not learn that there are 336 matches over 14 pages, so it could neither render "page 2 of 14" nor decide whether a next page exists. A `Page` carries `content`, `totalElements`, `totalPages`, `first`, `last` - Spring Data runs one extra counting query for it | ✅ |
 
 This is also where JT's lecture ends (`96-refactor-spring-data-methods`): repository, service and
-controller all return `Page`, and the tests move from `$.size()` to `$.content.size()`.
+controller all return `Page`.
 
-Two things depend on it:
+What it brought:
 
-- **The totals cannot be asserted today.** The constants `BEERS_NAMED_IPA` (336), `BEERS_OF_STYLE_IPA`
-  (572) and `BEERS_NAMED_IPA_OF_STYLE_IPA` (324) were removed when the counts became page sizes; with a
-  `Page` they come back as `$.totalElements` assertions, which prove the search far better than a page
-  size does.
-- **`BeerRepositoryTest` could prove both** at once: `getContent()` has 25 rows, `getTotalElements()` is 336.
+- **`BeerServiceJPA` maps in one call** - `beerPage.map(beerMapper::beerToBeerDto)` instead of a stream
+  and `toList()`, and the totals survive the mapping.
+- **The totals are asserted again.** `BEERS_NAMED_IPA` (336), `BEERS_OF_STYLE_IPA` (572) and
+  `BEERS_NAMED_IPA_OF_STYLE_IPA` (324) came back as `$.totalElements` assertions, so every search test
+  proves its whole result set and not just the size of one page.
+- **`BeerRepositoryTest` proves both** at once: `getContent()` holds 25 rows, `getTotalElements()` is 336.
+- **The three finder helpers of the service are `private`** now; two of them used to be `public`.
+
+The price is a **breaking change of the API**: the answer is no longer a bare array but an object with
+`content`, `totalElements`, `totalPages`, `number`, `size`, `first`, `last`. Every JSON path in the tests
+moved under `content`, and `BeerServiceImpl`, the map-based service kept for the controller tests, now
+wraps its sample beers in a `PageImpl`.
 
 ## 4. Open - other
 

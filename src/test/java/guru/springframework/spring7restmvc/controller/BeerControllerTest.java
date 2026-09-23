@@ -10,6 +10,7 @@ import org.mockito.Captor;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -194,13 +195,13 @@ class BeerControllerTest {
 
     @Test
     void testListBeers() throws Exception {
-        given(beerService.listBeers(any(), any(), any(), any(), any())).willReturn(getAllBeers());
+        given(beerService.listBeers(any(), any(), any(), any(), any())).willReturn(new PageImpl<>(getAllBeers()));
 
         mockMvc.perform(get(BeerController.BEER_PATH)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.length()").value(getAllBeers().size()));
+                .andExpect(jsonPath("$.content.length()").value(getAllBeers().size()));
     }
 
     @Test
@@ -227,7 +228,7 @@ class BeerControllerTest {
 
     /** The map-based service only supplies the sample DTOs here; the mocked {@link BeerService} answers. */
     private List<BeerDTO> getAllBeers() {
-        return beerServiceImpl.listBeers(null, null, false, null, null);
+        return beerServiceImpl.listBeers(null, null, false, null, null).getContent();
     }
 
     private BeerDTO getFirstBeer() {

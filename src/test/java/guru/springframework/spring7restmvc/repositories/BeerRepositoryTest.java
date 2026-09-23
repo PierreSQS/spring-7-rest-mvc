@@ -9,10 +9,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -21,6 +21,9 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 @Import({BootstrapData.class, BeerCsvServiceImpl.class})
 class BeerRepositoryTest {
 
+    /** Beers carrying IPA in their name, in the seeded data. */
+    private static final int BEERS_NAMED_IPA = 336;
+
     @Autowired
     BeerRepository beerRepository;
 
@@ -28,12 +31,13 @@ class BeerRepositoryTest {
     void testGetBeerListByName() {
         PageRequest firstPage = PageRequest.of(0, 25);
 
-        List<Beer> list = beerRepository.findAllByBeerNameIsLikeIgnoreCase("%IPA%", firstPage);
+        Page<Beer> page = beerRepository.findAllByBeerNameIsLikeIgnoreCase("%IPA%", firstPage);
 
-        // far more than 25 beers carry IPA in their name, so the page comes back full
-        assertThat(list)
+        // the page comes back full, and it also reports how many beers match in total
+        assertThat(page.getContent())
                 .hasSize(firstPage.getPageSize())
                 .allSatisfy(beer -> assertThat(beer.getBeerName()).containsIgnoringCase("IPA"));
+        assertThat(page.getTotalElements()).isEqualTo(BEERS_NAMED_IPA);
     }
 
     @Test
