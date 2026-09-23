@@ -23,11 +23,14 @@ import java.util.UUID;
 @Primary
 @RequiredArgsConstructor
 public class BeerServiceJPA implements BeerService {
-    private final BeerRepository beerRepository;
-    private final BeerMapper beerMapper;
-
     private static final int DEFAULT_PAGE = 0;
     private static final int DEFAULT_PAGE_SIZE = 25;
+
+    /** A client must not be able to pull the whole table in one request. */
+    private static final int MAX_PAGE_SIZE = 1000;
+
+    private final BeerRepository beerRepository;
+    private final BeerMapper beerMapper;
 
     @Override
     public List<BeerDTO> listBeers(String beerName, BeerStyle beerStyle, Boolean showInventory,
@@ -56,25 +59,19 @@ public class BeerServiceJPA implements BeerService {
                 .toList();
     }
 
-    public PageRequest buildPageRequest(Integer pageNumber, Integer pageSize) {
-        int queryPageNumber;
-        int queryPageSize;
+    /**
+     * Turns the paging parameters of a request into Spring Data's {@link PageRequest}. The API counts
+     * pages from 1, Spring Data from 0, hence the shift. A missing or nonsensical value falls back to
+     * the default, so a request can never make {@code PageRequest.of} throw.
+     */
+    PageRequest buildPageRequest(Integer pageNumber, Integer pageSize) {
+        int queryPageNumber = pageNumber != null && pageNumber > 0
+                ? pageNumber - 1
+                : DEFAULT_PAGE;
 
-        if (pageNumber != null && pageNumber > 0) {
-            queryPageNumber = pageNumber - 1;
-        } else {
-            queryPageNumber = DEFAULT_PAGE;
-        }
-
-        if (pageSize == null) {
-            queryPageSize = DEFAULT_PAGE_SIZE;
-        } else {
-            if (pageSize > 1000) {
-                queryPageSize = 1000;
-            } else {
-                queryPageSize = pageSize;
-            }
-        }
+        int queryPageSize = pageSize != null && pageSize > 0
+                ? Math.min(pageSize, MAX_PAGE_SIZE)
+                : DEFAULT_PAGE_SIZE;
 
         return PageRequest.of(queryPageNumber, queryPageSize);
     }
