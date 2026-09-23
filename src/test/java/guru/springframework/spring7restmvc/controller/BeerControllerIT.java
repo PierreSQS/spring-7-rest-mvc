@@ -85,7 +85,7 @@ class BeerControllerIT {
                         .queryParam("pageSize", String.valueOf(PAGE_SIZE)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.size()").value(PAGE_SIZE))
-                .andExpect(jsonPath("$.totalElements").value(BEERS_NAMED_IPA_OF_STYLE_IPA))
+                .andExpect(jsonPath("$.page.totalElements").value(BEERS_NAMED_IPA_OF_STYLE_IPA))
                 .andExpect(jsonPath("$.content..beerName", everyItem(containsStringIgnoringCase("IPA"))))
                 .andExpect(jsonPath("$.content..beerStyle", everyItem(is(BeerStyle.IPA.name()))))
                 .andExpect(jsonPath("$.content..quantityOnHand", everyItem(notNullValue())));
@@ -99,7 +99,7 @@ class BeerControllerIT {
                         .queryParam("showInventory", "true"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.size()").value(DEFAULT_PAGE_SIZE))
-                .andExpect(jsonPath("$.totalElements").value(BEERS_NAMED_IPA_OF_STYLE_IPA))
+                .andExpect(jsonPath("$.page.totalElements").value(BEERS_NAMED_IPA_OF_STYLE_IPA))
                 .andExpect(jsonPath("$.content..beerName", everyItem(containsStringIgnoringCase("IPA"))))
                 .andExpect(jsonPath("$.content..beerStyle", everyItem(is(BeerStyle.IPA.name()))))
                 .andExpect(jsonPath("$.content..quantityOnHand", everyItem(notNullValue())));
@@ -113,7 +113,7 @@ class BeerControllerIT {
                         .queryParam("showInventory", "false"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.size()").value(DEFAULT_PAGE_SIZE))
-                .andExpect(jsonPath("$.totalElements").value(BEERS_NAMED_IPA_OF_STYLE_IPA))
+                .andExpect(jsonPath("$.page.totalElements").value(BEERS_NAMED_IPA_OF_STYLE_IPA))
                 .andExpect(jsonPath("$.content..beerName", everyItem(containsStringIgnoringCase("IPA"))))
                 .andExpect(jsonPath("$.content..beerStyle", everyItem(is(BeerStyle.IPA.name()))))
                 // showInventory=false keeps the field but empties it
@@ -127,7 +127,7 @@ class BeerControllerIT {
                         .queryParam("beerStyle", BeerStyle.IPA.name()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.size()").value(DEFAULT_PAGE_SIZE))
-                .andExpect(jsonPath("$.totalElements").value(BEERS_NAMED_IPA_OF_STYLE_IPA))
+                .andExpect(jsonPath("$.page.totalElements").value(BEERS_NAMED_IPA_OF_STYLE_IPA))
                 .andExpect(jsonPath("$.content..beerName", everyItem(containsStringIgnoringCase("IPA"))))
                 .andExpect(jsonPath("$.content..beerStyle", everyItem(is(BeerStyle.IPA.name()))));
     }
@@ -138,7 +138,7 @@ class BeerControllerIT {
                         .queryParam("beerStyle", BeerStyle.IPA.name()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.size()").value(DEFAULT_PAGE_SIZE))
-                .andExpect(jsonPath("$.totalElements").value(BEERS_OF_STYLE_IPA))
+                .andExpect(jsonPath("$.page.totalElements").value(BEERS_OF_STYLE_IPA))
                 .andExpect(jsonPath("$.content..beerStyle", everyItem(is(BeerStyle.IPA.name()))));
     }
 
@@ -148,7 +148,7 @@ class BeerControllerIT {
                         .queryParam("beerName", "IPA"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.size()").value(DEFAULT_PAGE_SIZE))
-                .andExpect(jsonPath("$.totalElements").value(BEERS_NAMED_IPA))
+                .andExpect(jsonPath("$.page.totalElements").value(BEERS_NAMED_IPA))
                 .andExpect(jsonPath("$.content..beerName", everyItem(containsStringIgnoringCase("IPA"))));
     }
 
