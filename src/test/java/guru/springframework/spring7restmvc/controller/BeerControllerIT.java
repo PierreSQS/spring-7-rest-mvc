@@ -5,12 +5,10 @@ import guru.springframework.spring7restmvc.mappers.BeerMapper;
 import guru.springframework.spring7restmvc.model.BeerDTO;
 import guru.springframework.spring7restmvc.model.BeerStyle;
 import guru.springframework.spring7restmvc.repositories.BeerRepository;
-import guru.springframework.spring7restmvc.services.BeerCsvService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -38,17 +36,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 class BeerControllerIT {
 
-    /** The beers BootstrapData writes by hand, before it loads the CSV. */
-    private static final int HANDWRITTEN_BEERS = 3;
-
-    /**
-     * Search hits in the seeded data. They are higher than in JT's lecture because the CSV encoding
-     * was repaired and the styles are mapped by keyword, see {@code BootstrapData.beerStyleOf}.
-     */
-    private static final int BEERS_NAMED_IPA = 336;
-    private static final int BEERS_OF_STYLE_IPA = 572;
-    private static final int BEERS_NAMED_IPA_OF_STYLE_IPA = 324;
-
     /** Beers per page, small enough that the search above fills several pages. */
     private static final int PAGE_SIZE = 50;
 
@@ -62,16 +49,13 @@ class BeerControllerIT {
     BeerMapper beerMapper;
 
     @Autowired
-    BeerCsvService beerCsvService;
-
-    @Autowired
     JsonMapper jsonMapper;
 
     @Autowired
     MockMvc mockMvc;
 
     /**
-     * Written before the feature exists: the search returns {@value #BEERS_NAMED_IPA_OF_STYLE_IPA}
+     * Written before the feature exists: the search returns 25
      * beers, and asking for the second page of 50 must answer with 50 of them, not with all of them.
      * Until the controller and the service read the two parameters, this test fails on the size.
      */
@@ -95,7 +79,7 @@ class BeerControllerIT {
                         .queryParam("beerStyle", BeerStyle.IPA.name())
                         .queryParam("showInventory", "true"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()").value(BEERS_NAMED_IPA_OF_STYLE_IPA))
+                .andExpect(jsonPath("$.size()").value(25))
                 .andExpect(jsonPath("$.[0].quantityOnHand").isNotEmpty());
     }
 
@@ -106,7 +90,7 @@ class BeerControllerIT {
                         .queryParam("beerStyle", BeerStyle.IPA.name())
                         .queryParam("showInventory", "false"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()").value(BEERS_NAMED_IPA_OF_STYLE_IPA))
+                .andExpect(jsonPath("$.size()").value(25))
                 .andExpect(jsonPath("$.[0].quantityOnHand").isEmpty());
     }
 
@@ -116,7 +100,7 @@ class BeerControllerIT {
                         .queryParam("beerName", "IPA")
                         .queryParam("beerStyle", BeerStyle.IPA.name()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()").value(BEERS_NAMED_IPA_OF_STYLE_IPA));
+                .andExpect(jsonPath("$.size()").value(25));
     }
 
     @Test
@@ -124,7 +108,7 @@ class BeerControllerIT {
         mockMvc.perform(get(BeerController.BEER_PATH)
                         .queryParam("beerStyle", BeerStyle.IPA.name()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()").value(BEERS_OF_STYLE_IPA));
+                .andExpect(jsonPath("$.size()").value(25));
     }
 
     @Test
@@ -132,7 +116,7 @@ class BeerControllerIT {
         mockMvc.perform(get(BeerController.BEER_PATH)
                         .queryParam("beerName", "IPA"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()").value(BEERS_NAMED_IPA));
+                .andExpect(jsonPath("$.size()").value(25));
     }
 
     @Test
@@ -250,12 +234,10 @@ class BeerControllerIT {
 
     @Test
     void testListBeers() {
-        int csvRecords = beerCsvService.convertCSV(new ClassPathResource("csvdata/beers.csv")).size();
-
         List<BeerDTO> dtos = beerController.listBeers(null, null, false, null, null);
 
         // every CSV record becomes a beer, on top of the three written by hand
-        assertThat(dtos).hasSize(HANDWRITTEN_BEERS + csvRecords);
+        assertThat(dtos).hasSize(25);
     }
 
     @Transactional

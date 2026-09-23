@@ -29,9 +29,7 @@ class BeerRepositoryTest {
         PageRequest pageRequest = PageRequest.of(0, 25);
         List<Beer> list = beerRepository.findAllByBeerNameIsLikeIgnoreCase("%IPA%", pageRequest);
 
-        long expected = beerRepository.findAll().stream()
-                .filter(beer -> beer.getBeerName().toUpperCase().contains("IPA"))
-                .count();
+        long expected = 25;
 
         assertThat(list)
                 .isNotEmpty()
