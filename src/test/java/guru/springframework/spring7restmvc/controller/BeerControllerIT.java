@@ -49,6 +49,9 @@ class BeerControllerIT {
     private static final int BEERS_OF_STYLE_IPA = 572;
     private static final int BEERS_NAMED_IPA_OF_STYLE_IPA = 324;
 
+    /** Beers per page, small enough that the search above fills several pages. */
+    private static final int PAGE_SIZE = 50;
+
     @Autowired
     BeerController beerController;
 
@@ -66,6 +69,24 @@ class BeerControllerIT {
 
     @Autowired
     MockMvc mockMvc;
+
+    /**
+     * Written before the feature exists: the search returns {@value #BEERS_NAMED_IPA_OF_STYLE_IPA}
+     * beers, and asking for the second page of 50 must answer with 50 of them, not with all of them.
+     * Until the controller and the service read the two parameters, this test fails on the size.
+     */
+    @Test
+    void testListBeersByStyleAndNameShowInventoryTrue2() throws Exception {
+        mockMvc.perform(get(BeerController.BEER_PATH)
+                        .queryParam("beerName", "IPA")
+                        .queryParam("beerStyle", BeerStyle.IPA.name())
+                        .queryParam("showInventory", "true")
+                        .queryParam("pageNumber", "2")
+                        .queryParam("pageSize", String.valueOf(PAGE_SIZE)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size()").value(PAGE_SIZE))
+                .andExpect(jsonPath("$.[0].quantityOnHand").isNotEmpty());
+    }
 
     @Test
     void testListBeersByStyleAndNameShowInventoryTrue() throws Exception {
@@ -231,7 +252,7 @@ class BeerControllerIT {
     void testListBeers() {
         int csvRecords = beerCsvService.convertCSV(new ClassPathResource("csvdata/beers.csv")).size();
 
-        List<BeerDTO> dtos = beerController.listBeers(null, null, false);
+        List<BeerDTO> dtos = beerController.listBeers(null, null, false, null, null);
 
         // every CSV record becomes a beer, on top of the three written by hand
         assertThat(dtos).hasSize(HANDWRITTEN_BEERS + csvRecords);
@@ -241,7 +262,7 @@ class BeerControllerIT {
     @Test
     void testEmptyList() {
         beerRepository.deleteAll();
-        List<BeerDTO> dtos = beerController.listBeers(null, null, false);
+        List<BeerDTO> dtos = beerController.listBeers(null, null, false, null, null);
 
         assertThat(dtos).isEmpty();
     }
