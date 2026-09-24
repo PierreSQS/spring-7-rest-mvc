@@ -77,7 +77,7 @@ controller -> services -> repositories -> entities
 
 **Paging and sorting** (`BeerServiceJPA.buildPageRequest`): the API counts pages from **1**, Spring Data from 0. Without parameters a request gets page 1 with **25** beers; `pageSize` is capped at **1000**; a `pageNumber` or `pageSize` below 1 is treated as missing, so `PageRequest.of` can never throw. Every page is sorted by `beerName` ascending, which keeps a beer from landing on two pages. `showInventory=false` empties `quantityOnHand` **on the DTOs**, never on the entities - see `docs/service-layer-boundaries.md`.
 
-**Persistence:** keep `@Version` for optimistic locking. Let `@CreationTimestamp` and `@UpdateTimestamp` populate `createdDate` and `updateDate`; do not assign them manually. Open-in-view is disabled; the model has no lazy associations.
+**Persistence:** keep `@Version` for optimistic locking. Let `@CreationTimestamp` and `@UpdateTimestamp` populate `createdDate` and `updateDate`; do not assign them manually. Open-in-view is disabled; the model has no lazy associations. Every table names its columns `created_date`, `update_date` and `version integer` - including `beer_order` and `beer_order_line` (`V3`), where JT uses `last_modified_date` and `version bigint`; map their entities to `updateDate` and `Integer version`, not to his `lastModifiedDate` / `Long`.
 
 **Annotation processing:** `pom.xml` registers Lombok, lombok-mapstruct-binding and mapstruct-processor for `default-compile`. MapStruct's version is pinned explicitly because Boot does not manage it.
 
@@ -99,7 +99,7 @@ controller -> services -> repositories -> entities
 | Environment | Database / connection | Schema management | Configuration |
 |---|---|---|---|
 | Default application and H2 tests | In-memory H2; Compose disabled via `spring.docker.compose.enabled=false` (it is on by default once `spring-boot-docker-compose` is on the classpath, and this line applies to every profile that does not override it) | Hibernate generates schema; Flyway off | `src/main/resources/application.properties` |
-| `localmysql` with Compose | `mysql:9.5` (pinned, not `latest`), host port **3308**, container `mysql-spring7-rest-sec13-chap145`, database `jt_spring7_rest_sec13_chap145_db` | Flyway on; `ddl-auto=validate` | `application-localmysql.properties` (`spring.docker.compose.enabled=true`) and `compose.yaml` |
+| `localmysql` with Compose | `mysql:9.5` (pinned, not `latest`), host port **3308**, container `mysql-spring7-rest-sec17-assn20`, database `jt_spring7_rest_sec17_assn20_db` | Flyway on; `ddl-auto=validate` | `application-localmysql.properties` (`spring.docker.compose.enabled=true`) and `compose.yaml` |
 | `testcontainers` (tests only) | Shared `mysql:9.5` container; connection supplied by `@ServiceConnection` | Flyway on; `ddl-auto=validate` | `src/test/resources/application-testcontainers.properties` |
 
 The `localmysql` profile declares **no** `spring.datasource.*` of its own: url, user and password all come from Compose, so the profile only works with Compose enabled. It does configure a Hikari pool named `RestDB-Pool` (max 5 connections) and logs formatted SQL with its bind values.
@@ -112,9 +112,9 @@ The `localmysql` profile declares **no** `spring.datasource.*` of its own: url, 
 
 | Detail | Behavior |
 |---|---|
-| Project isolation | Keep the Compose project name `spring-7-rest-mvc-sb411` and the fixed `container_name` `mysql-spring7-rest-sec13-chap145`: both name this lecture, so Docker cannot mix the container up with one from another lesson. |
+| Project isolation | Keep the Compose project name `spring-7-rest-mvc-sb411-sec17-assn20` and the fixed `container_name` `mysql-spring7-rest-sec17-assn20`: both name this lecture, so Docker cannot mix the container up with one from another lesson. The project name matters most: when a container of the same project is already running, Boot skips `docker compose up` and connects to it, whatever its database. Rename project, container, volume and database together when a lecture gets its own database. |
 | Graceful shutdown | `spring.docker.compose.stop.command=down` with `stop.arguments=-v` makes Boot run `docker compose down -v`, removing the container, network and the named data volume. The next start migrates and seeds a fresh database. |
-| Forced termination | No shutdown hook runs; the container and its data remain. The data directory is the **named** volume `mysql-spring7-rest-sec13-chap145-data` (declared in `compose.yaml` with an explicit `name:`, so Compose adds no project prefix), so a leftover can be inspected or removed by name instead of being an anonymous hash. |
+| Forced termination | No shutdown hook runs; the container and its data remain. The data directory is the **named** volume `mysql-spring7-rest-sec17-assn20-data` (declared in `compose.yaml` with an explicit `name:`, so Compose adds no project prefix), so a leftover can be inspected or removed by name instead of being an anonymous hash. |
 | Changed credentials or database name | MySQL initialization variables only affect an empty volume. To reinitialize, remove the old container and volume with `docker compose down -v`; this deletes its data. |
 
 ### Standalone MySQL (legacy, no longer wired up)

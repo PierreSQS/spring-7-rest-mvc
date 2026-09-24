@@ -1,13 +1,13 @@
 # own Compose project name, so Docker never mixes this lecture's container up with other
 # containers of the 'spring-7-rest-mvc' project (the default name is the folder name)
-name: 'spring-7-rest-mvc-sb411'
+name: 'spring-7-rest-mvc-sb411-sec17-assn20'
 
 services:
   mysql:
-    container_name: 'mysql-spring7-rest-sec13-chap145'
+    container_name: 'mysql-spring7-rest-sec17-assn20'
     image: 'mysql:9.5'
     environment:
-      - 'MYSQL_DATABASE=jt_spring7_rest_sec13_chap145_db'
+      - 'MYSQL_DATABASE=jt_spring7_rest_sec17_assn20_db'
       # username and passwords live in the .env file next to this one, which is not in Git
       # (see .env.example); ':?' makes Compose fail with that message instead of starting MySQL
       # without a password
@@ -22,9 +22,9 @@ services:
       # shutdown ('docker compose down -v'), so this is not about keeping data: it is about the
       # case where the app is killed instead of stopped. The leftover is then a volume with a
       # name that can be inspected or removed, not an anonymous hash nothing points to.
-      - 'mysql-spring7-rest-sec13-chap145-data:/var/lib/mysql'
+      - 'mysql-spring7-rest-sec17-assn20-data:/var/lib/mysql'
 
 volumes:
-  mysql-spring7-rest-sec13-chap145-data:
-    # without this, Compose would prefix the project name: 'spring-7-rest-mvc-sb411_mysql-...'
-    name: 'mysql-spring7-rest-sec13-chap145-data'
+  mysql-spring7-rest-sec17-assn20-data:
+    # without this, Compose would prefix the project name: 'spring-7-rest-mvc-sb411-sec17-assn20_mysql-...'
+    name: 'mysql-spring7-rest-sec17-assn20-data'
