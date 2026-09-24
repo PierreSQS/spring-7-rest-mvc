@@ -6,6 +6,7 @@ import guru.springframework.spring7restmvc.repositories.CustomerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -40,6 +41,7 @@ public class CustomerServiceJPA implements CustomerService {
                 .save(customerMapper.customerDtoToCustomer(customer)));
     }
 
+    @Transactional
     @Override
     public Optional<CustomerDTO> updateCustomerById(UUID customerId, CustomerDTO customer) {
         return customerRepository.findById(customerId).map(foundCustomer -> {
@@ -58,6 +60,7 @@ public class CustomerServiceJPA implements CustomerService {
         return false;
     }
 
+    @Transactional
     @Override
     public Optional<CustomerDTO> patchCustomerById(UUID customerId, CustomerDTO customer) {
         return customerRepository.findById(customerId).map(foundCustomer -> {

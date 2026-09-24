@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -272,6 +273,28 @@ class BeerControllerIT {
         // one page of the default size, and the page knows how many beers exist in total
         assertThat(page.getContent()).hasSize(DEFAULT_PAGE_SIZE);
         assertThat(page.getTotalElements()).isEqualTo(beerRepository.count());
+    }
+
+    /**
+     * The stock is hidden on the DTOs the client gets, never on the entities. This test runs inside a
+     * transaction, so the beers stay managed: were the field emptied on them, Hibernate would take it
+     * for a change and write the nulls to the database.
+     */
+    @Transactional
+    @Test
+    void testListBeersWithoutInventoryKeepsTheStockInTheDatabase() {
+        Page<BeerDTO> page = beerController.listBeers(null, null, false, null, null);
+
+        assertThat(page.getContent())
+                .isNotEmpty()
+                .allSatisfy(dto -> assertThat(dto.getQuantityOnHand()).isNull());
+
+        List<UUID> shownBeers = page.getContent().stream().map(BeerDTO::getId).toList();
+        beerRepository.flush();
+
+        assertThat(beerRepository.findAllById(shownBeers))
+                .hasSameSizeAs(shownBeers)
+                .allSatisfy(beer -> assertThat(beer.getQuantityOnHand()).isNotNull());
     }
 
     @Transactional

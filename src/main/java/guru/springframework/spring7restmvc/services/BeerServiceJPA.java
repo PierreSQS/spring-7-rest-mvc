@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.Optional;
@@ -51,12 +52,16 @@ public class BeerServiceJPA implements BeerService {
             beerPage = beerRepository.findAll(pageRequest);
         }
 
+        // a Page maps its content and keeps the totals, so the client learns how many pages exist
+        Page<BeerDTO> beerDtoPage = beerPage.map(beerMapper::beerToBeerDto);
+
+        // hide the stock on the copies the client gets, never on the entities: inside a transaction
+        // Hibernate would take the emptied field for a change and write the nulls to the database
         if (showInventory != null && !showInventory) {
-            beerPage.forEach(beer -> beer.setQuantityOnHand(null));
+            beerDtoPage.forEach(beerDto -> beerDto.setQuantityOnHand(null));
         }
 
-        // a Page maps its content and keeps the totals, so the client learns how many pages exist
-        return beerPage.map(beerMapper::beerToBeerDto);
+        return beerDtoPage;
     }
 
     /**
@@ -98,6 +103,7 @@ public class BeerServiceJPA implements BeerService {
         return beerMapper.beerToBeerDto(beerRepository.save(beerMapper.beerDtoToBeer(beer)));
     }
 
+    @Transactional
     @Override
     public Optional<BeerDTO> updateBeerById(UUID beerId, BeerDTO beer) {
         return beerRepository.findById(beerId).map(foundBeer -> {
@@ -119,6 +125,7 @@ public class BeerServiceJPA implements BeerService {
         return false;
     }
 
+    @Transactional
     @Override
     public Optional<BeerDTO> patchBeerById(UUID beerId, BeerDTO beer) {
         return beerRepository.findById(beerId).map(foundBeer -> {

@@ -61,7 +61,7 @@ There is no `spring.datasource.url`, `username` or `password`. The container sta
 
 `localmysql` is for running the application on **this PC's own MySQL**: it holds port `3307`, the `restadmin` user and very noisy SQL/bind-value logging. A container test needs none of that - only "Flyway on, check the tables". Borrowing `localmysql` also meant that changing it for local work would silently change the tests.
 
-JT's course code uses `@ActiveProfiles("localmysql")` in the test; the switch to a dedicated profile was improvement #10 in Sec13_Chap142 - see `docs/78.3-using-dynamic-properties-improvements.md` for that discussion.
+JT's course code uses `@ActiveProfiles("localmysql")` in the test; the switch to a dedicated profile was improvement #10 in Sec13_Chap142 - see `docs/sec13-chap142-dynamic-properties-improvements.md` for that discussion.
 
 ## In one sentence
 

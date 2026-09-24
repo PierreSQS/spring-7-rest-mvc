@@ -27,7 +27,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * Modified by Pierrot on 22-09-2026
+ * Modified by Pierrot on 24-09-2026
  */
 @ExtendWith(MockitoExtension.class)
 @WebMvcTest(CustomerController.class)
@@ -115,6 +115,43 @@ class CustomerControllerTest {
         verify(customerService).updateCustomerById(uuidArgumentCaptor.capture(), any(CustomerDTO.class));
 
         assertThat(uuidArgumentCaptor.getValue()).isEqualTo(customer.getId());
+    }
+
+    @Test
+    void testUpdateCustomerBlankName() throws Exception {
+        CustomerDTO customer = customerServiceImpl.getAllCustomers().getFirst();
+        customer.setName(" ");
+
+        mockMvc.perform(put(CustomerController.CUSTOMER_PATH_ID, customer.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(jsonMapper.writeValueAsString(customer)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.length()").value(1));
+    }
+
+    @Test
+    void testCreateCustomerBlankName() throws Exception {
+        CustomerDTO customer = CustomerDTO.builder().email("blank.name@example.com").build();
+
+        mockMvc.perform(post(CustomerController.CUSTOMER_PATH)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(jsonMapper.writeValueAsString(customer)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.length()").value(1));
+    }
+
+    @Test
+    void testCreateCustomerInvalidEmail() throws Exception {
+        CustomerDTO customer = CustomerDTO.builder().name("Customer 4").email("not-an-email").build();
+
+        mockMvc.perform(post(CustomerController.CUSTOMER_PATH)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(jsonMapper.writeValueAsString(customer)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.length()").value(1));
     }
 
     @Test
