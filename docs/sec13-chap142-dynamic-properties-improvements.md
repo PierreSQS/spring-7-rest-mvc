@@ -1,5 +1,9 @@
 # Section 13, Chapter 142 (`Sec13_Chap142`): possible improvements
 
+> **Snapshot.** This page reviews one lesson and describes the code as it stood then. Later sections
+> changed some of it. For how the project behaves **today**, see `CLAUDE.md` and the topic pages such as
+> `service-layer-boundaries.md`.
+
 This lecture adds `repositories/MySqlTest`: a `@SpringBootTest` that starts a MySQL container with Testcontainers and points the Spring datasource at it with `@DynamicPropertySource`. JT's code for it is on his branch `78.3-using-dynamic-properties`.
 
 Versions compared: JT's upstream branch uses **Spring Boot 4.0.6**, this project **Spring Boot 4.1.1**. Both resolve **Testcontainers 2.0.5**, so most differences come from Testcontainers 2.x itself, not from the Boot versions.

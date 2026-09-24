@@ -1,5 +1,9 @@
 # Section 14 (CSV) - possible improvements
 
+> **Snapshot.** This page reviews one lesson and describes the code as it stood then. Later sections
+> changed some of it. For how the project behaves **today**, see `CLAUDE.md` and the topic pages such as
+> `service-layer-boundaries.md`.
+
 Written at the end of the CSV lesson, **Section 14, chapters 147-153** (JT's branches `79-beer-csv-data`
 to `85-beer-csv-fix-integration-tests`). Chapter 152 and JT's branch `84-hibernate-create-update-timestamp`
 were skipped: `@CreationTimestamp` and `@UpdateTimestamp` were already on `Beer` from an earlier lesson.

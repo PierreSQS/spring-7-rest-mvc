@@ -18,6 +18,22 @@ A beer and customer REST API built alongside John Thompson's **Spring Framework 
 | Branches | One per lesson (e.g. `78-fly-add-column`), merged forward into the next |
 | Commits | Include the course section: `Sec11_Chap124-XX: ...` |
 
+### Documentation
+
+| Kind | Naming | Rule |
+|---|---|---|
+| Lesson review | `secNN[-chapNNN]-<topic>-improvements.md` | A snapshot of one lecture: what JT did, what this project changed and why. It is **history**; it is not updated when later sections move on, and it says so at the top. |
+| Topic page | `<topic>.md`, e.g. `service-layer-boundaries.md` | Explains a mechanism that outlives the lecture. Must describe the code as it is **today**. |
+
+Never name a document after JT's branch index - it is his numbering, not the chapter number.
+
+**When a change contradicts something a topic page or this guide states, correct it in the same commit.**
+Both were found stale on 2026-09-24: `CLAUDE.md` still claimed the bootstrap seeded 3 beers, five months
+of lessons after it stopped doing so.
+
+**Older lesson branches carry older copies of these files.** They are frozen and describe the code they
+contain, so they are deliberately not back-ported; read the newest branch for current truth.
+
 ---
 
 ## 2. Build, test and run
@@ -55,9 +71,11 @@ controller -> services -> repositories -> entities
 | `model` | API contracts: `BeerDTO`, `CustomerDTO` | Keep the Bean Validation annotations, and the constructor annotations Jackson 3 needs (see section 6). |
 | `entities` | JPA models with persistence constraints | Use `@UuidGenerator` and `@JdbcTypeCode(SqlTypes.VARCHAR)` for UUIDs stored as `varchar(36)`. Store `BeerStyle` as `SMALLINT`, matching migrations. |
 | `mappers` | MapStruct entity/DTO conversion | Generated mappers are Spring beans through `-Amapstruct.defaultComponentModel=spring`. |
-| `repositories` | Spring Data JPA repositories | `BeerRepository`, `CustomerRepository`; plain `JpaRepository` interfaces, no custom implementations. |
+| `repositories` | Spring Data JPA repositories | `BeerRepository`, `CustomerRepository`; plain `JpaRepository` interfaces, no custom implementations. The three beer finders take a `Pageable` and return `Page<Beer>`. |
 | `services` | Resource operations | `*ServiceJPA` is `@Primary`. Keep the earlier map-based `*ServiceImpl` beans: controller tests also instantiate them for sample DTOs. |
-| `bootstrap` | Initial data via `BootstrapData` | The `CommandLineRunner` seeds 3 beers and 3 customers when their tables are empty. |
+| `bootstrap` | Initial data via `BootstrapData` | The `CommandLineRunner` seeds 3 hand-written beers, then every row of `csvdata/beers.csv` (**2413 beers** in total), and 3 customers. It skips the beers when the table already holds 10 or more, and the customers when the table is not empty. |
+
+**Paging and sorting** (`BeerServiceJPA.buildPageRequest`): the API counts pages from **1**, Spring Data from 0. Without parameters a request gets page 1 with **25** beers; `pageSize` is capped at **1000**; a `pageNumber` or `pageSize` below 1 is treated as missing, so `PageRequest.of` can never throw. Every page is sorted by `beerName` ascending, which keeps a beer from landing on two pages. `showInventory=false` empties `quantityOnHand` **on the DTOs**, never on the entities - see `docs/service-layer-boundaries.md`.
 
 **Persistence:** keep `@Version` for optimistic locking. Let `@CreationTimestamp` and `@UpdateTimestamp` populate `createdDate` and `updateDate`; do not assign them manually. Open-in-view is disabled; the model has no lazy associations.
 
@@ -67,6 +85,7 @@ controller -> services -> repositories -> entities
 
 | Outcome | Response |
 |---|---|
+| `GET` on a list | a page object: `content` plus `size`, `number`, `totalElements`, `totalPages` under `page` (`@EnableSpringDataWebSupport(pageSerializationMode = VIA_DTO)` on the application class) |
 | Successful POST | `201` with a `Location` header |
 | Successful PUT / PATCH / DELETE | `204` |
 | Missing entity | `NotFoundException`, annotated with `@ResponseStatus(404)` |
@@ -118,11 +137,13 @@ Store migrations in `src/main/resources/db/migration` using `V<n>__description.s
 |---|---|---|---|
 | `*ControllerTest` | `@WebMvcTest` with `@MockitoBean` services | Surefire (`test`) | No |
 | `*RepositoryTest`, `BootstrapDataTest` | `@DataJpaTest` | Surefire (`test`) | No |
-| `*ControllerIT` | `@SpringBootTest` with H2, controllers called directly; `BeerControllerIT` adds `@AutoConfigureMockMvc`. Data-changing tests are `@Transactional` | Failsafe (`verify`) | No |
+| `*ControllerIT` | `@SpringBootTest` with H2 and `@AutoConfigureMockMvc`; both call the controller directly where that is simpler and through `MockMvc` where the JSON matters. Data-changing tests are `@Transactional` | Failsafe (`verify`) | No |
 | `Spring7RestMvcApplicationTests` | `@SpringBootTest` context check | Surefire (`test`) | No |
 | `MySqlIT` | `@DataJpaTest`, extends `MySqlContainerBase` | Failsafe (`verify`) | Yes |
 
-Surefire selects `*Test` / `*Tests`; Failsafe selects `*IT`. `verify` runs unit tests first, then `BeerControllerIT`, `CustomerControllerIT` and `MySqlIT`. Controller integration tests depend on seed data: `testListBeers` expects exactly **3 beers**.
+Surefire selects `*Test` / `*Tests`; Failsafe selects `*IT`. `verify` runs unit tests first, then `BeerControllerIT`, `CustomerControllerIT` and `MySqlIT`.
+
+The controller integration tests depend on the seeded data, but never on a hard-coded total: `testListBeers` compares the page's `totalElements` with `beerRepository.count()`, and `BootstrapDataTest` derives its count from the parsed CSV. The search counts **are** fixed constants - 336 beers named `IPA`, 572 of style `IPA`, 324 both - so a change to `beers.csv` or to `BootstrapData.beerStyleOf` makes `BeerControllerIT` fail on purpose.
 
 ### MySQL integration tests
 
