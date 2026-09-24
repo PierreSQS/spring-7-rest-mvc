@@ -1,11 +1,14 @@
 package guru.springframework.spring7restmvc.services;
 
+import guru.springframework.spring7restmvc.entities.Beer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 
 /**
  * Created by Pierrot on 23-09-2026.
@@ -47,5 +50,23 @@ class BeerServiceJPATest {
 
         assertThat(pageRequest.getPageNumber()).isZero();
         assertThat(pageRequest.getPageSize()).isEqualTo(25);
+    }
+
+    @Test
+    void testBuildPageRequestSortsByBeerName() {
+        PageRequest pageRequest = beerServiceJPA.buildPageRequest(2, 50);
+
+        assertThat(pageRequest.getSort()).isEqualTo(Sort.by("beerName").ascending());
+    }
+
+    /**
+     * The sorted property is a plain string, so a rename or a typo like {@code beer_name} would only
+     * fail when a query runs. This ties the string to a field that really exists on the entity.
+     */
+    @Test
+    void testTheSortedPropertyIsAFieldOfTheEntity() {
+        Sort.Order order = beerServiceJPA.buildPageRequest(null, null).getSort().iterator().next();
+
+        assertThatNoException().isThrownBy(() -> Beer.class.getDeclaredField(order.getProperty()));
     }
 }

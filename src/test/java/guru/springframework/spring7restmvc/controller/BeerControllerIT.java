@@ -92,6 +92,26 @@ class BeerControllerIT {
                 .andExpect(jsonPath("$.content..quantityOnHand", everyItem(notNullValue())));
     }
 
+    /**
+     * Counting the beers on a page does not prove that the right page was served: a search that ignored
+     * {@code pageNumber} and always returned the first 50 would pass that check. This compares the two
+     * pages, which is only meaningful now that the rows come back in a stable order.
+     */
+    @Test
+    void testSecondPageHoldsOtherBeersThanTheFirst() {
+        Page<BeerDTO> firstPage = beerController.listBeers("IPA", BeerStyle.IPA, true, 1, PAGE_SIZE);
+        Page<BeerDTO> secondPage = beerController.listBeers("IPA", BeerStyle.IPA, true, 2, PAGE_SIZE);
+
+        assertThat(firstPage.getContent()).hasSize(PAGE_SIZE);
+        assertThat(secondPage.getContent()).hasSize(PAGE_SIZE);
+
+        List<UUID> beersOfTheFirstPage = firstPage.getContent().stream().map(BeerDTO::getId).toList();
+
+        assertThat(secondPage.getContent())
+                .extracting(BeerDTO::getId)
+                .doesNotContainAnyElementsOf(beersOfTheFirstPage);
+    }
+
     @Test
     void testListBeersByStyleAndNameShowInventoryTrue() throws Exception {
         mockMvc.perform(get(BeerController.BEER_PATH)

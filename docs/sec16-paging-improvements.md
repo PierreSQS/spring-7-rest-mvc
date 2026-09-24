@@ -70,7 +70,7 @@ wraps its sample beers in a `PageImpl`.
 
 | # | Improvement | Why | Status |
 |---|---|---|---|
-| 11 | Assert that page 2 holds **different** beers than page 1 | The paging test only counts, so an implementation that ignores `pageNumber` and always serves the first 50 would pass it. Comparing the first id of both pages catches the off-by-one between the API (pages from 1) and Spring Data (pages from 0) | 💡 agreed to revisit once paging is complete |
-| 12 | No sort order anywhere | Without an `ORDER BY`, "the first 25 rows" is whatever the database returns. It can differ between H2 and MySQL, and a beer can in principle appear on two pages. JT's next lecture (`97-paging-add-sort`) adds sorting | ⏭ next lecture |
+| 11 | Assert that page 2 holds **different** beers than page 1 | Counting the beers on a page proved nothing: an implementation ignoring `pageNumber` and always serving the first 50 passed that check. `BeerControllerIT.testSecondPageHoldsOtherBeersThanTheFirst` compares the ids of both pages, and `BeerServiceJPATest` pins the sort - including that the sorted property is really a field of `Beer` | ✅ |
+| 12 | No sort order anywhere | Without an `ORDER BY`, "the first 25 rows" was whatever the database returned: a beer could appear on two pages, and H2 and MySQL could disagree. Chapter 169 adds `Sort.by("beerName").ascending()` to every page request | ✅ |
 | 13 | `listBeers` nulls `quantityOnHand` on the **DTOs**, no longer on the entities | Inside a transaction Hibernate took the emptied field for a change and would have written the nulls to the database. See `docs/service-layer-boundaries.md` | ✅ |
 | 14 | `listBeersByStyle` and `listBeersByName` are `public`, `listBeersByNameAndStyle` is `private` | All three are internal helpers of the service | ✅ all three are `private` since the `Page` change |
