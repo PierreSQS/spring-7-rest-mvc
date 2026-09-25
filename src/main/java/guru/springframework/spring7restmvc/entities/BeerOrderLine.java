@@ -45,4 +45,13 @@ public class BeerOrderLine {
 
     @Builder.Default
     private Integer quantityAllocated = 0;
+
+    @ManyToOne
+    @JoinColumn(name = "beer_order_id")
+    private BeerOrder beerOrder;
+
+    @ManyToOne
+    @JoinColumn(name = "beer_id")
+    private Beer beer;
+
 }
