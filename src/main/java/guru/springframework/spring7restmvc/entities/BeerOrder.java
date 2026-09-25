@@ -40,4 +40,9 @@ public class BeerOrder {
     private LocalDateTime updateDate;
 
     private String customerRef;
+
+    @ManyToOne
+    @JoinColumn(name = "customer_id")
+    private Customer customer;
+
 }
