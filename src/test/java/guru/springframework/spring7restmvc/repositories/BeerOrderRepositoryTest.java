@@ -2,6 +2,7 @@ package guru.springframework.spring7restmvc.repositories;
 
 import guru.springframework.spring7restmvc.bootstrap.BootstrapData;
 import guru.springframework.spring7restmvc.entities.Beer;
+import guru.springframework.spring7restmvc.entities.BeerOrder;
 import guru.springframework.spring7restmvc.entities.Customer;
 import guru.springframework.spring7restmvc.services.BeerCsvServiceImpl;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +11,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
 @DataJpaTest
@@ -39,11 +42,15 @@ class BeerOrderRepositoryTest {
 
     @Test
     void testBeerOrders() {
-        log.info("Beer Orders Count: {}", beerOrderRepo.count());
-        log.info("Customer Count: {}", customerRepo.count());
-        log.info("Beer Count: {}", beerRepo.count());
-        log.info("Test Customer Name: {}", testCustomer.getName());
-        log.info("Test Beer Name: {}", testBeer.getBeerName());
+        // create a new beer order for the test customer and beer
+        BeerOrder order = BeerOrder.builder()
+                .customerRef(testCustomer.getName())
+                .customer(testCustomer)
+                .build();
 
+        // save the order
+        BeerOrder savedOrder = beerOrderRepo.save(order);
+
+        assertThat(savedOrder.getCustomer().getBeerOrders()).contains(savedOrder);
     }
 }
