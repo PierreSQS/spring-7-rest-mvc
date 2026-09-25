@@ -126,6 +126,9 @@ public class BeerServiceJPA implements BeerService {
         return false;
     }
 
+    // The patching itself lives in BeerMapper.updateBeerFromDto: MapStruct copies every field the
+    // request carries and skips the null ones. Compare with JT's version, which does it by hand with
+    // one if-block per field (JT-Origin/102-rel-beer-order-repository, BeerServiceJPA).
     @Transactional
     @Override
     public Optional<BeerDTO> patchBeerById(UUID beerId, BeerDTO beer) {
