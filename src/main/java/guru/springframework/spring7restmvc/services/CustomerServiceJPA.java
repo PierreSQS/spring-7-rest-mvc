@@ -60,6 +60,9 @@ public class CustomerServiceJPA implements CustomerService {
         return false;
     }
 
+    // The patching itself lives in CustomerMapper.updateCustomerFromDto: MapStruct copies every field
+    // the request carries and skips the null ones. Compare with JT's version, which patches only the
+    // name, by hand (JT-Origin/103-rel-persisting-relationships, CustomerServiceJPA).
     @Transactional
     @Override
     public Optional<CustomerDTO> patchCustomerById(UUID customerId, CustomerDTO customer) {
