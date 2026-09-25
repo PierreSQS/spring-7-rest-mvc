@@ -49,7 +49,7 @@ class BeerOrderRepositoryTest {
                 .build();
 
         // save the order
-        BeerOrder savedOrder = beerOrderRepo.save(order);
+        BeerOrder savedOrder = beerOrderRepo.saveAndFlush(order);
 
         assertThat(savedOrder.getCustomer().getBeerOrders()).contains(savedOrder);
     }
