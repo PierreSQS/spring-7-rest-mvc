@@ -10,11 +10,13 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 
 /**
  * Created by jt, Spring Framework Guru.
- * Modified by Pierrot on 22-09-2026
+ * Modified by Pierrot on 25-09-2026
  */
 @Mapper
 public interface CustomerMapper {
 
+    // the DTO carries no orders; they are never set from a request body
+    @Mapping(target = "beerOrders", ignore = true)
     Customer customerDtoToCustomer(CustomerDTO dto);
 
     CustomerDTO customerToCustomerDto(Customer customer);
@@ -23,14 +25,15 @@ public interface CustomerMapper {
      * Copies the fields a PATCH request carries onto an existing customer: MapStruct generates one
      * null check per property ({@code IGNORE}), so a new field needs no change in the service.
      * <p>
-     * The id, the version and the timestamps are owned by the persistence layer, so a request body
-     * cannot overwrite them.
+     * The id, the version, the timestamps and the orders are owned by the persistence layer, so a
+     * request body cannot overwrite them.
      */
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "version", ignore = true)
     @Mapping(target = "createdDate", ignore = true)
     @Mapping(target = "updateDate", ignore = true)
+    @Mapping(target = "beerOrders", ignore = true)
     void updateCustomerFromDto(CustomerDTO dto, @MappingTarget Customer customer);
 
 }
