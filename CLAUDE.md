@@ -112,7 +112,7 @@ The `localmysql` profile declares **no** `spring.datasource.*` of its own: url, 
 
 | Detail | Behavior |
 |---|---|
-| Project isolation | Keep the Compose project name `spring-7-rest-mvc-sb411-sec17-assn20` and the fixed `container_name` `mysql-spring7-rest-sec17-assn20`: both name this lecture, so Docker cannot mix the container up with one from another lesson. The project name matters most: when a container of the same project is already running, Boot skips `docker compose up` and connects to it, whatever its database. Rename project, container, volume and database together when a lecture gets its own database. |
+| Project isolation | Keep the Compose project name `spring-7-rest-mvc-sb411-sec17-assn20` and the fixed `container_name` `mysql-spring7-rest-sec17-assn20`: both name this lecture, so Docker cannot mix the container up with one from another lesson. The project name matters most: when a container of the same project is already running, Boot skips `docker compose up` and connects to it, whatever its database. Rename project, container, volume and database together, and only when a new Flyway migration changes the schema: a lecture without one keeps the previous names, so the names show the chapter in which the current schema was first created. |
 | Graceful shutdown | `spring.docker.compose.stop.command=down` with `stop.arguments=-v` makes Boot run `docker compose down -v`, removing the container, network and the named data volume. The next start migrates and seeds a fresh database. |
 | Forced termination | No shutdown hook runs; the container and its data remain. The data directory is the **named** volume `mysql-spring7-rest-sec17-assn20-data` (declared in `compose.yaml` with an explicit `name:`, so Compose adds no project prefix), so a leftover can be inspected or removed by name instead of being an anonymous hash. |
 | Changed credentials or database name | MySQL initialization variables only affect an empty volume. To reinitialize, remove the old container and volume with `docker compose down -v`; this deletes its data. |
@@ -149,7 +149,7 @@ The controller integration tests depend on the seeded data, but never on a hard-
 
 - Extend `MySqlContainerBase` in the test root package. It starts one `mysql:9.5` container per JVM, shared by subclasses and removed by Testcontainers' Ryuk at JVM exit.
 - The base class activates `testcontainers` and supplies connection details through `@ServiceConnection`; no manual datasource wiring is needed.
-- `repositories/MySqlIT` imports `BootstrapData` with `@Import` so the JPA slice seeds its data; it logs `### ... loaded` or `### ... Bootstrap skipped`. It needs no `@AutoConfigureTestDatabase`: Boot 4.1's `NON_TEST` replacement policy retains the test-supplied datasource.
+- `repositories/MySqlIT` imports `BootstrapData` with `@Import` so the JPA slice seeds its data; it logs `### ... loaded` or `### ... Bootstrap skipped`. It also asserts that `beer_order` and `beer_order_line` use our column names (`update_date`, `version int`); a commented-out `testAllMigrationsApplied` documents why a Flyway state check would add nothing. It needs no `@AutoConfigureTestDatabase`: Boot 4.1's `NON_TEST` replacement policy retains the test-supplied datasource.
 - **Missing Docker must fail these tests, not skip them.** Use `test` for checks without Docker, or explicitly opt out of integration tests with `-DskipITs`.
 - Docker Compose is not involved in tests (`spring.docker.compose.skip.in-tests=true` by default).
 
