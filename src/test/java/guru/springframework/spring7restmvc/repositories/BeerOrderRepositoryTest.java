@@ -42,15 +42,17 @@ class BeerOrderRepositoryTest {
 
     @Test
     void testBeerOrders() {
-        // create a new beer order for the test customer and beer
+        // a new order for the test customer; .customer(...) fills the customer_id column
         BeerOrder order = BeerOrder.builder()
                 .customerRef(testCustomer.getName())
                 .customer(testCustomer)
                 .build();
 
-        // save the order
+        // saveAndFlush writes the order to the database at once; save() would only note it for later
         BeerOrder savedOrder = beerOrderRepo.saveAndFlush(order);
 
+        // the customer's order list is loaded from the database only here, so it finds the new order
+        // (see docs/lazy-collections-and-flush.md)
         assertThat(savedOrder.getCustomer().getBeerOrders()).contains(savedOrder);
     }
 }
