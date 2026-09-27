@@ -49,7 +49,7 @@ class BeerOrderRepositoryTest {
                 .build();
 
         // saveAndFlush writes the order to the database at once; save() would only note it for later
-        BeerOrder savedOrder = beerOrderRepo.saveAndFlush(order);
+        BeerOrder savedOrder = beerOrderRepo.save(order);
 
         // the customer's order list is loaded from the database only here, so it finds the new order
         // (see docs/lazy-collections-and-flush.md)
