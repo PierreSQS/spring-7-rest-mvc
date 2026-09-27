@@ -1,12 +1,13 @@
 # Warum der Kunde seine neue Bestellung (nicht) kennt
 
 Erklärung zu `BeerOrderRepositoryTest.testBeerOrders`, entstanden in Section 17, Chapter 175. Der Test
-wurde in zwei Varianten ausgeführt:
+wurde in zwei Varianten ausgeführt und in Chapter 176 mit einer Helper-Methode repariert (Abschnitt 6):
 
 | Commit | Variante | Speichern mit | Ergebnis |
 |---|---|---|---|
 | `a402631e` | `Sec17_Chap175-a` | `beerOrderRepo.save(order)` | Kunde kennt die Bestellung **nicht** |
 | `e7958ffa` | `Sec17_Chap175-b` | `beerOrderRepo.saveAndFlush(order)` | Kunde kennt die Bestellung |
+| `4785e074` | `Sec17_Chap176` | `beerOrderRepo.save(order)` + Helper-Methode | Kunde kennt die Bestellung |
 
 Der Test fragt jedes Mal dasselbe:
 
@@ -147,21 +148,34 @@ geöffnet wird.
 
 ---
 
-## 6. Die saubere Lösung (nächste Lektion)
+## 6. Die saubere Lösung: die Helper-Methode (Chapter 176)
 
 Man verlässt sich nicht auf die Reihenfolge, sondern setzt beim Verknüpfen **beide Seiten selbst in
-Java**: Bestellung → Kunde **und** Kunde → Bestellung. JT zeigt das in der nächsten Lektion mit
-*Helper-Methoden*. So steht es in seinem `BeerOrder` (Branch `104-rel-helper-methods`):
+Java**. Seit Chapter 176 macht das `BeerOrder.setCustomer(...)`:
 
 ```java
 public void setCustomer(Customer customer) {
-    this.customer = customer;
-    customer.getBeerOrders().add(this);   // den Spiegel selbst aktualisieren
+    this.customer = customer;                 // Bestellung → Kunde (schreibt customer_id)
+    if (customer != null) {
+        customer.getBeerOrders().add(this);   // Kunde → Bestellung: den Spiegel selbst aktualisieren
+    }
 }
 ```
 
-Dann kennt der Kunde seine Bestellung **sofort**, egal ob `save` oder `saveAndFlush`, und egal wann die
-Schachtel geöffnet wird.
+Drei Dinge gehören dazu:
 
-**Diese Seite beschreibt den Stand von Chapter 175.** Wenn die Helper-Methoden eingebaut sind, muss
-Abschnitt 6 an den dann aktuellen Code angepasst werden.
+| Was | Wo | Warum |
+|---|---|---|
+| Der Builder ruft `setCustomer(...)` auf | handgeschriebener Konstruktor in `BeerOrder` statt `@AllArgsConstructor` | `@AllArgsConstructor` würde das Feld direkt setzen, ohne die Methode |
+| Die Liste ist nie `null` | `Customer.beerOrders` mit `@Builder.Default ... = new HashSet<>()` | sonst würde `.add(this)` bei einem neuen Kunden eine `NullPointerException` werfen |
+| `if (customer != null)` | in `setCustomer` | eine Bestellung ohne Kunden bleibt möglich; JTs Version wirft hier eine `NullPointerException` |
+
+Ergebnis (27.09.2026):
+
+- Der Test benutzt wieder `save()`. Es gibt **kein** `insert`, und der Kunde kennt die Bestellung
+  trotzdem: sie steht schon in seiner Liste in Java.
+- Der zerbrechliche Fall aus Abschnitt 5 (Liste **vor** dem Speichern öffnen) ist jetzt **grün**.
+
+**Hinweis:** `.add(this)` öffnet die Schachtel. In dem Moment holt Hibernate alle Bestellungen des
+Kunden aus der Datenbank (`select ... from beer_order where customer_id = ?`). Bei einem Kunden mit
+sehr vielen Bestellungen kostet das - ein Thema für die Verbesserungen am Ende des Kurses.
