@@ -32,7 +32,10 @@ import java.util.UUID;
 @NoArgsConstructor
 public class BeerOrder {
 
-    public BeerOrder(UUID id, Integer version, LocalDateTime createdDate, LocalDateTime updateDate, String customerRef, Customer customer, Set<BeerOrderLine> beerOrderLines) {
+    // written by hand instead of @AllArgsConstructor: the builder calls this constructor, and it
+    // must go through setCustomer(...) so the customer's order list gets the order too
+    public BeerOrder(UUID id, Integer version, LocalDateTime createdDate, LocalDateTime updateDate,
+                     String customerRef, Customer customer, Set<BeerOrderLine> beerOrderLines) {
         this.id = id;
         this.version = version;
         this.createdDate = createdDate;
