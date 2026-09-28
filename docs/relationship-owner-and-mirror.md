@@ -22,7 +22,7 @@ Entstanden in Section 17, Chapter 177.
 | Kunde ↔ Bestellung | `BeerOrder.customer` (`@ManyToOne` + `@JoinColumn`) | `Customer.beerOrders` (`mappedBy = "customer"`) |
 | Bestellung ↔ Bestellposition | `BeerOrderLine.beerOrder` | `BeerOrder.beerOrderLines` (`mappedBy = "beerOrder"`) |
 | Bier ↔ Bestellposition | `BeerOrderLine.beer` | `Beer.beerOrderLines` (`mappedBy = "beer"`) |
-| Bier ↔ Kategorie | `Beer.categories` (`@JoinTable`) | `Category.beers`: soll `mappedBy = "categories"` werden (Fix #1) |
+| Bier ↔ Kategorie | `Beer.categories` (`@JoinTable`) | `Category.beers` (`mappedBy = "categories"`) |
 
 **Merksatz:** Bei `@ManyToOne` ↔ `@OneToMany` ist die `@ManyToOne`-Seite immer der Besitzer. Bei
 `@ManyToMany` entscheidest du, und die andere Seite bekommt `mappedBy`.
