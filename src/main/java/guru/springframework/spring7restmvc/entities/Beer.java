@@ -73,7 +73,7 @@ public class Beer {
     @JoinTable(name  = "beer_category",
             joinColumns = @JoinColumn(name = "beer_id"),
             inverseJoinColumns = @JoinColumn(name = "category_id"))
-    Set<Category> categories;
+    private Set<Category> categories;
 
     @CreationTimestamp
     @Column(updatable = false)

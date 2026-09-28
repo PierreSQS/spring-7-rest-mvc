@@ -3,8 +3,6 @@ package guru.springframework.spring7restmvc.entities;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
@@ -43,19 +41,17 @@ public class Category {
     @Version
     private Integer version;
 
+    @Column(length = 50)
+    private String description;
+
+    @ManyToMany(mappedBy = "categories")
+    private Set<Beer> beers;
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdDate;
 
-    @ManyToMany
-    @JoinTable(name = "beer_category",
-            joinColumns = @JoinColumn(name = "category_id"),
-            inverseJoinColumns = @JoinColumn(name = "beer_id"))
-    private Set<Beer> beers;
-
     @UpdateTimestamp
     private LocalDateTime updateDate;
 
-    @Column(length = 50)
-    private String description;
 }
