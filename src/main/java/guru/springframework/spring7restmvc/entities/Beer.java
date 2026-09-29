@@ -25,6 +25,7 @@ import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
@@ -81,5 +82,27 @@ public class Beer {
 
     @UpdateTimestamp
     private LocalDateTime updateDate;
+
+    public void addCategory(Category category) {
+        if (this.categories == null) {
+            this.categories = new HashSet<>();
+        }
+
+        Set<Beer> beers = category.getBeers();
+
+        if (beers == null) {
+            beers = new HashSet<>();
+        }
+
+        this.categories.add(category);
+        beers.add(this);
+    }
+
+    public void removeCategory(Category category) {
+        if (this.categories != null) {
+            this.categories.remove(category);
+            category.getBeers().remove(this);
+        }
+    }
 
 }
