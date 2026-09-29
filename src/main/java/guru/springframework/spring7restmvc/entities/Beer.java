@@ -70,11 +70,12 @@ public class Beer {
     @OneToMany(mappedBy = "beer")
     private Set<BeerOrderLine> beerOrderLines;
 
+    @Builder.Default
     @ManyToMany
-    @JoinTable(name  = "beer_category",
+    @JoinTable(name = "beer_category",
             joinColumns = @JoinColumn(name = "beer_id"),
             inverseJoinColumns = @JoinColumn(name = "category_id"))
-    private Set<Category> categories;
+    private Set<Category> categories = new HashSet<>();
 
     @CreationTimestamp
     @Column(updatable = false)
@@ -84,26 +85,13 @@ public class Beer {
     private LocalDateTime updateDate;
 
     public void addCategory(Category category) {
-        if (this.categories == null) {
-            this.categories = new HashSet<>();
-        }
-
-        Set<Beer> beers = category.getBeers();
-
-        if (beers == null) {
-            beers = new HashSet<>();
-            category.setBeers(beers);
-        }
-
         this.categories.add(category);
-        beers.add(this);
+        category.getBeers().add(this);
     }
 
     public void removeCategory(Category category) {
-        if (this.categories != null) {
-            this.categories.remove(category);
-            category.getBeers().remove(this);
-        }
+        this.categories.remove(category);
+        category.getBeers().remove(this);
     }
 
 }
