@@ -92,6 +92,7 @@ public class Beer {
 
         if (beers == null) {
             beers = new HashSet<>();
+            category.setBeers(beers);
         }
 
         this.categories.add(category);
