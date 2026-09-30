@@ -54,9 +54,10 @@ public class BootstrapData implements CommandLineRunner {
                     .quantityOnHand(beerCSVRecord.getCount())
                     .build()));
 
-            log.info("### {} beers in the DB after loading {}", beerRepository.count(), BEERS_CSV);
+            log.info("loaded {} Beers from CSV-File", beerCSVRecords.size());
+            log.info("total Beers loaded: {}", beerRepository.count());
         } else {
-            log.info("### More than 10 beers are present in the DB. CSV bootstrap skipped");
+            log.info("### More than 10 Beers present. CSV-Data loading skipped!! ###");
         }
     }
 
@@ -129,9 +130,9 @@ public class BootstrapData implements CommandLineRunner {
             beerRepository.save(beer2);
             beerRepository.save(beer3);
 
-            log.info("### {} beers loaded into the DB", beerRepository.count());
+            log.info("### loaded {} Beers manually ###", beerRepository.count());
         } else {
-            log.info("### Beers are present in the DB. Bootstrap skipped");
+            log.info("### Beers are present in the DB. Manual Data loading skipped");
         }
 
     }
@@ -155,7 +156,7 @@ public class BootstrapData implements CommandLineRunner {
 
             log.info("### {} customers loaded into the DB", customerRepository.count());
         } else {
-            log.info("### Customers are present in the DB. Bootstrap skipped");
+            log.info("### Customers are present in the DB. Data loading skipped");
         }
 
     }
