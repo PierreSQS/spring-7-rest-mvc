@@ -65,13 +65,13 @@ public class BeerOrder {
 
     private String customerRef;
 
-    @OneToOne
-    @JoinColumn(name = "beer_order_shipment_id")
-    private BeerOrderShipment beerOrderShipment;
-
     @ManyToOne
     @JoinColumn(name = "customer_id")
     private Customer customer;
+
+    @OneToOne
+    @JoinColumn(name = "beer_order_shipment_id")
+    private BeerOrderShipment beerOrderShipment;
 
     @OneToMany(mappedBy = "beerOrder")
     private Set<BeerOrderLine> beerOrderLines;
