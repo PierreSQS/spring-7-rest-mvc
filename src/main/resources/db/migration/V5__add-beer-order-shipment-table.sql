@@ -12,3 +12,7 @@ create table beer_order_shipment (
 
 alter table beer_order
     add column beer_order_shipment_id varchar(36);
+
+alter table beer_order
+    add constraint fk_beer_order_shipment
+        foreign key (beer_order_shipment_id) references beer_order_shipment (id);

@@ -3,6 +3,7 @@ package guru.springframework.spring7restmvc.entities;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -41,6 +42,9 @@ public class BeerOrderShipment {
 
     @Column(length = 50)
     private String trackingNumber;
+
+    @OneToOne
+    private BeerOrder beerOrder;
 
     @CreationTimestamp
     @Column(updatable = false)

@@ -6,6 +6,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Version;
 import lombok.Builder;
 import lombok.Getter;
@@ -35,13 +36,14 @@ public class BeerOrder {
     // written by hand instead of @AllArgsConstructor: the builder calls this constructor, and it
     // must go through setCustomer(...) so the customer's order list gets the order too
     public BeerOrder(UUID id, Integer version, LocalDateTime createdDate, LocalDateTime updateDate,
-                     String customerRef, Customer customer, Set<BeerOrderLine> beerOrderLines) {
+                     String customerRef, Customer customer, BeerOrderShipment beerOrderShipment, Set<BeerOrderLine> beerOrderLines) {
         this.id = id;
         this.version = version;
         this.createdDate = createdDate;
         this.updateDate = updateDate;
         this.customerRef = customerRef;
         this.setCustomer(customer);
+        this.beerOrderShipment = beerOrderShipment;
         this.beerOrderLines = beerOrderLines;
     }
 
@@ -62,6 +64,10 @@ public class BeerOrder {
     private LocalDateTime updateDate;
 
     private String customerRef;
+
+    @OneToOne
+    @JoinColumn(name = "beer_order_shipment_id")
+    private BeerOrderShipment beerOrderShipment;
 
     @ManyToOne
     @JoinColumn(name = "customer_id")
