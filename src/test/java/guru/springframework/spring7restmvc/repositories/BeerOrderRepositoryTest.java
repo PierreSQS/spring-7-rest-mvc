@@ -3,6 +3,7 @@ package guru.springframework.spring7restmvc.repositories;
 import guru.springframework.spring7restmvc.bootstrap.BootstrapData;
 import guru.springframework.spring7restmvc.entities.Beer;
 import guru.springframework.spring7restmvc.entities.BeerOrder;
+import guru.springframework.spring7restmvc.entities.BeerOrderShipment;
 import guru.springframework.spring7restmvc.entities.Customer;
 import guru.springframework.spring7restmvc.services.BeerCsvServiceImpl;
 import lombok.extern.slf4j.Slf4j;
@@ -47,6 +48,9 @@ class BeerOrderRepositoryTest {
         BeerOrder order = BeerOrder.builder()
                 .customerRef(testCustomer.getName())
                 .customer(testCustomer)
+                .beerOrderShipment(BeerOrderShipment.builder()
+                        .trackingNumber("1234k")
+                        .build())
                 .build();
 
         // save() only notes the order for later: no insert is needed for the check below
@@ -55,5 +59,11 @@ class BeerOrderRepositoryTest {
         // the customer already knows the order because setCustomer(...) put it into the list
         // (see docs/lazy-collections-and-flush.md)
         assertThat(savedOrder.getCustomer().getBeerOrders()).contains(savedOrder);
+
+        // the shipment was saved too: only a saved shipment gets an id
+        assertThat(savedOrder.getBeerOrderShipment().getId()).isNotNull();
+
+        // the shipment knows its order (the other side of the one-to-one)
+        assertThat(savedOrder.getBeerOrderShipment().getBeerOrder()).isNotNull();
     }
 }
