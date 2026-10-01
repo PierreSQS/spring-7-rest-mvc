@@ -44,7 +44,7 @@ public class BeerOrder {
         this.updateDate = updateDate;
         this.customerRef = customerRef;
         this.setCustomer(customer);
-        this.beerOrderShipment = beerOrderShipment;
+        this.setBeerOrderShipment(beerOrderShipment);
         this.beerOrderLines = beerOrderLines;
     }
 
@@ -81,6 +81,13 @@ public class BeerOrder {
         this.customer = customer;
         if (customer != null) {
             customer.getBeerOrders().add(this);
+        }
+    }
+
+    public void setBeerOrderShipment(BeerOrderShipment beerOrderShipment) {
+        this.beerOrderShipment = beerOrderShipment;
+        if (beerOrderShipment != null) {
+            beerOrderShipment.setBeerOrder(this);
         }
     }
 
