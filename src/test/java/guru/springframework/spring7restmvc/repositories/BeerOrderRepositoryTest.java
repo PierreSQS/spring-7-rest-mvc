@@ -1,7 +1,6 @@
 package guru.springframework.spring7restmvc.repositories;
 
 import guru.springframework.spring7restmvc.bootstrap.BootstrapData;
-import guru.springframework.spring7restmvc.entities.Beer;
 import guru.springframework.spring7restmvc.entities.BeerOrder;
 import guru.springframework.spring7restmvc.entities.BeerOrderShipment;
 import guru.springframework.spring7restmvc.entities.Customer;
@@ -29,16 +28,11 @@ class BeerOrderRepositoryTest {
     @Autowired
     CustomerRepository customerRepo;
 
-    @Autowired
-    BeerRepository beerRepo;
-
     Customer testCustomer;
-    Beer testBeer;
 
     @BeforeEach
     void setUp() {
         testCustomer = customerRepo.findAll().getFirst();
-        testBeer = beerRepo.findAll().getFirst();
     }
 
     @Test
@@ -53,8 +47,9 @@ class BeerOrderRepositoryTest {
                         .build())
                 .build();
 
-        // save() only notes the order for later: no insert is needed for the check below
-        BeerOrder savedOrder = beerOrderRepo.save(order);
+        // saveAndFlush writes the order and its shipment to the database now, so a mapping error
+        // fails the test instead of hiding behind the rollback
+        BeerOrder savedOrder = beerOrderRepo.saveAndFlush(order);
 
         // the customer already knows the order because setCustomer(...) put it into the list
         // (see docs/lazy-collections-and-flush.md)

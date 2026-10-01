@@ -70,7 +70,7 @@ public class BeerOrder {
     @JoinColumn(name = "customer_id")
     private Customer customer;
 
-    @OneToOne(cascade = CascadeType.PERSIST)
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "beer_order_shipment_id")
     private BeerOrderShipment beerOrderShipment;
 
@@ -84,7 +84,11 @@ public class BeerOrder {
         }
     }
 
+    // replaces the shipment on both sides: unlinks the old one, then links the new one
     public void setBeerOrderShipment(BeerOrderShipment beerOrderShipment) {
+        if (this.beerOrderShipment != null) {
+            this.beerOrderShipment.setBeerOrder(null);
+        }
         this.beerOrderShipment = beerOrderShipment;
         if (beerOrderShipment != null) {
             beerOrderShipment.setBeerOrder(this);

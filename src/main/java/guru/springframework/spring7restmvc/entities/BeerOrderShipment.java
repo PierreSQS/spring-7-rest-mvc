@@ -43,7 +43,7 @@ public class BeerOrderShipment {
     @Column(length = 50)
     private String trackingNumber;
 
-    @OneToOne
+    @OneToOne(mappedBy = "beerOrderShipment")
     private BeerOrder beerOrder;
 
     @CreationTimestamp
