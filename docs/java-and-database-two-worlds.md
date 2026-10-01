@@ -15,9 +15,6 @@ weiterhin **zwei Felder**:
 - `order.beerOrderShipment`, der Besitzer;
 - `shipment.beerOrder`, der Spiegel.
 
-(Für Bestellung ↔ Sendung gilt das, sobald `BeerOrderShipment.beerOrder` `mappedBy` bekommt - Issue 1 der
-Verbesserungen zu Chapter 180. Heute sind dort noch beide Seiten Besitzer.)
-
 ## Was passieren kann, wenn man nur eines setzt
 
 ```java

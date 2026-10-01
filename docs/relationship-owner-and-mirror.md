@@ -23,6 +23,7 @@ Entstanden in Section 17, Chapter 177.
 | Bestellung ↔ Bestellposition | `BeerOrderLine.beerOrder` | `BeerOrder.beerOrderLines` (`mappedBy = "beerOrder"`) |
 | Bier ↔ Bestellposition | `BeerOrderLine.beer` | `Beer.beerOrderLines` (`mappedBy = "beer"`) |
 | Bier ↔ Kategorie | `Beer.categories` (`@JoinTable`) | `Category.beers` (`mappedBy = "categories"`) |
+| Bestellung ↔ Sendung | `BeerOrder.beerOrderShipment` (`@OneToOne` + `@JoinColumn`) | `BeerOrderShipment.beerOrder` (`mappedBy = "beerOrderShipment"`) |
 
 **Merksatz:** Bei `@ManyToOne` ↔ `@OneToMany` ist die `@ManyToOne`-Seite immer der Besitzer. Bei
-`@ManyToMany` entscheidest du, und die andere Seite bekommt `mappedBy`.
+`@ManyToMany` und `@OneToOne` entscheidest du, und die andere Seite bekommt `mappedBy`.
