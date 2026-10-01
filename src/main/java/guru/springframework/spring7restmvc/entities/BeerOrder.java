@@ -1,5 +1,6 @@
 package guru.springframework.spring7restmvc.entities;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -69,7 +70,7 @@ public class BeerOrder {
     @JoinColumn(name = "customer_id")
     private Customer customer;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "beer_order_shipment_id")
     private BeerOrderShipment beerOrderShipment;
 
