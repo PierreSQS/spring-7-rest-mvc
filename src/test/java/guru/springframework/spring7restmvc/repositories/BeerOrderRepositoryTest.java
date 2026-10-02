@@ -10,7 +10,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
 import org.springframework.context.annotation.Import;
+
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -27,6 +30,10 @@ class BeerOrderRepositoryTest {
 
     @Autowired
     CustomerRepository customerRepo;
+
+    // für Sendungen gibt es kein Repository; der TestEntityManager liest sie direkt
+    @Autowired
+    TestEntityManager entityManager;
 
     Customer testCustomer;
 
@@ -62,46 +69,54 @@ class BeerOrderRepositoryTest {
         assertThat(savedOrder.getBeerOrderShipment().getBeerOrder()).isNotNull();
     }
 
+    // Issue 3: Eine Bestellung mit Sendung lässt sich löschen, und die Sendung geht mit
     @Test
     void testDeleteOrderDeletesShipment() {
-        // issue 3: deleting an order that has a shipment works, and the shipment is deleted with it
-        BeerOrder order = BeerOrder.builder()
-                .customerRef(testCustomer.getName())
-                .customer(testCustomer)
-                .beerOrderShipment(BeerOrderShipment.builder()
-                        .trackingNumber("to-be-deleted")
-                        .build())
-                .build();
+        BeerOrder savedOrder = beerOrderRepo.saveAndFlush(getOrderWithShipment("to-be-deleted"));
 
-        BeerOrder savedOrder = beerOrderRepo.saveAndFlush(order);
+        // die id VOR dem Löschen merken, danach gibt es nichts mehr zum Fragen
+        UUID shipmentId = savedOrder.getBeerOrderShipment().getId();
 
         beerOrderRepo.delete(savedOrder);
+        // flush: das delete muss wirklich in die Datenbank, sonst prüfen wir nur Java
         beerOrderRepo.flush();
 
         assertThat(beerOrderRepo.findById(savedOrder.getId())).isEmpty();
+        // ohne cascade = ALL bliebe die Sendung übrig
+        assertThat(entityManager.find(BeerOrderShipment.class, shipmentId)).isNull();
     }
 
+    // Issue 4: Eine gespeicherte Bestellung bekommt eine neue Sendung, und die alte wird getrennt
     @Test
     void testReplaceShipment() {
-        // issue 4: a saved order can get a new shipment, and the old one no longer points to it
-        BeerOrder order = BeerOrder.builder()
+        BeerOrder savedOrder = beerOrderRepo.saveAndFlush(getOrderWithShipment("old-shipment"));
+
+        // die alte Sendung VOR dem Austauschen merken, sonst kann man sie hinterher nicht prüfen
+        BeerOrderShipment oldShipment = savedOrder.getBeerOrderShipment();
+
+        savedOrder.setBeerOrderShipment(BeerOrderShipment.builder()
+                .trackingNumber("new-shipment")
+                .build());
+        beerOrderRepo.saveAndFlush(savedOrder);
+
+        // Java-Seite: der Helper hat die alte Sendung getrennt und die neue verbunden
+        assertThat(oldShipment.getBeerOrder()).isNull();
+        assertThat(savedOrder.getBeerOrderShipment().getBeerOrder()).isEqualTo(savedOrder);
+
+        // Datenbank-Seite: Cache leeren und neu laden, damit die Antwort aus der Datenbank kommt
+        entityManager.clear();
+        BeerOrder reloadedOrder = beerOrderRepo.findById(savedOrder.getId()).orElseThrow();
+        assertThat(reloadedOrder.getBeerOrderShipment().getTrackingNumber()).isEqualTo("new-shipment");
+    }
+
+    /** Eine neue Bestellung des Testkunden mit einer neuen Sendung, beide noch nicht gespeichert. */
+    private BeerOrder getOrderWithShipment(String trackingNumber) {
+        return BeerOrder.builder()
                 .customerRef(testCustomer.getName())
                 .customer(testCustomer)
                 .beerOrderShipment(BeerOrderShipment.builder()
-                        .trackingNumber("old-shipment")
+                        .trackingNumber(trackingNumber)
                         .build())
                 .build();
-
-        BeerOrder savedOrder = beerOrderRepo.saveAndFlush(order);
-
-        BeerOrderShipment newShipment = BeerOrderShipment.builder()
-                .trackingNumber("new-shipment")
-                .build();
-
-        savedOrder.setBeerOrderShipment(newShipment);
-        BeerOrder updatedOrder = beerOrderRepo.saveAndFlush(savedOrder);
-
-        assertThat(updatedOrder.getBeerOrderShipment().getTrackingNumber()).isEqualTo("new-shipment");
-        assertThat(updatedOrder.getBeerOrderShipment().getBeerOrder()).isEqualTo(updatedOrder);
     }
 }
