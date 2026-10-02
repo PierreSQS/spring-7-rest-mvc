@@ -61,4 +61,47 @@ class BeerOrderRepositoryTest {
         // the shipment knows its order (the other side of the one-to-one)
         assertThat(savedOrder.getBeerOrderShipment().getBeerOrder()).isNotNull();
     }
+
+    @Test
+    void testDeleteOrderDeletesShipment() {
+        // issue 3: deleting an order that has a shipment works, and the shipment is deleted with it
+        BeerOrder order = BeerOrder.builder()
+                .customerRef(testCustomer.getName())
+                .customer(testCustomer)
+                .beerOrderShipment(BeerOrderShipment.builder()
+                        .trackingNumber("to-be-deleted")
+                        .build())
+                .build();
+
+        BeerOrder savedOrder = beerOrderRepo.saveAndFlush(order);
+
+        beerOrderRepo.delete(savedOrder);
+        beerOrderRepo.flush();
+
+        assertThat(beerOrderRepo.findById(savedOrder.getId())).isEmpty();
+    }
+
+    @Test
+    void testReplaceShipment() {
+        // issue 4: a saved order can get a new shipment, and the old one no longer points to it
+        BeerOrder order = BeerOrder.builder()
+                .customerRef(testCustomer.getName())
+                .customer(testCustomer)
+                .beerOrderShipment(BeerOrderShipment.builder()
+                        .trackingNumber("old-shipment")
+                        .build())
+                .build();
+
+        BeerOrder savedOrder = beerOrderRepo.saveAndFlush(order);
+
+        BeerOrderShipment newShipment = BeerOrderShipment.builder()
+                .trackingNumber("new-shipment")
+                .build();
+
+        savedOrder.setBeerOrderShipment(newShipment);
+        BeerOrder updatedOrder = beerOrderRepo.saveAndFlush(savedOrder);
+
+        assertThat(updatedOrder.getBeerOrderShipment().getTrackingNumber()).isEqualTo("new-shipment");
+        assertThat(updatedOrder.getBeerOrderShipment().getBeerOrder()).isEqualTo(updatedOrder);
+    }
 }
