@@ -41,7 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * Created by jt, Spring Framework Guru.
- * Modified by Pierrot on 22-09-2026
+ * Modified by Pierrot on 06-10-2026
  */
 @Slf4j
 @SpringBootTest
@@ -95,7 +95,11 @@ class BeerControllerIT {
                 .andDo(print())
                 .andReturn();
 
-        log.info(result.getResponse().getContentAsString());
+        // a PUT answers 204 without a body, so log what is stored in the database instead
+        Beer afterFirstPut = beerRepository.findById(beer.getId()).orElseThrow();
+        log.info("### after PUT 1: status={} dto.version={} db.version={} db.name={}",
+                result.getResponse().getStatus(), beerDTO.getVersion(),
+                afterFirstPut.getVersion(), afterFirstPut.getBeerName());
 
         beerDTO.setBeerName("Updated Name 2");
 
@@ -107,7 +111,11 @@ class BeerControllerIT {
                 .andDo(print())
                 .andReturn();
 
-        log.info(String.valueOf(result2.getResponse().getStatus()));
+        // the stale dto.version was accepted: the second name overwrote the first (a lost update)
+        Beer afterSecondPut = beerRepository.findById(beer.getId()).orElseThrow();
+        log.info("### after PUT 2: status={} dto.version={} db.version={} db.name={}",
+                result2.getResponse().getStatus(), beerDTO.getVersion(),
+                afterSecondPut.getVersion(), afterSecondPut.getBeerName());
     }
 
     /**
