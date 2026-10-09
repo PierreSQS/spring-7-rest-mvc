@@ -30,6 +30,9 @@ import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+/**
+ * Modified by Pierrot on 09-10-2026
+ */
 @WebMvcTest(BeerController.class)
 @ExtendWith(MockitoExtension.class)
 class BeerControllerTest {
@@ -62,6 +65,8 @@ class BeerControllerTest {
 
         Map<String, Object> beerMap = new HashMap<>();
         beerMap.put("beerName", "New Name");
+
+        given(beerService.patchBeerById(any(), any())).willReturn(Optional.of(beer));
 
         mockMvc.perform(patch(BeerController.BEER_PATH_ID, beer.getId())
                 .contentType(MediaType.APPLICATION_JSON)

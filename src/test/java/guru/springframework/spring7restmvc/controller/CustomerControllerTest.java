@@ -29,6 +29,9 @@ import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+/**
+ * Modified by Pierrot on 09-10-2026
+ */
 @WebMvcTest(CustomerController.class)
 @ExtendWith(MockitoExtension.class)
 class CustomerControllerTest {
@@ -61,6 +64,8 @@ class CustomerControllerTest {
 
         Map<String, Object> customerMap = new HashMap<>();
         customerMap.put("name", "New Name");
+
+        given(customerService.patchCustomerById(any(), any())).willReturn(Optional.of(customer));
 
         mockMvc.perform(patch( CustomerController.CUSTOMER_PATH_ID, customer.getId())
                 .contentType(MediaType.APPLICATION_JSON)
