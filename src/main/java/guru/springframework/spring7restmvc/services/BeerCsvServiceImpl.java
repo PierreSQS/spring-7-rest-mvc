@@ -21,7 +21,7 @@ public class BeerCsvServiceImpl implements BeerCsvService {
     @Override
     public List<BeerCSVRecord> convertCSV(Resource resource) {
 
-        try( Reader reader = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8)) {
+        try (Reader reader = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8)) {
             return new CsvToBeanBuilder<BeerCSVRecord>(reader)
                     .withType(BeerCSVRecord.class)
                     .build().parse();
