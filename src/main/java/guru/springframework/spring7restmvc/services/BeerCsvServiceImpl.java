@@ -2,9 +2,9 @@ package guru.springframework.spring7restmvc.services;
 
 import com.opencsv.bean.CsvToBeanBuilder;
 import guru.springframework.spring7restmvc.model.BeerCSVRecord;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -17,14 +17,14 @@ import java.util.List;
 @Service
 public class BeerCsvServiceImpl implements BeerCsvService {
     @Override
-    public List<BeerCSVRecord> convertCSV(File csvFile) {
+    public List<BeerCSVRecord> convertCSV(Resource resource) {
 
-        try(FileReader fileReader = new FileReader(csvFile)) {
-            return new CsvToBeanBuilder<BeerCSVRecord>(fileReader)
+        try {
+            return new CsvToBeanBuilder<BeerCSVRecord>(new FileReader(resource.getFile()))
                     .withType(BeerCSVRecord.class)
                     .build().parse();
         } catch (IOException e) {
-            throw new UncheckedIOException("Failed to read CSV file " + csvFile.getAbsolutePath(), e);
+            throw new UncheckedIOException("Failed to read CSV file " + resource.getFilename(), e);
         }
     }
 }
