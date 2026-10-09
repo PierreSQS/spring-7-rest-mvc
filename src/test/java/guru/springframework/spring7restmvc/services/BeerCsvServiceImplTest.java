@@ -2,24 +2,25 @@ package guru.springframework.spring7restmvc.services;
 
 import guru.springframework.spring7restmvc.model.BeerCSVRecord;
 import org.junit.jupiter.api.Test;
-import org.springframework.util.ResourceUtils;
+import org.springframework.core.io.ClassPathResource;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * Modified by Pierrot on 09-10-2026
+ */
 class BeerCsvServiceImplTest {
 
     BeerCsvService beerCsvService = new BeerCsvServiceImpl();
 
     @Test
-    void convertCSV() throws FileNotFoundException {
+    void convertCSV() {
 
-        File file = ResourceUtils.getFile("classpath:csvdata/beers.csv");
+        ClassPathResource resource = new ClassPathResource("csvdata/beers.csv");
 
-        List<BeerCSVRecord> recs = beerCsvService.convertCSV(file);
+        List<BeerCSVRecord> recs = beerCsvService.convertCSV(resource);
 
         System.out.println(recs.size());
 

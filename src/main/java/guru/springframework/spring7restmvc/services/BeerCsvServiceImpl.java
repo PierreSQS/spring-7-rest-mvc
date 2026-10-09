@@ -5,9 +5,11 @@ import guru.springframework.spring7restmvc.model.BeerCSVRecord;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
@@ -19,8 +21,8 @@ public class BeerCsvServiceImpl implements BeerCsvService {
     @Override
     public List<BeerCSVRecord> convertCSV(Resource resource) {
 
-        try {
-            return new CsvToBeanBuilder<BeerCSVRecord>(new FileReader(resource.getFile()))
+        try( Reader reader = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8)) {
+            return new CsvToBeanBuilder<BeerCSVRecord>(reader)
                     .withType(BeerCSVRecord.class)
                     .build().parse();
         } catch (IOException e) {

@@ -40,7 +40,7 @@ public class BootstrapData implements CommandLineRunner {
 
     private void loadCsvData() {
         if (beerRepository.count() < 10){
-            ClassPathResource resource = new ClassPathResource("classpath:csvdata/beers.csv");
+            ClassPathResource resource = new ClassPathResource("csvdata/beers.csv");
 
             List<BeerCSVRecord> recs = beerCsvService.convertCSV(resource);
 
