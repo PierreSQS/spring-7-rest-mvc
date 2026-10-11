@@ -10,6 +10,7 @@ import java.util.UUID;
 
 /**
  * Created by jt, Spring Framework Guru.
+ * Modified by Pierrot on 12-10-2026
  */
 @Getter
 @Setter
@@ -19,7 +20,6 @@ import java.util.UUID;
 @Builder
 public class BeerOrderShipment {
     @Id
-    @GeneratedValue(generator = "UUID")
     @UuidGenerator
     @JdbcTypeCode(SqlTypes.CHAR)
     @Column(length = 36, columnDefinition = "varchar(36)", updatable = false, nullable = false )
@@ -32,11 +32,6 @@ public class BeerOrderShipment {
     private BeerOrder beerOrder;
 
     private String trackingNumber;
-
-    @Override
-    public int hashCode() {
-        return super.hashCode();
-    }
 
     @CreationTimestamp
     @Column(updatable = false)

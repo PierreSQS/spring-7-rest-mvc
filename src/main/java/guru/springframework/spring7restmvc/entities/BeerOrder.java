@@ -31,6 +31,9 @@ import java.sql.Timestamp;
 import java.util.Set;
 import java.util.UUID;
 
+/**
+ * Modified by Pierrot on 12-10-2026
+ */
 @Getter
 @Setter
 @Entity
@@ -51,7 +54,6 @@ public class BeerOrder {
     }
 
     @Id
-    @GeneratedValue(generator = "UUID")
     @UuidGenerator
     @JdbcTypeCode(SqlTypes.CHAR)
     @Column(length = 36, columnDefinition = "varchar(36)", updatable = false, nullable = false )

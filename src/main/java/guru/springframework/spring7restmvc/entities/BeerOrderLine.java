@@ -10,6 +10,7 @@ import java.util.UUID;
 
 /**
  * Created by jt.
+ * Modified by Pierrot on 12-10-2026
  */
 @Getter
 @Setter
@@ -20,7 +21,6 @@ import java.util.UUID;
 public class BeerOrderLine {
 
     @Id
-    @GeneratedValue(generator = "UUID")
     @UuidGenerator
     @JdbcTypeCode(SqlTypes.CHAR)
     @Column(length = 36, columnDefinition = "varchar(36)", updatable = false, nullable = false )
