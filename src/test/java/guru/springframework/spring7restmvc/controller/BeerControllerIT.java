@@ -15,7 +15,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.annotation.Rollback;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,9 +25,8 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.core.Is.is;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -36,7 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Modified by Pierrot on 11-10-2026
+ * Modified by Pierrot on 12-10-2026
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -185,9 +183,11 @@ class BeerControllerIT {
 
     @Test
     void testUpdateNotFound() {
-        assertThrows(NotFoundException.class, () -> {
-            beerController.updateById(UUID.randomUUID(), BeerDTO.builder().build());
-        });
+        UUID beerId = UUID.randomUUID();
+        BeerDTO beerDTO = BeerDTO.builder().build();
+
+        assertThatThrownBy(() -> beerController.updateById(beerId, beerDTO))
+                .isInstanceOf(NotFoundException.class);
     }
 
     @Transactional
@@ -207,7 +207,6 @@ class BeerControllerIT {
         assertThat(updatedBeer.getBeerName()).isEqualTo(beerName);
     }
 
-    @Rollback
     @Transactional
     @Test
     void saveNewBeerTest() {
@@ -229,9 +228,10 @@ class BeerControllerIT {
 
     @Test
     void testBeerIdNotFound() {
-        assertThrows(NotFoundException.class, () -> {
-            beerController.getBeerById(UUID.randomUUID());
-        });
+        UUID beerId = UUID.randomUUID();
+
+        assertThatThrownBy(() -> beerController.getBeerById(beerId))
+                .isInstanceOf(NotFoundException.class);
     }
 
     @Test
@@ -250,7 +250,6 @@ class BeerControllerIT {
         assertThat(dtos.getContent()).hasSize(1000);
     }
 
-    @Rollback
     @Transactional
     @Test
     void testEmptyList() {

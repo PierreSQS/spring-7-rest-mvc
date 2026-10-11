@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -17,10 +16,9 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
- * Modified by Pierrot on 11-10-2026
+ * Modified by Pierrot on 12-10-2026
  */
 @SpringBootTest
 class CustomerControllerIT {
@@ -34,7 +32,6 @@ class CustomerControllerIT {
     @Autowired
     CustomerMapper customerMapper;
 
-    @Rollback
     @Transactional
     @Test
     void deleteByIdFound() {
@@ -49,17 +46,20 @@ class CustomerControllerIT {
     @Test
     void testDeleteNotFound() {
         UUID customerId = UUID.randomUUID();
-        assertThrows(NotFoundException.class, () -> customerController.deleteCustomerById(customerId));
+
+        assertThatThrownBy(() -> customerController.deleteCustomerById(customerId))
+                .isInstanceOf(NotFoundException.class);
     }
 
     @Test
     void testUpdateNotFound() {
         UUID customerId = UUID.randomUUID();
         CustomerDTO customerDTO = CustomerDTO.builder().build();
-        assertThrows(NotFoundException.class, () -> customerController.updateCustomerByID(customerId, customerDTO));
+
+        assertThatThrownBy(() -> customerController.updateCustomerByID(customerId, customerDTO))
+                .isInstanceOf(NotFoundException.class);
     }
 
-    @Rollback
     @Transactional
     @Test
     void updateExistingBeer() {
@@ -77,7 +77,6 @@ class CustomerControllerIT {
         assertThat(updatedCustomer.getName()).isEqualTo(customerName);
     }
 
-    @Rollback
     @Transactional
     @Test
     void saveNewBeerTest() {
@@ -97,7 +96,6 @@ class CustomerControllerIT {
         assertThat(customer).isNotNull();
     }
 
-    @Rollback
     @Transactional
     @Test
     void testListAllEmptyList() {
