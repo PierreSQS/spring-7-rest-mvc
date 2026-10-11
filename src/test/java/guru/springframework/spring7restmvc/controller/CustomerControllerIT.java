@@ -16,10 +16,11 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
- * Modified by Pierrot on 10-10-2026
+ * Modified by Pierrot on 11-10-2026
  */
 @SpringBootTest
 class CustomerControllerIT {
@@ -47,16 +48,15 @@ class CustomerControllerIT {
 
     @Test
     void testDeleteNotFound() {
-        assertThrows(NotFoundException.class, () -> {
-            customerController.deleteCustomerById(UUID.randomUUID());
-        });
+        UUID customerId = UUID.randomUUID();
+        assertThrows(NotFoundException.class, () -> customerController.deleteCustomerById(customerId));
     }
 
     @Test
     void testUpdateNotFound() {
-        assertThrows(NotFoundException.class, () -> {
-            customerController.updateCustomerByID(UUID.randomUUID(), CustomerDTO.builder().build());
-        });
+        UUID customerId = UUID.randomUUID();
+        CustomerDTO customerDTO = CustomerDTO.builder().build();
+        assertThrows(NotFoundException.class, () -> customerController.updateCustomerByID(customerId, customerDTO));
     }
 
     @Rollback
@@ -116,9 +116,10 @@ class CustomerControllerIT {
 
     @Test
     void testGetByIdNotFound() {
-        assertThrows(NotFoundException.class, () -> {
-            customerController.getCustomerById(UUID.randomUUID());
-        });
+        UUID customerID = UUID.randomUUID();
+
+        assertThatThrownBy(() -> customerController.getCustomerById(customerID))
+                .isInstanceOf(NotFoundException.class);
     }
 
     @Test
@@ -128,13 +129,3 @@ class CustomerControllerIT {
         assertThat(customerDTO).isNotNull();
     }
 }
-
-
-
-
-
-
-
-
-
-

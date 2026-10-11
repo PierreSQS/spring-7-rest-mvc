@@ -20,6 +20,7 @@ import java.util.UUID;
 
 /**
  * Created by jt, Spring Framework Guru.
+ * Modified by Pierrot on 11-10-2026
  */
 @Getter
 @Setter
@@ -41,7 +42,7 @@ public class Beer {
 
     @NotNull
     @NotBlank
-    @Size(max = 50)
+    @Size(max = 50, message = "Beer name must be at most 50 characters")
     @Column(length = 50)
     private String beerName;
 
