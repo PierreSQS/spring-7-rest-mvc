@@ -20,7 +20,7 @@ import java.util.UUID;
 
 /**
  * Created by jt, Spring Framework Guru.
- * Modified by Pierrot on 11-10-2026
+ * Modified by Pierrot on 12-10-2026
  */
 @Getter
 @Setter
@@ -76,7 +76,7 @@ public class Beer {
 
     public void removeCategory(Category category){
         this.categories.remove(category);
-        category.getBeers().remove(category);
+        category.getBeers().remove(this);
     }
 
     @CreationTimestamp
