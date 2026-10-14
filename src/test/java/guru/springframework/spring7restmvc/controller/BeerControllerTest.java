@@ -10,6 +10,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -40,7 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Modified by Pierrot on 14-10-2026
+ * Modified by Pierrot on 15-10-2026
  */
 @WebMvcTest(BeerController.class)
 @ExtendWith(MockitoExtension.class)
@@ -48,6 +49,12 @@ class BeerControllerTest {
 
     @Autowired
     MockMvc mockMvc;
+
+    @Value("${spring.security.user.name}")
+    String username;
+
+    @Value("${spring.security.user.password}")
+    String password;
 
     @Autowired
     JsonMapper jsonMapper;
@@ -175,7 +182,7 @@ class BeerControllerTest {
 
         mockMvc.perform(get(BeerController.BEER_PATH)
                 .accept(MediaType.APPLICATION_JSON)
-                        .with(httpBasic("user", "user")))
+                        .with(httpBasic(username, password)))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.content.length()", is(3)))
@@ -187,7 +194,8 @@ class BeerControllerTest {
 
         given(beerService.getBeerById(any(UUID.class))).willReturn(Optional.empty());
 
-        mockMvc.perform(get(BeerController.BEER_PATH_ID, UUID.randomUUID()))
+        mockMvc.perform(get(BeerController.BEER_PATH_ID, UUID.randomUUID())
+                        .with(httpBasic(username, password)))
                 .andExpect(status().isNotFound());
     }
 
@@ -199,7 +207,7 @@ class BeerControllerTest {
 
         mockMvc.perform(get(BeerController.BEER_PATH_ID, testBeer.getId())
                 .accept(MediaType.APPLICATION_JSON)
-                        .with(httpBasic("user", "user")))
+                        .with(httpBasic(username, password)))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id", is(testBeer.getId().toString())))
