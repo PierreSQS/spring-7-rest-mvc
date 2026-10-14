@@ -8,6 +8,7 @@ import guru.springframework.spring7restmvc.repositories.BeerRepository;
 import guru.springframework.spring7restmvc.repositories.CustomerRepository;
 import guru.springframework.spring7restmvc.services.BeerCsvService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.io.ClassPathResource;
@@ -16,13 +17,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 
 /**
  * Created by jt, Spring Framework Guru.
- * Modified by Pierrot on 09-10-2026
+ * Modified by Pierrot on 14-10-2026
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class BootstrapData implements CommandLineRunner {
@@ -66,6 +67,11 @@ public class BootstrapData implements CommandLineRunner {
                                 .quantityOnHand(beerCSVRecord.getCount())
                         .build());
             });
+
+            log.info("### loaded {} Beers from CSV-File ###", recs.size());
+            log.info("### total Beers loaded: {} ###", beerRepository.count());
+        } else {
+            log.info("### More than 10 Beers present. CSV-Data loading skipped!! ###");
         }
     }
 
@@ -104,6 +110,10 @@ public class BootstrapData implements CommandLineRunner {
             beerRepository.save(beer1);
             beerRepository.save(beer2);
             beerRepository.save(beer3);
+
+            log.info("### loaded {} Beers manually ###", beerRepository.count());
+        } else {
+            log.info("### Beers are present in the DB. Manual Data loading skipped");
         }
 
     }
@@ -113,26 +123,27 @@ public class BootstrapData implements CommandLineRunner {
         if (customerRepository.count() == 0) {
             Customer customer1 = Customer.builder()
                     .name("Customer 1")
-                    .version(1)
                     .createdDate(LocalDateTime.now())
                     .updateDate(LocalDateTime.now())
                     .build();
 
             Customer customer2 = Customer.builder()
                     .name("Customer 2")
-                    .version(1)
                     .createdDate(LocalDateTime.now())
                     .updateDate(LocalDateTime.now())
                     .build();
 
             Customer customer3 = Customer.builder()
                     .name("Customer 3")
-                    .version(1)
                     .createdDate(LocalDateTime.now())
                     .updateDate(LocalDateTime.now())
                     .build();
 
-            customerRepository.saveAll(Arrays.asList(customer1, customer2, customer3));
+            customerRepository.saveAll(List.of(customer1, customer2, customer3));
+
+            log.info("### loaded {} customers manually ###", customerRepository.count());
+        } else {
+            log.info("### Customers are present in the DB. Data loading skipped");
         }
 
     }
