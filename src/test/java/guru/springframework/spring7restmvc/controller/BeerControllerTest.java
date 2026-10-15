@@ -41,7 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Modified by Pierrot on 15-10-2026
+ * Modified by Pierrot on 16-10-2026
  */
 @WebMvcTest(BeerController.class)
 @ExtendWith(MockitoExtension.class)
@@ -152,7 +152,8 @@ class BeerControllerTest {
         mockMvc.perform(post(BeerController.BEER_PATH)
                 .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(jsonMapper.writeValueAsString(beer)))
+                        .content(jsonMapper.writeValueAsString(beer))
+                        .with(httpBasic(username, password)))
                 .andExpect(status().isCreated())
                 .andExpect(header().exists("Location"));
     }
