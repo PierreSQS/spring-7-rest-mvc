@@ -9,6 +9,7 @@ import org.hamcrest.core.IsNull;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.data.domain.Page;
@@ -27,6 +28,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.core.Is.is;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -34,7 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Modified by Pierrot on 12-10-2026
+ * Modified by Pierrot on 16-10-2026
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -54,6 +56,12 @@ class BeerControllerIT {
     @Autowired
     MockMvc mockMvc;
 
+    @Value("${spring.security.user.name}")
+    private String username;
+
+    @Value("${spring.security.user.password}")
+    private String password;
+
     @Disabled("just for demo purposes")
     @Test
     void testUpdateBeerBadVersion() throws Exception {
@@ -66,7 +74,8 @@ class BeerControllerIT {
         MvcResult result = mockMvc.perform(put(BeerController.BEER_PATH_ID, beer.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
-                        .content(jsonMapper.writeValueAsString(beerDTO)))
+                        .content(jsonMapper.writeValueAsString(beerDTO))
+                        .with(httpBasic(username, password)))
                 .andExpect(status().isNoContent())
                 .andReturn();
 
@@ -77,7 +86,8 @@ class BeerControllerIT {
         MvcResult result2 = mockMvc.perform(put(BeerController.BEER_PATH_ID, beer.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
-                        .content(jsonMapper.writeValueAsString(beerDTO)))
+                        .content(jsonMapper.writeValueAsString(beerDTO))
+                        .with(httpBasic(username, password)))
                 .andExpect(status().isNoContent())
                 .andReturn();
 
@@ -91,7 +101,8 @@ class BeerControllerIT {
                         .queryParam("beerStyle", BeerStyle.IPA.name())
                         .queryParam("showInventory", "true")
                         .queryParam("pageNumber", "2")
-                        .queryParam("pageSize", "50"))
+                        .queryParam("pageSize", "50")
+                        .with(httpBasic(username, password)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.size()", is(50)))
                 .andExpect(jsonPath("$.content[0].quantityOnHand").value(IsNull.notNullValue()));
@@ -103,7 +114,8 @@ class BeerControllerIT {
                         .queryParam("beerName", "IPA")
                         .queryParam("beerStyle", BeerStyle.IPA.name())
                         .queryParam("showInventory", "true")
-                        .queryParam("pageSize", "800"))
+                        .queryParam("pageSize", "800")
+                        .with(httpBasic(username, password)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.size()", is(310)))
                 .andExpect(jsonPath("$.content[0].quantityOnHand").value(IsNull.notNullValue()));
@@ -115,7 +127,8 @@ class BeerControllerIT {
                         .queryParam("beerName", "IPA")
                         .queryParam("beerStyle", BeerStyle.IPA.name())
                         .queryParam("showInventory", "false")
-                        .queryParam("pageSize", "800"))
+                        .queryParam("pageSize", "800")
+                        .with(httpBasic(username, password)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.size()", is(310)))
                 .andExpect(jsonPath("$.content[0].quantityOnHand").value(IsNull.nullValue()));
@@ -126,7 +139,8 @@ class BeerControllerIT {
         mockMvc.perform(get(BeerController.BEER_PATH)
                         .queryParam("beerName", "IPA")
                         .queryParam("beerStyle", BeerStyle.IPA.name())
-                        .queryParam("pageSize", "800"))
+                        .queryParam("pageSize", "800")
+                        .with(httpBasic(username, password)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.size()", is(310)));
     }
@@ -135,7 +149,8 @@ class BeerControllerIT {
     void tesListBeersByStyle() throws Exception {
         mockMvc.perform(get(BeerController.BEER_PATH)
                         .queryParam("beerStyle", BeerStyle.IPA.name())
-                        .queryParam("pageSize", "800"))
+                        .queryParam("pageSize", "800")
+                        .with(httpBasic(username, password)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.size()", is(548)));
     }
@@ -144,7 +159,8 @@ class BeerControllerIT {
     void tesListBeersByName() throws Exception {
         mockMvc.perform(get(BeerController.BEER_PATH)
                 .queryParam("beerName", "IPA")
-                .queryParam("pageSize", "800"))
+                .queryParam("pageSize", "800")
+                        .with(httpBasic(username, password)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.size()", is(336)));
     }
@@ -159,14 +175,16 @@ class BeerControllerIT {
         mockMvc.perform(patch(BeerController.BEER_PATH_ID, beer.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
-                        .content(jsonMapper.writeValueAsString(beerMap)))
+                        .content(jsonMapper.writeValueAsString(beerMap))
+                        .with(httpBasic(username, password)))
                 .andExpect(status().isBadRequest());
 
     }
 
     @Test
     void testDeleteByIDNotFound() {
-        assertThatThrownBy(() -> beerController.deleteById(UUID.randomUUID()))
+        UUID beerId = UUID.randomUUID();
+        assertThatThrownBy(() -> beerController.deleteById(beerId))
                 .isInstanceOf(NotFoundException.class);
     }
 
