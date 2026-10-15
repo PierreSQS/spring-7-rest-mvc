@@ -13,7 +13,7 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SpringSecConfig {
 
     @Bean
-    public SecurityFilterChain securityWebFilterChain(HttpSecurity httpSecurity) {
+    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) {
         httpSecurity.csrf(csrf -> csrf
                 .ignoringRequestMatchers("/api/**"));
 
