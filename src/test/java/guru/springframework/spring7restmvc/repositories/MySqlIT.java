@@ -6,9 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.test.context.ActiveProfiles;
-import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.mysql.MySQLContainer;
 
 import java.util.List;
 
@@ -16,6 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Created by jt, Spring Framework Guru.
+ * Modified by Pierrot on 16-10-2026
  */
 @Testcontainers
 @SpringBootTest
@@ -24,7 +25,7 @@ public class MySqlIT {
 
     @Container
     @ServiceConnection
-    static MySQLContainer<?> mySQLContainer = new MySQLContainer<>("mysql:9.2");
+    static MySQLContainer mySQLContainer = new MySQLContainer("mysql:9.5");
 
     @Autowired
     BeerRepository beerRepository;
@@ -33,6 +34,6 @@ public class MySqlIT {
     void testListBeers() {
         List<Beer> beers = beerRepository.findAll();
 
-        assertThat(beers.size()).isGreaterThan(0);
+        assertThat(beers).hasSizeGreaterThan(0);
     }
 }
