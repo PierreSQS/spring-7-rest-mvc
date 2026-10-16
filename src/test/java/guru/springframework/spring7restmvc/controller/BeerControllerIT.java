@@ -249,6 +249,32 @@ class BeerControllerIT {
         assertThat(updatedBeer.getBeerName()).isEqualTo(beerName);
     }
 
+    // a PUT replaces the whole beer: a field missing from the body must become null,
+    // unlike a PATCH, which keeps it (see BeerMapper.updateBeerFromDto / patchBeerFromDto)
+    @Transactional
+    @Test
+    void updateExistingBeerWithoutQuantityClearsIt() {
+        // take a beer that HAS a quantity - otherwise "becomes null" would prove nothing
+        Beer beer = beerRepository.findAll().stream()
+                .filter(foundBeer -> foundBeer.getQuantityOnHand() != null)
+                .findFirst().orElseThrow();
+        BeerDTO beerDTO = beerMapper.beerToBeerDto(beer);
+
+        // set quantityOnHand to null to simulate a PUT request that doesn't include it
+        beerDTO.setQuantityOnHand(null);
+
+        // the PUT itself succeeds: 204 No Content
+        ResponseEntity<Void> responseEntity = beerController.updateById(beer.getId(), beerDTO);
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(204));
+
+        // reload the beer: the quantity must now be null, because a PUT replaces the whole beer;
+        // with the PATCH mapper (IGNORE) it would still hold its old value - that is the bug this test catches
+        assertThat(beerRepository.findById(beer.getId()))
+                .get()
+                .extracting(Beer::getQuantityOnHand)
+                .isNull();
+    }
+
     @Transactional
     @Test
     void saveNewBeerTest() {

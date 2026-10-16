@@ -112,11 +112,8 @@ public class BeerServiceJPA implements BeerService {
         AtomicReference<Optional<BeerDTO>> atomicReference = new AtomicReference<>();
 
         beerRepository.findById(beerId).ifPresentOrElse(foundBeer -> {
-            foundBeer.setBeerName(beer.getBeerName());
-            foundBeer.setBeerStyle(beer.getBeerStyle());
-            foundBeer.setUpc(beer.getUpc());
-            foundBeer.setPrice(beer.getPrice());
-            foundBeer.setQuantityOnHand(beer.getQuantityOnHand());
+            beerMapper.updateBeerFromDto(beer, foundBeer);
+
             atomicReference.set(Optional.of(beerMapper
                     .beerToBeerDto(beerRepository.save(foundBeer))));
         }, () -> atomicReference.set(Optional.empty()));

@@ -41,4 +41,19 @@ public interface BeerMapper {
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void patchBeerFromDto(BeerDTO dto, @MappingTarget Beer beer);
 
+    /**
+     * Replaces all the fields of an existing beer for a PUT: a {@code null} field of the DTO
+     * becomes {@code null} on the beer (MapStruct's default), because a PUT sends the whole beer.
+     * Deliberately NO {@code IGNORE} here, unlike {@link #patchBeerFromDto}: with it, a PUT without
+     * {@code quantityOnHand} would keep the old value and behave like a PATCH.
+     * The id, the version, the timestamps and the relationships stay protected as in the PATCH.
+     */
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "beerOrderLines", ignore = true)
+    @Mapping(target = "categories", ignore = true)
+    @Mapping(target = "createdDate", ignore = true)
+    @Mapping(target = "updateDate", ignore = true)
+    @Mapping(target = "version", ignore = true)
+    void updateBeerFromDto(BeerDTO dto, @MappingTarget Beer beer);
+
 }
