@@ -4,12 +4,17 @@ import guru.springframework.spring7restmvc.entities.Beer;
 import guru.springframework.spring7restmvc.entities.BeerOrder;
 import guru.springframework.spring7restmvc.entities.BeerOrderShipment;
 import guru.springframework.spring7restmvc.entities.Customer;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Modified by Pierrot on 16-10-2026
+ */
+@Slf4j
 @SpringBootTest
 class BeerOrderRepositoryTest {
 
@@ -45,7 +50,7 @@ class BeerOrderRepositoryTest {
         BeerOrder savedBeerOrder = beerOrderRepository.save(beerOrder);
 
 
-        System.out.println(savedBeerOrder.getCustomerRef());
+        log.info("Saved beer order customerRef: {}", savedBeerOrder.getCustomerRef());
     }
 }
 

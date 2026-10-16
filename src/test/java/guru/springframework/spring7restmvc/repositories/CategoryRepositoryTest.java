@@ -2,6 +2,7 @@ package guru.springframework.spring7restmvc.repositories;
 
 import guru.springframework.spring7restmvc.entities.Beer;
 import guru.springframework.spring7restmvc.entities.Category;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +11,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Modified by Pierrot on 16-10-2026
+ */
+@Slf4j
 @SpringBootTest
 class CategoryRepositoryTest {
     @Autowired
@@ -34,7 +39,7 @@ class CategoryRepositoryTest {
         testBeer.addCategory(savedCat);
         Beer saveBeer = beerRepository.save(testBeer);
 
-        System.out.println(saveBeer.getBeerName());
+        log.info("Saved beer with category: {}", saveBeer.getBeerName());
 
     }
 }

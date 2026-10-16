@@ -4,6 +4,7 @@ import guru.springframework.spring7restmvc.config.SpringSecConfig;
 import guru.springframework.spring7restmvc.model.BeerDTO;
 import guru.springframework.spring7restmvc.services.BeerService;
 import guru.springframework.spring7restmvc.services.BeerServiceImpl;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,6 +46,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * Modified by Pierrot on 16-10-2026
  */
+@Slf4j
 @WebMvcTest(BeerController.class)
 @Import(SpringSecConfig.class)
 @ExtendWith(MockitoExtension.class)
@@ -184,7 +186,7 @@ class BeerControllerTest {
                 .andDo(print())
                 .andReturn();
 
-        System.out.println(mvcResult.getResponse().getContentAsString());
+        log.info("Validation errors: {}", mvcResult.getResponse().getContentAsString());
     }
 
     @Test

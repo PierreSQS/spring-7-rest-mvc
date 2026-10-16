@@ -5,6 +5,7 @@ import guru.springframework.spring7restmvc.mappers.BeerMapper;
 import guru.springframework.spring7restmvc.model.BeerDTO;
 import guru.springframework.spring7restmvc.model.BeerStyle;
 import guru.springframework.spring7restmvc.repositories.BeerRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.core.IsNull;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -38,6 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * Modified by Pierrot on 16-10-2026
  */
+@Slf4j
 @SpringBootTest
 @AutoConfigureMockMvc
 class BeerControllerIT {
@@ -79,7 +81,7 @@ class BeerControllerIT {
                 .andExpect(status().isNoContent())
                 .andReturn();
 
-        System.out.println(result.getResponse().getContentAsString());
+        log.info("First PUT response: {}", result.getResponse().getContentAsString());
 
         beerDTO.setBeerName("Updated Name 2");
 
@@ -91,7 +93,7 @@ class BeerControllerIT {
                 .andExpect(status().isNoContent())
                 .andReturn();
 
-        System.out.println(result2.getResponse().getStatus());
+        log.info("Second PUT status: {}", result2.getResponse().getStatus());
     }
 
     @Test
