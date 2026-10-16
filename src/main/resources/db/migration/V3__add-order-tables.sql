@@ -1,6 +1,3 @@
-drop table if exists beer_order_line;
-drop table if exists beer_order;
-
 CREATE TABLE `beer_order`
 (
     id                 varchar(36) NOT NULL,
