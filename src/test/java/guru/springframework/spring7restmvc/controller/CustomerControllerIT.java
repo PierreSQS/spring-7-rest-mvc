@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.TransactionSystemException;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -18,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * Modified by Pierrot on 12-10-2026
+ * Modified by Pierrot on 17-10-2026
  */
 @SpringBootTest
 class CustomerControllerIT {
@@ -75,6 +76,29 @@ class CustomerControllerIT {
 
         Customer updatedCustomer = customerRepository.findById(customer.getId()).get();
         assertThat(updatedCustomer.getName()).isEqualTo(customerName);
+    }
+
+    // JT's hasText check ignored an empty name; the MapStruct patch copies it, and without
+    // @NotBlank on Customer.name the customer silently lost its name (known bug of ebab5ee8).
+    // Not @Transactional on purpose: the save must really commit, because the validation
+    // runs when Hibernate writes the change - inside a rolled-back test transaction it never would.
+    @Test
+    void testPatchCustomerBlankNameIsRejected() {
+        Customer customer = customerRepository.findAll().getFirst();
+        UUID customerId = customer.getId();
+        CustomerDTO customerDTO = CustomerDTO.builder().name("").build();
+
+        // the save is refused: Bean Validation (@NotBlank) fails while committing
+        assertThatThrownBy(() -> customerController.patchCustomerById(customerId, customerDTO))
+                .isInstanceOf(TransactionSystemException.class)
+                .rootCause()
+                .hasMessageContaining("name");
+
+        // reload the customer: the refused change was rolled back, so the name is still there
+        assertThat(customerRepository.findById(customerId))
+                .get()
+                .extracting(Customer::getName)
+                .isEqualTo(customer.getName());
     }
 
     @Transactional
