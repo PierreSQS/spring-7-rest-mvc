@@ -119,7 +119,7 @@ class BeerControllerIT {
                         .queryParam("pageSize", "800")
                         .with(httpBasic(username, password)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content.size()", is(310)))
+                .andExpect(jsonPath("$.content.size()", is(324)))
                 .andExpect(jsonPath("$.content[0].quantityOnHand").value(IsNull.notNullValue()));
     }
 
@@ -132,7 +132,7 @@ class BeerControllerIT {
                         .queryParam("pageSize", "800")
                         .with(httpBasic(username, password)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content.size()", is(310)))
+                .andExpect(jsonPath("$.content.size()", is(324)))
                 .andExpect(jsonPath("$.content[0].quantityOnHand").value(IsNull.nullValue()));
     }
 
@@ -144,7 +144,7 @@ class BeerControllerIT {
                         .queryParam("pageSize", "800")
                         .with(httpBasic(username, password)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content.size()", is(310)));
+                .andExpect(jsonPath("$.content.size()", is(324)));
     }
 
     @Test
@@ -154,7 +154,7 @@ class BeerControllerIT {
                         .queryParam("pageSize", "800")
                         .with(httpBasic(username, password)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content.size()", is(548)));
+                .andExpect(jsonPath("$.content.size()", is(572)));
     }
 
     @Test

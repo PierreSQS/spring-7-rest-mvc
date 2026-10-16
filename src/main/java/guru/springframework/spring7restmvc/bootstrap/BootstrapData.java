@@ -21,7 +21,7 @@ import java.util.List;
 
 /**
  * Created by jt, Spring Framework Guru.
- * Modified by Pierrot on 14-10-2026
+ * Modified by Pierrot on 16-10-2026
  */
 @Slf4j
 @Component
@@ -46,22 +46,9 @@ public class BootstrapData implements CommandLineRunner {
             List<BeerCSVRecord> recs = beerCsvService.convertCSV(resource);
 
             recs.forEach(beerCSVRecord -> {
-                BeerStyle beerStyle = switch (beerCSVRecord.getStyle()) {
-                    case "American Pale Lager" -> BeerStyle.LAGER;
-                    case "American Pale Ale (APA)", "American Black Ale", "Belgian Dark Ale", "American Blonde Ale" ->
-                            BeerStyle.ALE;
-                    case "American IPA", "American Double / Imperial IPA", "Belgian IPA" -> BeerStyle.IPA;
-                    case "American Porter" -> BeerStyle.PORTER;
-                    case "Oatmeal Stout", "American Stout" -> BeerStyle.STOUT;
-                    case "Saison / Farmhouse Ale" -> BeerStyle.SAISON;
-                    case "Fruit / Vegetable Beer", "Winter Warmer", "Berliner Weissbier" -> BeerStyle.WHEAT;
-                    case "English Pale Ale" -> BeerStyle.PALE_ALE;
-                    default -> BeerStyle.PILSNER;
-                };
-
                 beerRepository.save(Beer.builder()
                                 .beerName(StringUtils.abbreviate(beerCSVRecord.getBeer(), 50))
-                                .beerStyle(beerStyle)
+                                .beerStyle(beerStyleOf(beerCSVRecord.getStyle()))
                                 .price(BigDecimal.TEN)
                                 .upc(beerCSVRecord.getRow().toString())
                                 .quantityOnHand(beerCSVRecord.getCount())
@@ -73,6 +60,31 @@ public class BootstrapData implements CommandLineRunner {
         } else {
             log.info("### More than 10 Beers present. CSV-Data loading skipped!! ###");
         }
+    }
+
+    /**
+     * Maps the free-text style of the CSV (e.g. "American IPA") to a {@link BeerStyle} by keyword.
+     * The order matters: "American Pale Wheat Ale" must become WHEAT and
+     * "English India Pale Ale (IPA)" IPA before the "PALE ALE" rule can catch them.
+     * Styles without a known keyword are almost all ales, so ALE is the default.
+     */
+    static BeerStyle beerStyleOf(String csvStyle) {
+        String style = csvStyle.toUpperCase();
+
+        if (style.contains("IPA")) return BeerStyle.IPA;
+        if (style.contains("STOUT")) return BeerStyle.STOUT;
+        if (style.contains("PORTER")) return BeerStyle.PORTER;
+        if (style.contains("GOSE")) return BeerStyle.GOSE;
+        if (style.contains("SAISON") || style.contains("FARMHOUSE")) return BeerStyle.SAISON;
+        if (style.contains("WHEAT") || style.contains("WITBIER") || style.contains("WEISS")
+                || style.contains("WEIZEN") || style.contains("HEFE")) return BeerStyle.WHEAT;
+        if (style.contains("PALE ALE")) return BeerStyle.PALE_ALE;
+        if (style.contains("PILSNER") || style.contains("PILSENER") || style.contains("PILS")) return BeerStyle.PILSNER;
+        if (style.contains("LAGER") || style.contains("BOCK") || style.contains("RZEN")
+                || style.contains("OKTOBERFEST") || style.contains("HELLES") || style.contains("DUNKEL")
+                || style.contains("SCHWARZ") || style.contains("VIENNA")) return BeerStyle.LAGER;
+
+        return BeerStyle.ALE;
     }
 
     private void loadBeerData() {
