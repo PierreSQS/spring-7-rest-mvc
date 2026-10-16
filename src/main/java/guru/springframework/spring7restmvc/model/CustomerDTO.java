@@ -10,6 +10,7 @@ import java.util.UUID;
 
 /**
  * Created by jt, Spring Framework Guru.
+ * Modified by Pierrot on 17-10-2026
  */
 @JsonDeserialize(builder = CustomerDTO.CustomerDTOBuilder.class)
 @Data
@@ -20,6 +21,9 @@ public class CustomerDTO {
 
     @JsonProperty("name")
     private String name;
+
+    @JsonProperty("email")
+    private String email;
 
     @JsonProperty("version")
     private Integer version;

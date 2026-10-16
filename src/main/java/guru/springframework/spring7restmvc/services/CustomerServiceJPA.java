@@ -6,7 +6,6 @@ import guru.springframework.spring7restmvc.repositories.CustomerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -15,7 +14,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Created by jt, Spring Framework Guru.
- * Modified by Pierrot on 09-10-2026
+ * Modified by Pierrot on 17-10-2026
  */
 @Service
 @Primary
@@ -48,7 +47,8 @@ public class CustomerServiceJPA implements CustomerService {
         AtomicReference<Optional<CustomerDTO>> atomicReference = new AtomicReference<>();
 
         customerRepository.findById(customerId).ifPresentOrElse(foundCustomer -> {
-            foundCustomer.setName(customer.getName());
+            customerMapper.updateCustomerFromDto(customer, foundCustomer);
+
             atomicReference.set(Optional.of(customerMapper
                     .customerToCustomerDto(customerRepository.save(foundCustomer))));
         }, () -> atomicReference.set(Optional.empty()));
@@ -70,9 +70,9 @@ public class CustomerServiceJPA implements CustomerService {
         AtomicReference<Optional<CustomerDTO>> atomicReference = new AtomicReference<>();
 
         customerRepository.findById(customerId).ifPresentOrElse(foundCustomer -> {
-            if (StringUtils.hasText(customer.getName())){
-                foundCustomer.setName(customer.getName());
-            }
+
+            customerMapper.patchCustomerFromDto(customer, foundCustomer);
+
             atomicReference.set(Optional.of(customerMapper
                     .customerToCustomerDto(customerRepository.save(foundCustomer))));
         }, () -> atomicReference.set(Optional.empty()));
