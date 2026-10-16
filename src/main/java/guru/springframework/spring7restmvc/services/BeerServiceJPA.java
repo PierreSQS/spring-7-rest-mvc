@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Created by jt, Spring Framework Guru.
- * Modified by Pierrot on 09-10-2026
+ * Modified by Pierrot on 16-10-2026
  */
 @Service
 @Primary
@@ -138,21 +138,8 @@ public class BeerServiceJPA implements BeerService {
         AtomicReference<Optional<BeerDTO>> atomicReference = new AtomicReference<>();
 
         beerRepository.findById(beerId).ifPresentOrElse(foundBeer -> {
-            if (StringUtils.hasText(beer.getBeerName())){
-                foundBeer.setBeerName(beer.getBeerName());
-            }
-            if (beer.getBeerStyle() != null){
-                foundBeer.setBeerStyle(beer.getBeerStyle());
-            }
-            if (StringUtils.hasText(beer.getUpc())){
-                foundBeer.setUpc(beer.getUpc());
-            }
-            if (beer.getPrice() != null){
-                foundBeer.setPrice(beer.getPrice());
-            }
-            if (beer.getQuantityOnHand() != null){
-                foundBeer.setQuantityOnHand(beer.getQuantityOnHand());
-            }
+            beerMapper.patchBeerFromDto(beer, foundBeer);
+
             atomicReference.set(Optional.of(beerMapper
                     .beerToBeerDto(beerRepository.save(foundBeer))));
         }, () -> atomicReference.set(Optional.empty()));

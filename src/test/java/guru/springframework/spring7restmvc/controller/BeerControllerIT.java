@@ -183,6 +183,28 @@ class BeerControllerIT {
 
     }
 
+    // JT's if-chain skipped an empty name and answered 204; the MapStruct patch copies it,
+    // @NotBlank rejects it on save, so the client gets 400 and the beer keeps its name
+    @Test
+    void testPatchBeerBlankName() throws Exception {
+        Beer beer = beerRepository.findAll().getFirst();
+
+        Map<String, Object> beerMap = new HashMap<>();
+        beerMap.put("beerName", "");
+
+        mockMvc.perform(patch(BeerController.BEER_PATH_ID, beer.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(jsonMapper.writeValueAsString(beerMap))
+                        .with(httpBasic(username, password)))
+                .andExpect(status().isBadRequest());
+
+        assertThat(beerRepository.findById(beer.getId()))
+                .get()
+                .extracting(Beer::getBeerName)
+                .isEqualTo(beer.getBeerName());
+    }
+
     @Test
     void testDeleteByIDNotFound() {
         UUID beerId = UUID.randomUUID();

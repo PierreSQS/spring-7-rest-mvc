@@ -2,16 +2,43 @@ package guru.springframework.spring7restmvc.mappers;
 
 import guru.springframework.spring7restmvc.entities.Beer;
 import guru.springframework.spring7restmvc.model.BeerDTO;
+import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
 /**
  * Created by jt, Spring Framework Guru.
+ * Modified by Pierrot on 16-10-2026
  */
 @Mapper
 public interface BeerMapper {
 
+    @Mapping(target = "beerOrderLines", ignore = true)
+    @Mapping(target = "categories", ignore = true)
     Beer beerDtoToBeer(BeerDTO dto);
 
     BeerDTO beerToBeerDto(Beer beer);
+
+    /**
+     * Copies the fields a PATCH request carries onto an existing beer. MapStruct generates one
+     * null check per property ({@code IGNORE}), so a field added later needs no change in the service.
+     * The id, the version, the timestamps and the relationships are owned by the persistence layer,
+     * so a request body cannot overwrite them.
+     * <p>
+     * Difference with JT's code: his {@code StringUtils.hasText(...)} checks silently skipped an
+     * empty {@code beerName} or {@code upc} and answered 204 although nothing had changed. Here only
+     * {@code null} is skipped: an empty name or upc is copied, rejected by {@code @NotBlank} when the
+     * beer is saved, and the client gets 400. The beer in the database stays unchanged.
+     */
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "beerOrderLines", ignore = true)
+    @Mapping(target = "categories", ignore = true)
+    @Mapping(target = "createdDate", ignore = true)
+    @Mapping(target = "updateDate", ignore = true)
+    @Mapping(target = "version", ignore = true)
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    void patchBeerFromDto(BeerDTO dto, @MappingTarget Beer beer);
 
 }
