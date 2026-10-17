@@ -5,12 +5,12 @@ import lombok.*;
 import org.hibernate.annotations.*;
 import org.hibernate.type.SqlTypes;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
  * Created by jt, Spring Framework Guru.
- * Modified by Pierrot on 12-10-2026
+ * Modified by Pierrot on 18-10-2026
  */
 @Getter
 @Setter
@@ -35,8 +35,8 @@ public class BeerOrderShipment {
 
     @CreationTimestamp
     @Column(updatable = false)
-    private Timestamp createdDate;
+    private LocalDateTime createdDate;
 
     @UpdateTimestamp
-    private Timestamp lastModifiedDate;
+    private LocalDateTime lastModifiedDate;
 }

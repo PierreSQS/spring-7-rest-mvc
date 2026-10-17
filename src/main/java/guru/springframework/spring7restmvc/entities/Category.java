@@ -18,13 +18,13 @@ import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
 /**
- * Modified by Pierrot on 12-10-2026
+ * Modified by Pierrot on 18-10-2026
  */
 @Builder
 @Getter
@@ -45,10 +45,10 @@ public class Category {
 
     @CreationTimestamp
     @Column(updatable = false)
-    private Timestamp createdDate;
+    private LocalDateTime createdDate;
 
     @UpdateTimestamp
-    private Timestamp lastModifiedDate;
+    private LocalDateTime lastModifiedDate;
 
     private String description;
 
