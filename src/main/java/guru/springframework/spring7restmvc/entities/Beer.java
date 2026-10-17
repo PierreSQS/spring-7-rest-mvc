@@ -20,7 +20,7 @@ import java.util.UUID;
 
 /**
  * Created by jt, Spring Framework Guru.
- * Modified by Pierrot on 12-10-2026
+ * Modified by Pierrot on 17-10-2026
  */
 @Getter
 @Setter
@@ -79,6 +79,7 @@ public class Beer {
     }
 
     @CreationTimestamp
+    @Column(updatable = false)
     private LocalDateTime createdDate;
 
     @UpdateTimestamp
