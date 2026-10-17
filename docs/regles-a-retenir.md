@@ -4,7 +4,7 @@ Les règles apprises en travaillant sur ce projet (Spring Boot 4, Spring Data JP
 MapStruct, Spring Security 7). Chaque règle : **la règle**, un **exemple**, et **la preuve**
 (le test ou le commit qui la montre). Document enrichi au fil des leçons.
 
-Créé le 18-10-2026.
+Créé le 17-10-2026.
 
 ---
 
@@ -202,3 +202,47 @@ reste dans l'historique : il faut alors la changer.
   `new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8)`.
 
 **Preuves :** commit `1fd507b1`, test `convertCSVKeepsAccentedCharacters`.
+
+---
+
+## 8. Java : lambdas et threads
+
+### R20 — `AtomicReference` sert aux threads ; pour sortir une valeur d'un lambda, ce n'est qu'une boîte
+
+**La règle des lambdas :** une variable déclarée en dehors d'un lambda et utilisée dedans ne doit plus
+jamais changer (« effectively final »). Sinon, le compilateur refuse :
+
+```
+error: local variables referenced from a lambda expression must be final or effectively final
+```
+
+**L'astuce de la boîte (le code de JT) :** on ne change pas la variable, on change son **contenu**.
+La variable désigne toujours la même boîte, donc Java accepte :
+
+```java
+AtomicReference<Optional<BeerDTO>> atomicReference = new AtomicReference<>();
+beerRepository.findById(beerId).ifPresentOrElse(
+        foundBeer -> atomicReference.set(Optional.of(...)),   // on remplit la boîte
+        () -> atomicReference.set(Optional.empty()));
+return atomicReference.get();                                 // on vide la boîte
+```
+
+**L'usage prévu : plusieurs threads sur la même valeur.** `count++` se fait en 3 temps (lire, ajouter,
+écrire) ; deux threads peuvent se croiser au milieu et écraser l'addition de l'autre.
+`incrementAndGet()` fait les 3 temps d'un seul coup indivisible (« atomique »).
+
+Deux threads, chacun 1 million d'additions sur le même compteur (attendu : 2 000 000) :
+
+| Essai | `int` avec `count++` | `AtomicInteger` avec `incrementAndGet()` |
+|---|---|---|
+| 1 | 1 299 226 ❌ | 2 000 000 ✅ |
+| 2 | 1 304 833 ❌ | 2 000 000 ✅ |
+| 3 | 1 377 340 ❌ | 2 000 000 ✅ |
+
+`AtomicReference` fait la même chose pour un objet : `compareAndSet(ancien, nouveau)` ne remplace
+que si personne ne l'a modifié entre-temps.
+
+**Dans nos services :** la boîte est créée pour une seule requête et un seul thread s'en sert.
+L'atomicité ne sert à rien : c'est un détour, et `Optional` permet de s'en passer.
+
+**Preuve :** petit programme de démonstration lancé le 17-10-2026 (deux threads, résultats ci-dessus).
