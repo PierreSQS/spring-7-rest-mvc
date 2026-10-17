@@ -120,6 +120,29 @@ class CustomerControllerIT {
         assertThat(customer).isNotNull();
     }
 
+    // a customer created through the API must get its dates from Hibernate
+    // (@CreationTimestamp / @UpdateTimestamp on Customer) - before, only BootstrapData set them by hand
+    @Transactional
+    @Test
+    void saveNewCustomerGetsCreatedAndUpdateDate() {
+        CustomerDTO customerDTO = CustomerDTO.builder()
+                .name("TEST")
+                .build();
+
+        ResponseEntity<Void> responseEntity = customerController.handlePost(customerDTO);
+
+        // write the insert now: the test transaction is never committed, and Hibernate
+        // fills @UpdateTimestamp only when it really writes the row (the flush)
+        customerRepository.flush();
+
+        String[] locationUUID = responseEntity.getHeaders().getLocation().getPath().split("/");
+        Customer customer = customerRepository.findById(UUID.fromString(locationUUID[4])).orElseThrow();
+
+        // the request sent no dates: both must have been filled by Hibernate
+        assertThat(customer.getCreatedDate()).isNotNull();
+        assertThat(customer.getUpdateDate()).isNotNull();
+    }
+
     @Transactional
     @Test
     void testListAllEmptyList() {
