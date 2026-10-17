@@ -69,10 +69,6 @@ public class BeerOrder {
     @UpdateTimestamp
     private LocalDateTime updateDate;
 
-    public boolean isNew() {
-        return this.id == null;
-    }
-
     private String customerRef;
 
     @ManyToOne
