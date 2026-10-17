@@ -157,9 +157,29 @@
                     </compilerArgs>
                 </configuration>
             </plugin>
+            <!--
+                Mockito needs a Java agent to create mocks. Without this, it attaches the agent itself
+                while the tests run, and the JDK warns that this "dynamic loading of agents" will be
+                disallowed in a future release. Declaring the agent at JVM start removes the warning.
+                -Xshare:off: the agent extends the JVM's boot class path, which disables part of the
+                JDK's class data sharing (a start-up cache) and prints one more warning; switching the
+                cache off for the test JVM silences it (start-up costs a fraction of a second more).
+                The path points into the local Maven repository so that IntelliJ can resolve it too;
+                mockito.version comes from the Spring Boot parent.
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>-Xshare:off -javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar</argLine>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
+                <configuration>
+                    <argLine>-Xshare:off -javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar</argLine>
+                </configuration>
                 <executions>
                     <execution>
                         <goals>
