@@ -246,3 +246,40 @@ que si personne ne l'a modifié entre-temps.
 L'atomicité ne sert à rien : c'est un détour, et `Optional` permet de s'en passer.
 
 **Preuve :** petit programme de démonstration lancé le 17-10-2026 (deux threads, résultats ci-dessus).
+
+### R21 — `Optional.map` : transformer le contenu d'un `Optional`, sans boîte
+
+**L'idée :** `map` transforme **toujours** un `Optional<A>` en `Optional<B>`, et on le renvoie.
+
+- `Optional<A>` plein → `map` exécute le lambda sur le contenu et met ce que le lambda **renvoie** dans un `Optional<B>` ;
+- `Optional<A>` vide → `map` n'exécute **pas** le lambda et rend un `Optional<B>` vide.
+
+**Dans nos services (PUT d'une bière) :** on part d'un `Optional<Beer>` et on renvoie un `Optional<BeerDTO>`.
+
+```java
+return beerRepository.findById(beerId)                                    // Optional<Beer> : la bière, ou rien
+        .map(foundBeer -> {                                               // ce qui se passe DANS la transformation :
+            beerMapper.updateBeerFromDto(beerDTO, foundBeer);             //   appliquer les changements
+            return beerMapper.beerToBeerDto(beerRepository.save(foundBeer)); // enregistrer, puis convertir en DTO
+        });                                                               // → Optional<BeerDTO> : le DTO, ou rien
+```
+
+| `findById` trouve… | `Optional<Beer>` | `map` | `Optional<BeerDTO>` | Réponse |
+|---|---|---|---|---|
+| la bière | avec la bière | exécute le lambda | avec le DTO de la bière **modifiée** | 204 |
+| rien | vide | n'exécute rien | vide | 404 |
+
+**`map` n'est qu'un raccourci pour ce `if / else` :**
+
+```java
+Optional<Beer> optionalBeer = beerRepository.findById(beerId);
+if (optionalBeer.isPresent()) {
+    Beer foundBeer = optionalBeer.get();
+    beerMapper.updateBeerFromDto(beerDTO, foundBeer);
+    return Optional.of(beerMapper.beerToBeerDto(beerRepository.save(foundBeer)));
+}
+return Optional.empty();
+```
+
+**Pourquoi c'est mieux que la boîte de JT (R20) :** le lambda **renvoie** son résultat (`return`) au lieu
+de le déposer dans une `AtomicReference`. Plus de boîte, plus de règle « effectively final » à contourner.
