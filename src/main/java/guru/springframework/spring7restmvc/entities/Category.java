@@ -48,7 +48,7 @@ public class Category {
     private LocalDateTime createdDate;
 
     @UpdateTimestamp
-    private LocalDateTime lastModifiedDate;
+    private LocalDateTime updateDate;
 
     private String description;
 
