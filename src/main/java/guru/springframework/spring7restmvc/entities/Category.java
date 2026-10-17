@@ -41,7 +41,7 @@ public class Category {
     private UUID id;
 
     @Version
-    private Long version;
+    private Integer version;
 
     @CreationTimestamp
     @Column(updatable = false)

@@ -26,7 +26,7 @@ public class BeerOrderShipment {
     private UUID id;
 
     @Version
-    private Long version;
+    private Integer version;
 
     @OneToOne
     private BeerOrder beerOrder;

@@ -41,7 +41,7 @@ import java.util.UUID;
 @Builder
 public class BeerOrder {
 
-    public BeerOrder(UUID id, Long version, LocalDateTime createdDate, LocalDateTime updateDate, String customerRef,
+    public BeerOrder(UUID id, Integer version, LocalDateTime createdDate, LocalDateTime updateDate, String customerRef,
                      Customer customer, Set<BeerOrderLine> beerOrderLines, BeerOrderShipment beerOrderShipment) {
         this.id = id;
         this.version = version;
@@ -60,7 +60,7 @@ public class BeerOrder {
     private UUID id;
 
     @Version
-    private Long version;
+    private Integer version;
 
     @CreationTimestamp
     @Column(updatable = false)
