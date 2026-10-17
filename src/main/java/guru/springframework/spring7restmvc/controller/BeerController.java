@@ -16,7 +16,7 @@ import java.util.UUID;
 
 /**
  * Created by jt, Spring Framework Guru.
- * Modified by Pierrot on 09-10-2026
+ * Modified by Pierrot on 18-10-2026
  */
 @Slf4j
 @RequiredArgsConstructor
@@ -29,9 +29,9 @@ public class BeerController {
     private final BeerService beerService;
 
     @PatchMapping(BEER_PATH_ID)
-    public ResponseEntity<Void> updateBeerPatchById(@PathVariable("beerId") UUID beerId, @RequestBody BeerDTO beer) {
+    public ResponseEntity<Void> updateBeerPatchById(@PathVariable("beerId") UUID beerId, @RequestBody BeerDTO beerDTO) {
 
-        if (beerService.patchBeerById(beerId, beer).isEmpty()) {
+        if (beerService.patchBeerById(beerId, beerDTO).isEmpty()) {
             throw new NotFoundException();
         }
 
@@ -49,9 +49,9 @@ public class BeerController {
     }
 
     @PutMapping(BEER_PATH_ID)
-    public ResponseEntity<Void> updateById(@PathVariable("beerId") UUID beerId, @Validated @RequestBody BeerDTO beer) {
+    public ResponseEntity<Void> updateById(@PathVariable("beerId") UUID beerId, @Validated @RequestBody BeerDTO beerDTO) {
 
-        if (beerService.updateBeerById(beerId, beer).isEmpty()) {
+        if (beerService.updateBeerById(beerId, beerDTO).isEmpty()) {
             throw new NotFoundException();
         }
 
@@ -59,9 +59,9 @@ public class BeerController {
     }
 
     @PostMapping(BEER_PATH)
-    public ResponseEntity<Void> handlePost(@Validated @RequestBody BeerDTO beer) {
+    public ResponseEntity<Void> handlePost(@Validated @RequestBody BeerDTO beerDTO) {
 
-        BeerDTO savedBeer = beerService.saveNewBeer(beer);
+        BeerDTO savedBeer = beerService.saveNewBeer(beerDTO);
 
         HttpHeaders headers = new HttpHeaders();
         headers.add("Location", BEER_PATH + "/" + savedBeer.getId());

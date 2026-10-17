@@ -13,7 +13,7 @@ import java.util.UUID;
 
 /**
  * Created by jt, Spring Framework Guru.
- * Modified by Pierrot on 09-10-2026
+ * Modified by Pierrot on 18-10-2026
  */
 
 @RequiredArgsConstructor
@@ -26,9 +26,9 @@ public class CustomerController {
 
     @PatchMapping(CUSTOMER_PATH_ID)
     public ResponseEntity<Void> patchCustomerById(@PathVariable("customerId") UUID customerId,
-                                                @RequestBody CustomerDTO customer){
+                                                @RequestBody CustomerDTO customerDTO){
 
-        if (customerService.patchCustomerById(customerId, customer).isEmpty()){
+        if (customerService.patchCustomerById(customerId, customerDTO).isEmpty()){
             throw new NotFoundException();
         }
 
@@ -47,9 +47,9 @@ public class CustomerController {
 
     @PutMapping(CUSTOMER_PATH_ID)
     public ResponseEntity<Void> updateCustomerByID(@PathVariable("customerId") UUID customerId,
-                                             @RequestBody CustomerDTO customer){
+                                             @RequestBody CustomerDTO customerDTO){
 
-        if (customerService.updateCustomerById(customerId, customer).isEmpty()){
+        if (customerService.updateCustomerById(customerId, customerDTO).isEmpty()){
             throw new NotFoundException();
         }
 
@@ -57,8 +57,8 @@ public class CustomerController {
     }
 
     @PostMapping(CUSTOMER_PATH)
-    public ResponseEntity<Void> handlePost(@RequestBody CustomerDTO customer){
-        CustomerDTO savedCustomer = customerService.saveNewCustomer(customer);
+    public ResponseEntity<Void> handlePost(@RequestBody CustomerDTO customerDTO){
+        CustomerDTO savedCustomer = customerService.saveNewCustomer(customerDTO);
 
         HttpHeaders headers = new HttpHeaders();
         headers.add("Location", CUSTOMER_PATH + "/" + savedCustomer.getId());
@@ -72,8 +72,8 @@ public class CustomerController {
     }
 
     @GetMapping(value = CUSTOMER_PATH_ID)
-    public CustomerDTO getCustomerById(@PathVariable("customerId") UUID id){
-        return customerService.getCustomerById(id).orElseThrow(NotFoundException::new);
+    public CustomerDTO getCustomerById(@PathVariable("customerId") UUID customerId){
+        return customerService.getCustomerById(customerId).orElseThrow(NotFoundException::new);
     }
 
 }

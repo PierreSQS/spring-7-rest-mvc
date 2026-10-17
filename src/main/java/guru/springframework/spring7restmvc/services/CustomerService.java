@@ -8,6 +8,7 @@ import java.util.UUID;
 
 /**
  * Created by jt, Spring Framework Guru.
+ * Modified by Pierrot on 18-10-2026
  */
 public interface CustomerService {
 
@@ -15,11 +16,11 @@ public interface CustomerService {
 
     List<CustomerDTO> getAllCustomers();
 
-    CustomerDTO saveNewCustomer(CustomerDTO customer);
+    CustomerDTO saveNewCustomer(CustomerDTO customerDTO);
 
-    Optional<CustomerDTO> updateCustomerById(UUID customerId, CustomerDTO customer);
+    Optional<CustomerDTO> updateCustomerById(UUID customerId, CustomerDTO customerDTO);
 
     Boolean deleteCustomerById(UUID customerId);
 
-    Optional<CustomerDTO> patchCustomerById(UUID customerId, CustomerDTO customer);
+    Optional<CustomerDTO> patchCustomerById(UUID customerId, CustomerDTO customerDTO);
 }

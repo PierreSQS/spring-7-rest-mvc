@@ -9,6 +9,7 @@ import java.util.UUID;
 
 /**
  * Created by jt, Spring Framework Guru.
+ * Modified by Pierrot on 18-10-2026
  */
 public interface BeerService {
 
@@ -16,11 +17,11 @@ public interface BeerService {
 
     Optional<BeerDTO> getBeerById(UUID id);
 
-    BeerDTO saveNewBeer(BeerDTO beer);
+    BeerDTO saveNewBeer(BeerDTO beerDTO);
 
-    Optional<BeerDTO> updateBeerById(UUID beerId, BeerDTO beer);
+    Optional<BeerDTO> updateBeerById(UUID beerId, BeerDTO beerDTO);
 
     Boolean deleteById(UUID beerId);
 
-    Optional<BeerDTO> patchBeerById(UUID beerId, BeerDTO beer);
+    Optional<BeerDTO> patchBeerById(UUID beerId, BeerDTO beerDTO);
 }

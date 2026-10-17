@@ -9,7 +9,7 @@ import java.util.*;
 
 /**
  * Created by jt, Spring Framework Guru.
- * Modified by Pierrot on 09-10-2026
+ * Modified by Pierrot on 18-10-2026
  */
 @Service
 public class CustomerServiceImpl implements CustomerService {
@@ -48,11 +48,11 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public Optional<CustomerDTO> patchCustomerById(UUID customerId, CustomerDTO customer) {
+    public Optional<CustomerDTO> patchCustomerById(UUID customerId, CustomerDTO customerDTO) {
         CustomerDTO existing = customerMap.get(customerId);
 
-        if (StringUtils.hasText(customer.getName())) {
-            existing.setName(customer.getName());
+        if (StringUtils.hasText(customerDTO.getName())) {
+            existing.setName(customerDTO.getName());
         }
 
         return Optional.of(existing);
@@ -66,21 +66,21 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public Optional<CustomerDTO> updateCustomerById(UUID customerId, CustomerDTO customer) {
+    public Optional<CustomerDTO> updateCustomerById(UUID customerId, CustomerDTO customerDTO) {
         CustomerDTO existing = customerMap.get(customerId);
-        existing.setName(customer.getName());
+        existing.setName(customerDTO.getName());
         return Optional.of(existing);
     }
 
     @Override
-    public CustomerDTO saveNewCustomer(CustomerDTO customer) {
+    public CustomerDTO saveNewCustomer(CustomerDTO customerDTO) {
 
         CustomerDTO savedCustomer = CustomerDTO.builder()
                 .id(UUID.randomUUID())
                 .version(1)
                 .updateDate(LocalDateTime.now())
                 .createdDate(LocalDateTime.now())
-                .name(customer.getName())
+                .name(customerDTO.getName())
                 .build();
 
         customerMap.put(savedCustomer.getId(), savedCustomer);

@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Created by jt, Spring Framework Guru.
- * Modified by Pierrot on 17-10-2026
+ * Modified by Pierrot on 18-10-2026
  */
 @Service
 @Primary
@@ -37,17 +37,17 @@ public class CustomerServiceJPA implements CustomerService {
     }
 
     @Override
-    public CustomerDTO saveNewCustomer(CustomerDTO customer) {
+    public CustomerDTO saveNewCustomer(CustomerDTO customerDTO) {
         return customerMapper.customerToCustomerDto(customerRepository
-                .save(customerMapper.customerDtoToCustomer(customer)));
+                .save(customerMapper.customerDtoToCustomer(customerDTO)));
     }
 
     @Override
-    public Optional<CustomerDTO> updateCustomerById(UUID customerId, CustomerDTO customer) {
+    public Optional<CustomerDTO> updateCustomerById(UUID customerId, CustomerDTO customerDTO) {
         AtomicReference<Optional<CustomerDTO>> atomicReference = new AtomicReference<>();
 
         customerRepository.findById(customerId).ifPresentOrElse(foundCustomer -> {
-            customerMapper.updateCustomerFromDto(customer, foundCustomer);
+            customerMapper.updateCustomerFromDto(customerDTO, foundCustomer);
 
             atomicReference.set(Optional.of(customerMapper
                     .customerToCustomerDto(customerRepository.save(foundCustomer))));
@@ -66,12 +66,12 @@ public class CustomerServiceJPA implements CustomerService {
     }
 
     @Override
-    public Optional<CustomerDTO> patchCustomerById(UUID customerId, CustomerDTO customer) {
+    public Optional<CustomerDTO> patchCustomerById(UUID customerId, CustomerDTO customerDTO) {
         AtomicReference<Optional<CustomerDTO>> atomicReference = new AtomicReference<>();
 
         customerRepository.findById(customerId).ifPresentOrElse(foundCustomer -> {
 
-            customerMapper.patchCustomerFromDto(customer, foundCustomer);
+            customerMapper.patchCustomerFromDto(customerDTO, foundCustomer);
 
             atomicReference.set(Optional.of(customerMapper
                     .customerToCustomerDto(customerRepository.save(foundCustomer))));

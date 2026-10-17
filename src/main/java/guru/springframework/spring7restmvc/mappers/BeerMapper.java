@@ -10,7 +10,7 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 
 /**
  * Created by jt, Spring Framework Guru.
- * Modified by Pierrot on 17-10-2026
+ * Modified by Pierrot on 18-10-2026
  */
 @Mapper
 public interface BeerMapper {
@@ -21,7 +21,7 @@ public interface BeerMapper {
     @Mapping(target = "updateDate", ignore = true)
     @Mapping(target = "beerOrderLines", ignore = true)
     @Mapping(target = "categories", ignore = true)
-    Beer beerDtoToBeer(BeerDTO dto);
+    Beer beerDtoToBeer(BeerDTO beerDTO);
 
     BeerDTO beerToBeerDto(Beer beer);
 
@@ -43,7 +43,7 @@ public interface BeerMapper {
     @Mapping(target = "updateDate", ignore = true)
     @Mapping(target = "version", ignore = true)
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    void patchBeerFromDto(BeerDTO dto, @MappingTarget Beer beer);
+    void patchBeerFromDto(BeerDTO beerDTO, @MappingTarget Beer beer);
 
     /**
      * Replaces all the fields of an existing beer for a PUT: a {@code null} field of the DTO
@@ -58,6 +58,6 @@ public interface BeerMapper {
     @Mapping(target = "createdDate", ignore = true)
     @Mapping(target = "updateDate", ignore = true)
     @Mapping(target = "version", ignore = true)
-    void updateBeerFromDto(BeerDTO dto, @MappingTarget Beer beer);
+    void updateBeerFromDto(BeerDTO beerDTO, @MappingTarget Beer beer);
 
 }

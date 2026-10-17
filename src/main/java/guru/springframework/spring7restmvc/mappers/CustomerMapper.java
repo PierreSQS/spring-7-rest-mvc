@@ -10,7 +10,7 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 
 /**
  * Created by jt, Spring Framework Guru.
- * Modified by Pierrot on 17-10-2026
+ * Modified by Pierrot on 18-10-2026
  */
 @Mapper
 public interface CustomerMapper {
@@ -19,7 +19,7 @@ public interface CustomerMapper {
     @Mapping(target = "createdDate", ignore = true)
     @Mapping(target = "updateDate", ignore = true)
     @Mapping(target = "version", ignore = true)
-    Customer customerDtoToCustomer(CustomerDTO dto);
+    Customer customerDtoToCustomer(CustomerDTO customerDTO);
 
     CustomerDTO customerToCustomerDto(Customer customer);
 
@@ -29,7 +29,7 @@ public interface CustomerMapper {
     @Mapping(target = "beerOrders", ignore = true)
     @Mapping(target = "createdDate", ignore = true)
     @Mapping(target = "updateDate", ignore = true)
-    void updateCustomerFromDto(CustomerDTO dto, @MappingTarget Customer customer);
+    void updateCustomerFromDto(CustomerDTO customerDTO, @MappingTarget Customer customer);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "version", ignore = true)
@@ -37,6 +37,6 @@ public interface CustomerMapper {
     @Mapping(target = "createdDate", ignore = true)
     @Mapping(target = "updateDate", ignore = true)
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    void patchCustomerFromDto(CustomerDTO dto, @MappingTarget Customer customer);
+    void patchCustomerFromDto(CustomerDTO customerDTO, @MappingTarget Customer customer);
 
 }
