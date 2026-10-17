@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Created by jt, Spring Framework Guru.
@@ -44,16 +43,12 @@ public class CustomerServiceJPA implements CustomerService {
 
     @Override
     public Optional<CustomerDTO> updateCustomerById(UUID customerId, CustomerDTO customerDTO) {
-        AtomicReference<Optional<CustomerDTO>> atomicReference = new AtomicReference<>();
 
-        customerRepository.findById(customerId).ifPresentOrElse(foundCustomer -> {
+        return customerRepository.findById(customerId).map(foundCustomer -> {
             customerMapper.updateCustomerFromDto(customerDTO, foundCustomer);
 
-            atomicReference.set(Optional.of(customerMapper
-                    .customerToCustomerDto(customerRepository.save(foundCustomer))));
-        }, () -> atomicReference.set(Optional.empty()));
-
-        return atomicReference.get();
+            return customerMapper.customerToCustomerDto(customerRepository.save(foundCustomer));
+        });
     }
 
     @Override
@@ -67,16 +62,12 @@ public class CustomerServiceJPA implements CustomerService {
 
     @Override
     public Optional<CustomerDTO> patchCustomerById(UUID customerId, CustomerDTO customerDTO) {
-        AtomicReference<Optional<CustomerDTO>> atomicReference = new AtomicReference<>();
 
-        customerRepository.findById(customerId).ifPresentOrElse(foundCustomer -> {
+        return customerRepository.findById(customerId).map(foundCustomer -> {
 
             customerMapper.patchCustomerFromDto(customerDTO, foundCustomer);
 
-            atomicReference.set(Optional.of(customerMapper
-                    .customerToCustomerDto(customerRepository.save(foundCustomer))));
-        }, () -> atomicReference.set(Optional.empty()));
-
-        return atomicReference.get();
+            return customerMapper.customerToCustomerDto(customerRepository.save(foundCustomer));
+        });
     }
 }
