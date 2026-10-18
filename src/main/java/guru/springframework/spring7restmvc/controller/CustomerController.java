@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -13,7 +14,7 @@ import java.util.UUID;
 
 /**
  * Created by jt, Spring Framework Guru.
- * Modified by Pierrot on 17-10-2026
+ * Modified by Pierrot on 18-10-2026
  */
 
 @RequiredArgsConstructor
@@ -47,7 +48,7 @@ public class CustomerController {
 
     @PutMapping(CUSTOMER_PATH_ID)
     public ResponseEntity<Void> updateCustomerByID(@PathVariable("customerId") UUID customerId,
-                                             @RequestBody CustomerDTO customerDTO){
+                                              @Validated @RequestBody CustomerDTO customerDTO){
 
         if (customerService.updateCustomerById(customerId, customerDTO).isEmpty()){
             throw new NotFoundException();
@@ -57,7 +58,7 @@ public class CustomerController {
     }
 
     @PostMapping(CUSTOMER_PATH)
-    public ResponseEntity<Void> handlePost(@RequestBody CustomerDTO customerDTO){
+    public ResponseEntity<Void> handlePost(@Validated @RequestBody CustomerDTO customerDTO){
         CustomerDTO savedCustomer = customerService.saveNewCustomer(customerDTO);
 
         HttpHeaders headers = new HttpHeaders();

@@ -1,6 +1,7 @@
 package guru.springframework.spring7restmvc.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
 import lombok.Data;
 import tools.jackson.databind.annotation.JsonDeserialize;
@@ -10,7 +11,7 @@ import java.util.UUID;
 
 /**
  * Created by jt, Spring Framework Guru.
- * Modified by Pierrot on 17-10-2026
+ * Modified by Pierrot on 18-10-2026
  */
 @JsonDeserialize(builder = CustomerDTO.CustomerDTOBuilder.class)
 @Data
@@ -20,6 +21,7 @@ public class CustomerDTO {
     private UUID id;
 
     @JsonProperty("name")
+    @NotBlank
     private String name;
 
     @JsonProperty("email")

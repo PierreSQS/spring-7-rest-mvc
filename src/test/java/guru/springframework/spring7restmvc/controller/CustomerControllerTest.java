@@ -127,6 +127,23 @@ class CustomerControllerTest {
         assertThat(uuidArgumentCaptor.getValue()).isEqualTo(customer.getId());
     }
 
+    // a blank name is refused on the DTO (@Validated + @NotBlank), before the service is called
+    @Test
+    void testCreateCustomerBlankName() throws Exception {
+        CustomerDTO customer = customerServiceImpl.getAllCustomers().getFirst();
+        customer.setId(null);
+        customer.setVersion(null);
+        customer.setName("");
+
+        mockMvc.perform(post(CustomerController.CUSTOMER_PATH).contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(jsonMapper.writeValueAsString(customer))
+                .with(jwt()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.length()", is(1)))
+                .andExpect(jsonPath("$[0].name").exists());
+    }
+
     @Test
     void testCreateCustomer() throws Exception {
         CustomerDTO customer = customerServiceImpl.getAllCustomers().getFirst();
