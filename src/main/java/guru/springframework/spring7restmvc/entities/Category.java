@@ -3,8 +3,6 @@ package guru.springframework.spring7restmvc.entities;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
@@ -24,7 +22,7 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * Modified by Pierrot on 17-10-2026
+ * Modified by Pierrot on 18-10-2026
  */
 @Builder
 @Getter
@@ -53,10 +51,7 @@ public class Category {
     private String description;
 
     @Builder.Default
-    @ManyToMany
-    @JoinTable(name = "beer_category",
-      joinColumns = @JoinColumn(name = "category_id"),
-      inverseJoinColumns = @JoinColumn(name = "beer_id"))
+    @ManyToMany(mappedBy = "categories")
     private Set<Beer> beers = new HashSet<>();
 
 }
