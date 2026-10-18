@@ -50,11 +50,17 @@ public class BeerServiceJPA implements BeerService {
             beerPage = beerRepository.findAll(pageRequest);
         }
 
-        if (showInventory != null && !showInventory) {
-            beerPage.forEach(beer -> beer.setQuantityOnHand(null));
-        }
+        boolean hideInventory = showInventory != null && !showInventory;
 
-        return beerPage.map(beerMapper::beerToBeerDto);
+        // hide the stock on the DTO, never on the entity: a managed entity changed here
+        // would be written back to the database by Hibernate (dirty checking)
+        return beerPage.map(beer -> {
+            BeerDTO beerDTO = beerMapper.beerToBeerDto(beer);
+            if (hideInventory) {
+                beerDTO.setQuantityOnHand(null);
+            }
+            return beerDTO;
+        });
 
     }
 

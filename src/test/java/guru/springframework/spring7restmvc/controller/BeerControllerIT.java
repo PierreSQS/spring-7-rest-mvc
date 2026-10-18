@@ -5,6 +5,7 @@ import guru.springframework.spring7restmvc.mappers.BeerMapper;
 import guru.springframework.spring7restmvc.model.BeerDTO;
 import guru.springframework.spring7restmvc.model.BeerStyle;
 import guru.springframework.spring7restmvc.repositories.BeerRepository;
+import jakarta.persistence.EntityManager;
 import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.core.IsNull;
 import org.junit.jupiter.api.Disabled;
@@ -56,6 +57,9 @@ class BeerControllerIT {
 
     @Autowired
     MockMvc mockMvc;
+
+    @Autowired
+    EntityManager entityManager;
 
     @Disabled("just for demo purposes")
     @Test
@@ -309,6 +313,24 @@ class BeerControllerIT {
         Page<BeerDTO> dtos = beerController.listBeers(null, null, false, 1, 2413);
 
         assertThat(dtos.getContent()).hasSize(1000);
+    }
+
+    // listBeers must only READ: hiding the stock must not change the database,
+    // even when the call runs inside a transaction (dirty checking)
+    @Transactional
+    @Test
+    void listBeersWithoutInventoryKeepsTheStockInTheDatabase() {
+        Page<BeerDTO> dtos = beerController.listBeers(null, null, false, 1, 25);
+
+        // write now whatever Hibernate noted as changed, then forget the cached entities
+        entityManager.flush();
+        entityManager.clear();
+
+        BeerDTO first = dtos.getContent().getFirst();
+        assertThat(beerRepository.findById(first.getId()))
+                .get()
+                .extracting(Beer::getQuantityOnHand)
+                .isNotNull();
     }
 
     // pageSize 0 used to reach PageRequest.of(..., 0) and fail with a 500; it now falls back to the default size
