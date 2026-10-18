@@ -10,7 +10,7 @@ import java.util.UUID;
 
 /**
  * Created by jt.
- * Modified by Pierrot on 17-10-2026
+ * Modified by Pierrot on 18-10-2026
  */
 @Getter
 @Setter
@@ -42,6 +42,9 @@ public class BeerOrderLine {
     @ManyToOne
     private Beer beer;
 
+    @Builder.Default
     private Integer orderQuantity = 0;
+
+    @Builder.Default
     private Integer quantityAllocated = 0;
 }
