@@ -147,8 +147,9 @@ Il faut tout redéclarer :
 | `@Bean` sur la méthode | la chaîne n'est jamais utilisée |
 | `authorizeHttpRequests(... anyRequest().authenticated())` | **toute l'API est ouverte** |
 | `httpBasic(Customizer.withDefaults())` | personne ne lit les identifiants → 401 |
+| `oauth2ResourceServer(o -> o.jwt(Customizer.withDefaults()))` (API protégée par JWT) | personne ne lit le jeton → 401 ; et **sans `.jwt(...)`, l'appli ne démarre pas** |
 
-**Preuve :** commentaire du commit `a06a6a49`.
+**Preuve :** commentaires des commits `a06a6a49` et `db7d94e6`.
 
 ### R13 — 401 ou 403 ?
 
@@ -164,6 +165,10 @@ identifiants et passe par le vrai login. Détails : `docs/spring-security-test-u
 
 CSRF protège les navigateurs qui envoient automatiquement leurs cookies. Pour une API REST utilisée
 par des programmes (Postman, autres applications), on peut l'ignorer, mais **seulement** pour `/api/**`.
+
+**Avec un serveur de ressources (JWT), cette ligne devient inutile :** Spring Security ignore
+déjà le CSRF pour toute requête qui porte un en-tête `Authorization: Bearer ...`
+(`OAuth2ResourceServerConfigurer`, vérifié dans le jar 7.1.1). Preuve : commentaire du commit `db7d94e6`.
 
 ### R16 — Ne jamais mettre de mot de passe en clair dans Git
 
