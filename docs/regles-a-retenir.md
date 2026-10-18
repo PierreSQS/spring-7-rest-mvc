@@ -96,6 +96,28 @@ Spring Data qu'il existe déjà (`merge` au lieu de `persist`). Ça marchait par
 `@CreationTimestamp` remplit la date une seule fois, mais n'empêche pas un code de la modifier
 ensuite. `updatable = false` exclut la colonne de tout `UPDATE` : la base garde la vraie date.
 
+### R22 — Une entité lue est surveillée : la modifier, c'est l'écrire en base
+
+Dans une transaction, Hibernate garde une copie de chaque entité qu'il a lue. Au `flush()` (commit
+ou appel explicite), il compare l'entité à sa copie et écrit **tout seul** un `UPDATE` pour chaque
+différence (« dirty checking »). Pas besoin de `save()`.
+
+```java
+Beer beer = beerRepository.findById(id).get();   // stock = 122 : Hibernate garde la copie
+beer.setQuantityOnHand(null);                    // l'entité diffère de sa copie
+// au flush : UPDATE beer SET quantity_on_hand = NULL   ← le stock est effacé en base
+```
+
+**Donc :** pour changer ce qu'on **affiche** (cacher un champ, le formater…), on modifie le **DTO**,
+jamais l'entité. Et le DTO modifié doit être **celui qu'on renvoie**.
+
+**Dans un test** `@Transactional`, le commit n'arrive jamais (rollback). Pour voir ce qu'Hibernate
+aurait écrit : `flush()`, puis `clear()` (sinon `findById` relit la mémoire, voir R6), puis relire
+depuis la base. Voir aussi R5.
+
+**Preuve :** commit `8f187948` (`listBeersWithoutInventoryKeepsTheStockInTheDatabase` : rouge quand
+le stock était caché sur l'entité, vert sur le DTO).
+
 ---
 
 ## 4. Tests
