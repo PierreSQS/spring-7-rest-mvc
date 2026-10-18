@@ -10,15 +10,16 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 
 /**
  * Created by jt, Spring Framework Guru.
- * Modified by Pierrot on 17-10-2026
+ * Modified by Pierrot on 18-10-2026
  */
 @Mapper
 public interface CustomerMapper {
 
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "version", ignore = true)
     @Mapping(target = "beerOrders", ignore = true)
     @Mapping(target = "createdDate", ignore = true)
     @Mapping(target = "updateDate", ignore = true)
-    @Mapping(target = "version", ignore = true)
     Customer customerDtoToCustomer(CustomerDTO customerDTO);
 
     CustomerDTO customerToCustomerDto(Customer customer);
