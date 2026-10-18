@@ -311,6 +311,14 @@ class BeerControllerIT {
         assertThat(dtos.getContent()).hasSize(1000);
     }
 
+    // pageSize 0 used to reach PageRequest.of(..., 0) and fail with a 500; it now falls back to the default size
+    @Test
+    void testListBeersPageSizeZeroFallsBackToDefault() {
+        Page<BeerDTO> dtos = beerController.listBeers(null, null, false, 1, 0);
+
+        assertThat(dtos.getContent()).hasSize(25);
+    }
+
     @Transactional
     @Test
     void testEmptyList() {

@@ -19,7 +19,7 @@ import java.util.UUID;
 
 /**
  * Created by jt, Spring Framework Guru.
- * Modified by Pierrot on 17-10-2026
+ * Modified by Pierrot on 18-10-2026
  */
 @Service
 @Primary
@@ -30,6 +30,7 @@ public class BeerServiceJPA implements BeerService {
 
     private static final int DEFAULT_PAGE = 0;
     private static final int DEFAULT_PAGE_SIZE = 25;
+    private static final int MAX_PAGE_SIZE = 1000;
 
     @Override
     public Page<BeerDTO> listBeers(String beerName, BeerStyle beerStyle, Boolean showInventory,
@@ -58,28 +59,14 @@ public class BeerServiceJPA implements BeerService {
     }
 
     public PageRequest buildPageRequest(Integer pageNumber, Integer pageSize) {
-        int queryPageNumber;
-        int queryPageSize;
+        int queryPageNumber = (pageNumber != null && pageNumber > 0) ? pageNumber - 1 : DEFAULT_PAGE;
 
-        if (pageNumber != null && pageNumber > 0) {
-            queryPageNumber = pageNumber - 1;
-        } else {
-            queryPageNumber = DEFAULT_PAGE;
-        }
+        // a missing, zero or negative size falls back to the default; PageRequest.of() rejects a size below one
+        int queryPageSize = (pageSize != null && pageSize > 0)
+                ? Math.min(pageSize, MAX_PAGE_SIZE)
+                : DEFAULT_PAGE_SIZE;
 
-        if (pageSize == null) {
-            queryPageSize = DEFAULT_PAGE_SIZE;
-        } else {
-            if (pageSize > 1000) {
-                queryPageSize = 1000;
-            } else {
-                queryPageSize = pageSize;
-            }
-        }
-
-        Sort sort = Sort.by(Sort.Order.asc("beerName"));
-
-        return PageRequest.of(queryPageNumber, queryPageSize, sort);
+        return PageRequest.of(queryPageNumber, queryPageSize, Sort.by(Sort.Order.asc("beerName")));
     }
 
     private Page<Beer> listBeersByNameAndStyle(String beerName, BeerStyle beerStyle, Pageable pageable) {
