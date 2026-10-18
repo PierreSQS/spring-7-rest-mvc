@@ -132,6 +132,28 @@ Exemples : `BeerTest.testRemoveCategoryUnlinksBothSides` (rouge sur la ligne de 
 - Une classe `@Configuration` (comme `SpringSecConfig`) doit être importée : `@Import(SpringSecConfig.class)`.
 - Avec Spring Boot 4, Spring Security n'entre dans `@WebMvcTest` qu'avec `spring-boot-starter-security-test`
   (`spring-security-test` seul n'apporte que les outils comme `httpBasic(...)`).
+- Le resource server (JWT), lui, entre dans `@WebMvcTest` grâce au starter **principal**
+  `spring-boot-starter-security-oauth2-resource-server` : son jar s'inscrit lui-même dans la liste du slice.
+  Avec `spring-boot-starter-security-test` (qui apporte `jwt()`), le starter `-test` du resource server
+  n'apporte donc rien de plus.
+- **Un `${...}` introuvable ne fait pas planter `@WebMvcTest`.** Le contrôle strict des propriétés
+  (`PropertyPlaceholderAutoConfiguration`) n'est pas dans la liste du slice : `@Value` garde alors le texte brut.
+
+  ```java
+  @Value("${spring.security.user.name}")   // la propriété n'existe plus
+  String username;
+  ```
+
+  | Test | Contrôle strict ? | Résultat |
+  |---|---|---|
+  | `@SpringBootTest` (toute l'appli) | oui | le contexte ne démarre pas : `Could not resolve placeholder 'spring.security.user.name'` |
+  | `@WebMvcTest` (le slice) | non | `username = "${spring.security.user.name}"` (le texte lui-même), le test tourne et échoue plus loin (ici 401/403) |
+
+  Piège : un slice peut donc rouler avec une valeur fausse sans rien signaler.
+
+**Preuve :** commit `d3f1c182` (Chap250) : `BeerControllerIT` ne démarre pas, `BeerControllerTest` envoie
+`Authorization: Basic` = `${spring.security.user.name}:${spring.security.user.password}` (en-tête décodé) ;
+listes du slice vérifiées dans les jars Spring Boot 4.1.1.
 
 ---
 
