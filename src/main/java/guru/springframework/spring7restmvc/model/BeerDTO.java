@@ -3,6 +3,7 @@ package guru.springframework.spring7restmvc.model;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Data;
 import tools.jackson.databind.annotation.JsonDeserialize;
@@ -13,6 +14,7 @@ import java.util.UUID;
 
 /**
  * Created by jt, Spring Framework Guru.
+ * Modified by Pierrot on 18-10-2026
  */
 @JsonDeserialize(builder = BeerDTO.BeerDTOBuilder.class)
 @Builder
@@ -26,6 +28,7 @@ public class BeerDTO {
     private Integer version;
 
     @JsonProperty("beerName")
+    @Size(max = 50, message = "Beer name must be at most 50 characters")
     @NotBlank
     @NotNull
     private String beerName;

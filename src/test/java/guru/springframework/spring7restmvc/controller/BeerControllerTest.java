@@ -162,6 +162,25 @@ class BeerControllerTest {
                 .andExpect(header().exists("Location"));
     }
 
+    // the 50-character limit is checked on the DTO, before the service is called:
+    // the client gets the field message instead of an empty 400 from the database side
+    @Test
+    void testCreateBeerTooLongBeerName() throws Exception {
+        BeerDTO beer = beerServiceImpl.listBeers(null, null, false, 1, 25).getContent().getFirst();
+        beer.setId(null);
+        beer.setVersion(null);
+        beer.setBeerName("x".repeat(51));
+
+        mockMvc.perform(post(BeerController.BEER_PATH)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonMapper.writeValueAsString(beer))
+                        .with(jwt()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.length()", is(1)))
+                .andExpect(jsonPath("$[0].beerName", is("Beer name must be at most 50 characters")));
+    }
+
     @Test
     void testCreateBeerNullBeerName() throws Exception {
 
