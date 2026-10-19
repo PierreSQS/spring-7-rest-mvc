@@ -32,7 +32,7 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * Modified by Pierrot on 17-10-2026
+ * Modified by Pierrot on 19-10-2026
  */
 @Getter
 @Setter
@@ -76,12 +76,16 @@ public class BeerOrder {
 
     public void setCustomer(Customer customer) {
         this.customer = customer;
-        customer.getBeerOrders().add(this);
+        if (customer != null) {
+            customer.getBeerOrders().add(this);
+        }
     }
 
     public void setBeerOrderShipment(BeerOrderShipment beerOrderShipment) {
         this.beerOrderShipment = beerOrderShipment;
-        beerOrderShipment.setBeerOrder(this);
+        if (beerOrderShipment != null) {
+            beerOrderShipment.setBeerOrder(this);
+        }
     }
 
     @OneToMany(mappedBy = "beerOrder")
