@@ -94,7 +94,7 @@ controller -> services -> repositories -> entities
 | Successful PUT / PATCH / DELETE | `204` |
 | Missing entity | `NotFoundException`, annotated with `@ResponseStatus(404)` |
 | Invalid request DTO | `CustomErrorController` (`@ControllerAdvice`) handles `MethodArgumentNotValidException`: `400` with a list of `{field: message}` maps |
-| JPA transaction validation failure | `CustomErrorController` handles `TransactionSystemException`: plain `400` without a body |
+| JPA transaction validation failure (e.g. a PATCH, which has no `@Validated`) | `CustomErrorController` handles `TransactionSystemException`: its root cause is a `ConstraintViolationException`, answered with the same `400` list of `{field: message}` maps; any other cause gets a plain `400` |
 
 ---
 
