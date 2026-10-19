@@ -14,7 +14,7 @@ import java.util.UUID;
 
 /**
  * Created by jt, Spring Framework Guru.
- * Modified by Pierrot on 18-10-2026
+ * Modified by Pierrot on 19-10-2026
  */
 
 @RequiredArgsConstructor
@@ -39,7 +39,7 @@ public class CustomerController {
     @DeleteMapping(CUSTOMER_PATH_ID)
     public ResponseEntity<Void> deleteCustomerById(@PathVariable("customerId") UUID customerId){
 
-        if (!Boolean.TRUE.equals(customerService.deleteCustomerById(customerId))){
+        if (!customerService.deleteCustomerById(customerId)){
             throw new NotFoundException();
         }
 
