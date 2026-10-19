@@ -162,7 +162,7 @@ Store migrations in `src/main/resources/db/migration` using `V<n>__description.s
 | `*ControllerTest` | `@WebMvcTest(XController.class)` with `@Import(SpringSecConfig.class)`, `@MockitoBean` services and `.with(jwt())` | Surefire (`test`) | No |
 | `*RepositoryTest`, `BootstrapDataTest` | `@DataJpaTest` | Surefire (`test`) | No |
 | `BeerTest`, `BeerOrderLineTest`, `BeerCsvServiceImplTest` | Plain unit tests | Surefire (`test`) | No |
-| `*ControllerIT` | `@SpringBootTest` with H2. `BeerControllerIT` also has `@AutoConfigureMockMvc` and goes through `MockMvc` where the JSON matters; `CustomerControllerIT` only calls the controller directly. Data-changing tests are `@Transactional`. Making both classes follow one style is open work. | Failsafe (`verify`) | No |
+| `*ControllerIT` | `@SpringBootTest` + `@AutoConfigureMockMvc` with H2. **Every test sends its request through `MockMvc` with `.with(jwt())`**, never by calling the controller method: a direct call skips security, `@Validated`, `CustomErrorController` and the JSON conversion (it once let a beer with only a name be "created"). Not-found cases expect `404`, not an exception. Data-changing tests are `@Transactional` and call `entityManager.flush()` + `clear()` before reading back. | Failsafe (`verify`) | No |
 | `Spring7RestMvcApplicationTests` | `@SpringBootTest` context check | Surefire (`test`) | No |
 | `MySqlIT` | `@SpringBootTest` + `@Testcontainers` + `@ActiveProfiles("localmysql")` | Failsafe (`verify`) | Yes |
 
