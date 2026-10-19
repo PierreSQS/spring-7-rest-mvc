@@ -37,7 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Modified by Pierrot on 18-10-2026
+ * Modified by Pierrot on 19-10-2026
  */
 @Slf4j
 @SpringBootTest
@@ -176,8 +176,11 @@ class BeerControllerIT {
                         .accept(MediaType.APPLICATION_JSON)
                         .content(jsonMapper.writeValueAsString(beerMap))
                         .with(jwt()))
-                .andExpect(status().isBadRequest());
-
+                .andExpect(status().isBadRequest())
+                // PATCH has no @Validated: the entity rejects the name at commit, and the
+                // client must still learn which field is wrong and why
+                .andExpect(jsonPath("$.length()", is(1)))
+                .andExpect(jsonPath("$[0].beerName", is("Beer name must be at most 50 characters")));
     }
 
     // JT's if-chain skipped an empty name and answered 204; the MapStruct patch copies it,
