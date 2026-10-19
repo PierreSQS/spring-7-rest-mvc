@@ -7,9 +7,9 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Created by jt, Spring Framework Guru.
@@ -37,11 +37,10 @@ public class CustomErrorController {
     ResponseEntity<List<Map<String, String>>> handleBindErrors(MethodArgumentNotValidException exception){
 
         List<Map<String, String>> errorList = exception.getFieldErrors().stream()
-                .map(fieldError -> {
-                    Map<String, String > errorMap = new HashMap<>();
-                    errorMap.put(fieldError.getField(), fieldError.getDefaultMessage());
-                    return errorMap;
-                }).toList();
+                // Map.of rejects null, and a field error may come without a message
+                .map(fieldError -> Map.of(fieldError.getField(),
+                        Objects.requireNonNullElse(fieldError.getDefaultMessage(), "invalid value")))
+                .toList();
 
         return ResponseEntity.badRequest().body(errorList);
     }
