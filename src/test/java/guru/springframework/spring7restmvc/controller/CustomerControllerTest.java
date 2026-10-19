@@ -3,8 +3,6 @@ package guru.springframework.spring7restmvc.controller;
 import guru.springframework.spring7restmvc.config.SpringSecConfig;
 import guru.springframework.spring7restmvc.model.CustomerDTO;
 import guru.springframework.spring7restmvc.services.CustomerService;
-import guru.springframework.spring7restmvc.services.CustomerServiceImpl;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -40,7 +38,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Modified by Pierrot on 18-10-2026
+ * Modified by Pierrot on 20-10-2026
  */
 @WebMvcTest(CustomerController.class)
 @Import(SpringSecConfig.class)
@@ -56,13 +54,6 @@ class CustomerControllerTest {
     @Autowired
     JsonMapper jsonMapper;
 
-    CustomerServiceImpl customerServiceImpl;
-
-    @BeforeEach
-    void setUp() {
-        customerServiceImpl = new CustomerServiceImpl();
-    }
-
     @Captor
     ArgumentCaptor<UUID> uuidArgumentCaptor;
 
@@ -71,7 +62,7 @@ class CustomerControllerTest {
 
     @Test
     void testPatchCustomer() throws Exception {
-        CustomerDTO customer = customerServiceImpl.getAllCustomers().getFirst();
+        CustomerDTO customer = SampleDtos.customers().getFirst();
 
         Map<String, Object> customerMap = new HashMap<>();
         customerMap.put("name", "New Name");
@@ -94,7 +85,7 @@ class CustomerControllerTest {
 
     @Test
     void testDeleteCustomer() throws Exception {
-        CustomerDTO customer = customerServiceImpl.getAllCustomers().getFirst();
+        CustomerDTO customer = SampleDtos.customers().getFirst();
 
         given(customerService.deleteCustomerById(any())).willReturn(true);
 
@@ -110,7 +101,7 @@ class CustomerControllerTest {
 
     @Test
     void testUpdateCustomer() throws Exception {
-        CustomerDTO customer = customerServiceImpl.getAllCustomers().getFirst();
+        CustomerDTO customer = SampleDtos.customers().getFirst();
 
         given(customerService.updateCustomerById(any(), any())).willReturn(Optional.of(CustomerDTO.builder()
                 .build()));
@@ -130,7 +121,7 @@ class CustomerControllerTest {
     // a blank name is refused on the DTO (@Validated + @NotBlank), before the service is called
     @Test
     void testCreateCustomerBlankName() throws Exception {
-        CustomerDTO customer = customerServiceImpl.getAllCustomers().getFirst();
+        CustomerDTO customer = SampleDtos.customers().getFirst();
         customer.setId(null);
         customer.setVersion(null);
         customer.setName("");
@@ -146,12 +137,12 @@ class CustomerControllerTest {
 
     @Test
     void testCreateCustomer() throws Exception {
-        CustomerDTO customer = customerServiceImpl.getAllCustomers().getFirst();
+        CustomerDTO customer = SampleDtos.customers().getFirst();
         customer.setId(null);
         customer.setVersion(null);
 
         given(customerService.saveNewCustomer(any(CustomerDTO.class)))
-                .willReturn(customerServiceImpl.getAllCustomers().get(1));
+                .willReturn(SampleDtos.customers().get(1));
 
         mockMvc.perform(post(CustomerController.CUSTOMER_PATH).contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
@@ -163,7 +154,7 @@ class CustomerControllerTest {
 
     @Test
     void listAllCustomers() throws Exception {
-        given(customerService.getAllCustomers()).willReturn(customerServiceImpl.getAllCustomers());
+        given(customerService.getAllCustomers()).willReturn(SampleDtos.customers());
 
         mockMvc.perform(get(CustomerController.CUSTOMER_PATH)
                 .accept(MediaType.APPLICATION_JSON)
@@ -185,7 +176,7 @@ class CustomerControllerTest {
 
     @Test
     void getCustomerById() throws Exception {
-        CustomerDTO customer = customerServiceImpl.getAllCustomers().getFirst();
+        CustomerDTO customer = SampleDtos.customers().getFirst();
 
         given(customerService.getCustomerById(customer.getId())).willReturn(Optional.of(customer));
 

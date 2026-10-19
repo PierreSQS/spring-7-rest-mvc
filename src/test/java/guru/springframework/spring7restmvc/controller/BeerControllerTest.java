@@ -3,9 +3,7 @@ package guru.springframework.spring7restmvc.controller;
 import guru.springframework.spring7restmvc.config.SpringSecConfig;
 import guru.springframework.spring7restmvc.model.BeerDTO;
 import guru.springframework.spring7restmvc.services.BeerService;
-import guru.springframework.spring7restmvc.services.BeerServiceImpl;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -14,6 +12,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -43,7 +42,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Modified by Pierrot on 18-10-2026
+ * Modified by Pierrot on 20-10-2026
  */
 @Slf4j
 @WebMvcTest(BeerController.class)
@@ -60,22 +59,15 @@ class BeerControllerTest {
     @MockitoBean
     BeerService beerService;
 
-    BeerServiceImpl beerServiceImpl;
-
     @Captor
     ArgumentCaptor<UUID> uuidArgumentCaptor;
 
     @Captor
     ArgumentCaptor<BeerDTO> beerArgumentCaptor;
 
-    @BeforeEach
-    void setUp() {
-        beerServiceImpl = new BeerServiceImpl();
-    }
-
     @Test
     void testPatchBeer() throws Exception {
-        BeerDTO beer = beerServiceImpl.listBeers(null, null, false, 1, 25).getContent().getFirst();
+        BeerDTO beer = SampleDtos.beers().getFirst();
 
         Map<String, Object> beerMap = new HashMap<>();
         beerMap.put("beerName", "New Name");
@@ -98,7 +90,7 @@ class BeerControllerTest {
 
     @Test
     void testDeleteBeer() throws Exception {
-        BeerDTO beer = beerServiceImpl.listBeers(null, null, false, 1, 25).getContent().getFirst();
+        BeerDTO beer = SampleDtos.beers().getFirst();
 
         given(beerService.deleteById(any())).willReturn(true);
 
@@ -114,7 +106,7 @@ class BeerControllerTest {
 
     @Test
     void testUpdateBeer() throws Exception {
-        BeerDTO beer = beerServiceImpl.listBeers(null, null, false, 1, 25).getContent().getFirst();
+        BeerDTO beer = SampleDtos.beers().getFirst();
 
         given(beerService.updateBeerById(any(), any())).willReturn(Optional.of(beer));
 
@@ -130,7 +122,7 @@ class BeerControllerTest {
 
     @Test
     void testUpdateBeerBlankName() throws Exception {
-        BeerDTO beer = beerServiceImpl.listBeers(null, null, false, 1, 25).getContent().getFirst();
+        BeerDTO beer = SampleDtos.beers().getFirst();
         beer.setBeerName("");
         given(beerService.updateBeerById(any(), any())).willReturn(Optional.of(beer));
 
@@ -147,11 +139,11 @@ class BeerControllerTest {
 
     @Test
     void testCreateNewBeer() throws Exception {
-        BeerDTO beer = beerServiceImpl.listBeers(null, null, false, 1, 25).getContent().getFirst();
+        BeerDTO beer = SampleDtos.beers().getFirst();
         beer.setVersion(null);
         beer.setId(null);
 
-        given(beerService.saveNewBeer(any(BeerDTO.class))).willReturn(beerServiceImpl.listBeers(null, null, false, 1, 25).getContent().get(1));
+        given(beerService.saveNewBeer(any(BeerDTO.class))).willReturn(SampleDtos.beers().get(1));
 
         mockMvc.perform(post(BeerController.BEER_PATH)
                 .accept(MediaType.APPLICATION_JSON)
@@ -166,7 +158,7 @@ class BeerControllerTest {
     // the client gets the field message instead of an empty 400 from the database side
     @Test
     void testCreateBeerTooLongBeerName() throws Exception {
-        BeerDTO beer = beerServiceImpl.listBeers(null, null, false, 1, 25).getContent().getFirst();
+        BeerDTO beer = SampleDtos.beers().getFirst();
         beer.setId(null);
         beer.setVersion(null);
         beer.setBeerName("x".repeat(51));
@@ -186,7 +178,7 @@ class BeerControllerTest {
 
         BeerDTO beerDTO = BeerDTO.builder().build();
 
-        given(beerService.saveNewBeer(any(BeerDTO.class))).willReturn(beerServiceImpl.listBeers(null, null, false, 1, 25).getContent().get(1));
+        given(beerService.saveNewBeer(any(BeerDTO.class))).willReturn(SampleDtos.beers().get(1));
 
         MvcResult mvcResult = mockMvc.perform(post(BeerController.BEER_PATH)
                         .accept(MediaType.APPLICATION_JSON)
@@ -204,7 +196,7 @@ class BeerControllerTest {
     @Test
     void testListBeers() throws Exception {
         given(beerService.listBeers(any(), any() , any(), any(), any()))
-                .willReturn(beerServiceImpl.listBeers(null, null, false, null, null));
+                .willReturn(new PageImpl<>(SampleDtos.beers()));
 
         mockMvc.perform(get(BeerController.BEER_PATH)
                 .accept(MediaType.APPLICATION_JSON)
@@ -227,7 +219,7 @@ class BeerControllerTest {
 
     @Test
     void getBeerById() throws Exception {
-        BeerDTO testBeer = beerServiceImpl.listBeers(null, null, false, 1, 25).getContent().getFirst();
+        BeerDTO testBeer = SampleDtos.beers().getFirst();
 
         given(beerService.getBeerById(testBeer.getId())).willReturn(Optional.of(testBeer));
 

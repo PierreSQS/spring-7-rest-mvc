@@ -4,7 +4,6 @@ import guru.springframework.spring7restmvc.mappers.CustomerMapper;
 import guru.springframework.spring7restmvc.model.CustomerDTO;
 import guru.springframework.spring7restmvc.repositories.CustomerRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,10 +12,9 @@ import java.util.UUID;
 
 /**
  * Created by jt, Spring Framework Guru.
- * Modified by Pierrot on 19-10-2026
+ * Modified by Pierrot on 20-10-2026
  */
 @Service
-@Primary
 @RequiredArgsConstructor
 public class CustomerServiceJPA implements CustomerService {
     private final CustomerRepository customerRepository;

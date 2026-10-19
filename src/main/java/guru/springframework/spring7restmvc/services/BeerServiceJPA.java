@@ -6,7 +6,6 @@ import guru.springframework.spring7restmvc.model.BeerDTO;
 import guru.springframework.spring7restmvc.model.BeerStyle;
 import guru.springframework.spring7restmvc.repositories.BeerRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Primary;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -19,10 +18,9 @@ import java.util.UUID;
 
 /**
  * Created by jt, Spring Framework Guru.
- * Modified by Pierrot on 19-10-2026
+ * Modified by Pierrot on 20-10-2026
  */
 @Service
-@Primary
 @RequiredArgsConstructor
 public class BeerServiceJPA implements BeerService {
     private final BeerRepository beerRepository;
