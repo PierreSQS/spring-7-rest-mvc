@@ -13,7 +13,7 @@ import java.util.UUID;
 
 /**
  * Created by jt, Spring Framework Guru.
- * Modified by Pierrot on 17-10-2026
+ * Modified by Pierrot on 19-10-2026
  */
 @Service
 @Primary
@@ -24,8 +24,7 @@ public class CustomerServiceJPA implements CustomerService {
 
     @Override
     public Optional<CustomerDTO> getCustomerById(UUID uuid) {
-        return Optional.ofNullable(customerMapper
-                .customerToCustomerDto(customerRepository.findById(uuid).orElse(null)));
+        return customerRepository.findById(uuid).map(customerMapper::customerToCustomerDto);
     }
 
     @Override

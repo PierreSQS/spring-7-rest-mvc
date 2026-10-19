@@ -19,7 +19,7 @@ import java.util.UUID;
 
 /**
  * Created by jt, Spring Framework Guru.
- * Modified by Pierrot on 18-10-2026
+ * Modified by Pierrot on 19-10-2026
  */
 @Service
 @Primary
@@ -90,8 +90,7 @@ public class BeerServiceJPA implements BeerService {
 
     @Override
     public Optional<BeerDTO> getBeerById(UUID id) {
-        return Optional.ofNullable(beerMapper.beerToBeerDto(beerRepository.findById(id)
-                .orElse(null)));
+        return beerRepository.findById(id).map(beerMapper::beerToBeerDto);
     }
 
     @Override
