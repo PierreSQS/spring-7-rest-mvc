@@ -16,6 +16,8 @@
     <properties>
         <java.version>25</java.version>
         <org.mapstruct.version>1.6.3</org.mapstruct.version>
+        <!-- profile used by "mvnw spring-boot:run" without -D: MySQL via Docker Compose, port 8081 -->
+        <spring-boot.run.profiles>localmysql</spring-boot.run.profiles>
     </properties>
     <dependencies>
         <dependency>

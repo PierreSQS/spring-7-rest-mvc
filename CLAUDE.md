@@ -49,8 +49,8 @@ Use **JDK 25** (`JAVA_HOME`) and the Maven wrapper, which pins **Maven 3.9.16**.
 | Full verification | `.\mvnw.cmd clean verify` | Yes |
 | One integration test class, plus unit tests | `.\mvnw.cmd verify "-Dit.test=MySqlIT"` | Yes |
 | Build without integration tests | `.\mvnw.cmd verify -DskipITs` | No |
-| Run with H2 | `.\mvnw.cmd spring-boot:run` | No |
-| Run with Compose MySQL | `.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=localmysql"` | Yes |
+| Run with H2 | `.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=default"` (the pom sets `localmysql` as the run profile) | No |
+| Run with Compose MySQL (port 8081) | `.\mvnw.cmd spring-boot:run` | Yes |
 
 No linter or formatter is configured. Calling the running API needs a JWT from an authorization server on `http://localhost:9000` (see section 4).
 
