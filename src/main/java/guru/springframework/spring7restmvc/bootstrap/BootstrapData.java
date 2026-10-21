@@ -10,6 +10,7 @@ import guru.springframework.spring7restmvc.services.BeerCsvService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.jspecify.annotations.NonNull;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
@@ -20,7 +21,7 @@ import java.util.List;
 
 /**
  * Created by jt, Spring Framework Guru.
- * Modified by Pierrot on 17-10-2026
+ * Modified by Pierrot on 21-10-2026
  */
 @Slf4j
 @Component
@@ -32,7 +33,7 @@ public class BootstrapData implements CommandLineRunner {
 
     @Transactional
     @Override
-    public void run(String... args) throws Exception {
+    public void run(String @NonNull ... args) {
         loadBeerData();
         loadCsvData();
         loadCustomerData();
@@ -44,15 +45,13 @@ public class BootstrapData implements CommandLineRunner {
 
             List<BeerCSVRecord> recs = beerCsvService.convertCSV(resource);
 
-            recs.forEach(beerCSVRecord -> {
-                beerRepository.save(Beer.builder()
-                                .beerName(StringUtils.abbreviate(beerCSVRecord.getBeer(), 50))
-                                .beerStyle(beerStyleOf(beerCSVRecord.getStyle()))
-                                .price(BigDecimal.TEN)
-                                .upc(beerCSVRecord.getRow().toString())
-                                .quantityOnHand(beerCSVRecord.getCount())
-                        .build());
-            });
+            recs.forEach(beerCSVRecord -> beerRepository.save(Beer.builder()
+                            .beerName(StringUtils.abbreviate(beerCSVRecord.getBeer(), 50))
+                            .beerStyle(beerStyleOf(beerCSVRecord.getStyle()))
+                            .price(BigDecimal.TEN)
+                            .upc(beerCSVRecord.getRow().toString())
+                            .quantityOnHand(beerCSVRecord.getCount())
+                    .build()));
 
             log.info("### loaded {} Beers from CSV-File ###", recs.size());
             log.info("### total Beers loaded: {} ###", beerRepository.count());
