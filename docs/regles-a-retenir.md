@@ -296,7 +296,7 @@ L'atomicité ne sert à rien : c'est un détour, et `Optional` permet de s'en pa
 
 **Preuve :** petit programme de démonstration lancé le 17-10-2026 (deux threads, résultats ci-dessus).
 
-### R21 — `Optional.map` : transformer le contenu d'un `Optional`, sans boîte
+### R21 — `Optional.map` / `flatMap` : transformer la valeur d'un `Optional`, au lieu de la sortir dans une `AtomicReference` (la « boîte » de R20)
 
 **L'idée :** `map` transforme **toujours** un `Optional<A>` en `Optional<B>`, et on le renvoie.
 
@@ -332,3 +332,170 @@ return Optional.empty();
 
 **Pourquoi c'est mieux que la boîte de JT (R20) :** le lambda **renvoie** son résultat (`return`) au lieu
 de le déposer dans une `AtomicReference`. Plus de boîte, plus de règle « effectively final » à contourner.
+
+#### Les classes des exemples ci-dessous
+
+`findNickname`, `findOrder`, `findCustomer`, `findAddress`, `findSupplierByUpc`, `Employee`… sont **inventés
+pour l'entraînement** (exercices du 21-10-2026). Seul l'exemple de la fin vient du projet.
+
+#### 1. Reconnaître le motif `map` dans du code existant
+
+**Le contexte :** on a un `Optional` qui contient peut-être une valeur, et on veut transformer cette valeur
+seulement si elle existe. Le code « à l'ancienne » le fait en trois temps ; `map` le fait en un.
+
+**Exemple :** une méthode rend le surnom d'un utilisateur, s'il en a un. On veut la longueur de ce surnom :
+`"Pierrot"` → `Optional[7]` ; pas de surnom → `Optional.empty`.
+
+```java
+Optional<String> findNickname(Long userId)   // le surnom, ou un Optional vide
+```
+
+```java
+// à l'ancienne : trois temps
+String nickname = findNickname(userId).orElse(null);   // 1. sortir : le surnom, ou null s'il n'y en a pas
+if (nickname == null) {
+    return Optional.empty();                           //    pas de surnom → Optional vide
+}
+return Optional.of(nickname.length());                 // 2. transformer : la longueur
+                                                       // 3. remettre : dans un Optional<Integer>
+
+// avec map : la même chose
+return findNickname(userId).map(String::length);
+```
+
+**La forme générale**, avec deux noms pour les deux morceaux qui changent d'un cas à l'autre :
+
+- **`x`** = l'`Optional` de départ. Ici : `findNickname(userId)`, un `Optional<String>`.
+- **`f`** = la transformation à appliquer à la valeur. Ici : `String::length`, qui prend un `String` et rend sa longueur.
+
+| Code à l'ancienne | Avec `map` |
+|---|---|
+| `Optional.ofNullable(f(x.orElse(null)))` | `x.map(f)` |
+
+**Attention :** la forme à l'ancienne sans `if` ne marche que si `f` accepte `null` (comme un mapper MapStruct,
+qui rend `null` pour `null`). Sinon `f(null)` lance une `NullPointerException` : c'est pourquoi on la trouve
+souvent écrite avec un `if (… == null)`, comme dans l'exemple.
+
+#### 2. `map` ou `flatMap` ?
+
+**Le contexte :** parfois, la transformation `f` **cherche** elle-même quelque chose qui peut ne pas exister.
+Elle rend donc déjà un `Optional`.
+
+**Exemple :** on veut l'adresse d'un client. Le client peut ne pas exister, et un client peut ne pas avoir d'adresse.
+
+```java
+Optional<Customer> findCustomer(Long id)   // le client, ou rien
+Optional<Address>  findAddress(Customer c) // l'adresse du client, ou rien
+```
+
+```java
+findCustomer(id).map(this::findAddress)       // → Optional<Optional<Address>> : un Optional dans un Optional
+findCustomer(id).flatMap(this::findAddress)   // → Optional<Address>           : ce qu'on veut
+```
+
+`map` met **tel quel** ce que rend `f` dans un nouvel `Optional`. Si `f` rend déjà un `Optional`, on en obtient
+deux, l'un dans l'autre. `flatMap` n'en ajoute pas.
+
+**La règle : regarder ce que rend `f`.**
+
+| `f` rend… | On utilise | Exemple |
+|---|---|---|
+| une valeur simple (`String`, `BigDecimal`, `BeerDTO`…) | `map` | `String::length` rend un `int` |
+| déjà un `Optional<…>` | `flatMap` | `findAddress` rend un `Optional<Address>` |
+
+#### 3. Dans du vieux code : `map` ou `flatMap` ?
+
+**Le contexte :** devant un vieux code avec `orElse(null)` et `if (… == null)`, comment savoir s'il faut le
+remplacer par `map` ou par `flatMap` ? Regarder **la dernière ligne**, celle qui rend le résultat quand la valeur existe.
+
+| Dernière ligne | Ce qu'elle montre | On écrit |
+|---|---|---|
+| `return Optional.of(order.getTotal());` | `getTotal()` rend une valeur simple, qu'il faut mettre dans un `Optional` avec `Optional.of` | `findOrder(orderId).map(Order::getTotal)` |
+| `return findMainCategory(beer);` | `findMainCategory` rend **déjà** un `Optional<Category>` : pas d'`Optional.of` | `findBeer(beerId).flatMap(this::findMainCategory)` |
+
+En bref : `Optional.of(...)` sur la dernière ligne → `map` ; pas d'`Optional.of` → `flatMap`.
+
+#### 4. Enchaîner plusieurs étapes
+
+**Le contexte :** on veut l'e-mail du fournisseur d'une bière. Il faut trois étapes :
+la bière → son code UPC → le fournisseur de ce code → son e-mail.
+
+```java
+Optional<Beer>     findBeer(UUID beerId)            // la bière, ou rien
+Optional<Supplier> findSupplierByUpc(String upc)    // le fournisseur, ou rien
+// Beer a String getUpc() ; Supplier a String getEmail()
+```
+
+On décide `map` ou `flatMap` **à chaque étape**, avec la règle du point 2 :
+
+| Étape | `f` | `f` prend… et rend… | On utilise | Résultat |
+|---|---|---|---|---|
+| départ | | | | `Optional<Beer>` |
+| 1 | `Beer::getUpc` | `Beer` → `String` | `map` | `Optional<String>` |
+| 2 | `this::findSupplierByUpc` | `String` → `Optional<Supplier>` | `flatMap` | `Optional<Supplier>` |
+| 3 | `Supplier::getEmail` | `Supplier` → `String` | `map` | `Optional<String>` |
+
+```java
+return findBeer(beerId)
+        .map(Beer::getUpc)                   // étape 1
+        .flatMap(this::findSupplierByUpc)    // étape 2
+        .map(Supplier::getEmail);            // étape 3
+```
+
+**Et si une étape ne trouve rien ?** L'`Optional` devient vide, et les étapes suivantes ne font rien :
+leur `f` n'est même pas appelée. Le résultat final est un `Optional` vide.
+
+| Cas | Étape 1 | Étape 2 | Étape 3 | Résultat |
+|---|---|---|---|---|
+| tout existe | rend l'UPC | rend le fournisseur | rend l'e-mail | `Optional["contact@…"]` |
+| bière inconnue | vide (`getUpc` pas appelé) | ne fait rien | ne fait rien | `Optional.empty` |
+| pas de fournisseur pour cet UPC | rend l'UPC | vide | ne fait rien (`getEmail` pas appelé) | `Optional.empty` |
+
+On n'a donc besoin d'aucun `if (… == null)` entre les étapes.
+
+#### 5. Enchaîner plutôt qu'emboîter
+
+**Le contexte :** il y a deux façons d'écrire plusieurs étapes. **Enchaîner** : les étapes l'une après l'autre.
+**Emboîter** : l'étape suivante écrite à l'intérieur du lambda de la précédente.
+
+**Exemple :** trouver le chef du service d'un employé.
+
+```java
+// enchaîné : se lit de gauche à droite, une étape à la fois
+findEmployee(id).flatMap(emp -> findDepartment(emp)).flatMap(dept -> findManager(dept))
+
+// emboîté : même résultat, mais il faut compter les parenthèses
+findEmployee(id).flatMap(emp -> findDepartment(emp).flatMap(dept -> findManager(dept)))
+```
+
+Préférer la forme **enchaînée**.
+
+**Le seul cas où il faut emboîter :** une étape a besoin d'une valeur d'une étape **plus ancienne**.
+Exemple : afficher `"Pierrot — Marketing"`, qui demande l'employé **et** son service en même temps.
+
+```java
+findEmployee(id).flatMap(emp -> findDepartment(emp).map(dept -> emp.getName() + " — " + dept.getName()))
+//                       ^^^                                    ^^^ emp est encore utilisable ici
+```
+
+En forme enchaînée, l'étape 2 ne reçoit que `dept` : `emp` n'existe plus à cet endroit.
+
+#### 6. Trois façons d'écrire `f`
+
+| Ce que fait `f` | Référence de méthode | Lambda (la même chose) |
+|---|---|---|
+| appelle une méthode **de l'objet reçu** | `Customer::getEmail` | `customer -> customer.getEmail()` |
+| passe l'objet reçu à une méthode **de notre classe** | `this::toDto` | `beer -> toDto(beer)` |
+| passe l'objet reçu à une méthode **d'un autre objet** | `beerMapper::beerToBeerDto` | `beer -> beerMapper.beerToBeerDto(beer)` |
+
+En cas de doute, écrire le lambda : il montre clairement qui reçoit quoi.
+
+**Exemple dans le projet :** `src/main/java/guru/springframework/spring7restmvc/services/BeerServiceJPA.java:91`
+
+```java
+return beerRepository.findById(id).map(beerMapper::beerToBeerDto);
+```
+
+Ici `x` = `beerRepository.findById(id)` (un `Optional<Beer>`) et `f` = `beerMapper::beerToBeerDto`
+(`Beer` → `BeerDTO`, 3e ligne du tableau) ; le résultat est un `Optional<BeerDTO>`.
+`flatMap` n'est pas encore utilisé dans le projet.
