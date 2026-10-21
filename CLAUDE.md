@@ -22,7 +22,7 @@ A beer and customer REST API built alongside John Thompson's **Spring Framework 
 
 | Kind | Naming | Rule |
 |---|---|---|
-| Rules | `docs/regles-a-retenir.md` | The rules learned on this project (R1-R22, in French): each with the rule, an example and the proof (test or commit). Extended lesson by lesson. |
+| Rules | `docs/regles-a-retenir.md` | The rules learned on this project (in French): each with the rule, an example and the proof (test or commit). Extended lesson by lesson. |
 | Lesson review | `secNN[-chapNNN]-<topic>-improvements.md` | A snapshot of one lecture: what JT did, what this project changed and why. It is **history**; it is not updated when later sections move on, and it says so at the top. |
 | Topic page | `<topic>.md`, e.g. `spring-security-test-user-vs-httpbasic.md` | Explains a mechanism that outlives the lecture. Must describe the code as it is **today**. |
 

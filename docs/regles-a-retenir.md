@@ -118,6 +118,86 @@ depuis la base. Voir aussi R5.
 **Preuve :** commit `8f187948` (`listBeersWithoutInventoryKeepsTheStockInTheDatabase` : rouge quand
 le stock était caché sur l'entité, vert sur le DTO).
 
+### R23 — Une validation refusée au commit arrive emballée : `getRootCause()` retrouve le champ et le message
+
+**Le contexte :** un PATCH n'a pas de `@Validated` dans le contrôleur (un PATCH peut être partiel, R3).
+Une valeur invalide passe donc le contrôleur ; elle n'est refusée que par les annotations de l'**entité**
+(`@Size`, `@NotBlank`…), au moment où Hibernate écrit en base, c'est-à-dire au commit (R5).
+Le client doit quand même savoir **quel champ** est faux et **pourquoi**.
+
+**Exemple :** un PATCH avec un nom de bière de plus de 50 caractères.
+
+```http
+PATCH /api/v1/beer/9c0d…
+{ "beerName": "New Name 12345678901234567890123456789012345678901234567890…" }
+```
+
+Réponse voulue :
+
+```json
+400
+[ { "beerName": "Beer name must be at most 50 characters" } ]
+```
+
+Le nom est refusé par l'entité `Beer` :
+
+```java
+@Size(max = 50, message = "Beer name must be at most 50 characters")
+private String beerName;
+```
+
+**Ce qui se passe au commit :** l'erreur traverse trois couches. Chacune emballe l'exception de la couche
+du dessous et la garde comme **cause** (`getCause()`).
+
+| Couche | Lance | Sa cause (`getCause()`) |
+|---|---|---|
+| 1. Hibernate Validator | `ConstraintViolationException` | aucune : c'est elle qui contient le champ (`beerName`) et le message |
+| 2. JPA (Hibernate) | `jakarta.persistence.RollbackException` | la `ConstraintViolationException` |
+| 3. Spring (`JpaTransactionManager`) | `TransactionSystemException` | la `RollbackException` |
+
+Ce qui arrive dans le `@ControllerAdvice`, c'est la couche **extérieure** (3). Les informations utiles
+sont **tout au fond** (1).
+
+**La règle :** attraper la `TransactionSystemException`, puis descendre à la cause la plus profonde avec
+`getRootCause()`, quel que soit le nombre de couches.
+
+```java
+@ExceptionHandler
+ResponseEntity<List<Map<String, String>>> handleJPAViolations(TransactionSystemException exception) {
+    // getRootCause() : la cause la plus profonde ; instanceof vérifie son type ET la met dans violationException
+    if (exception.getRootCause() instanceof ConstraintViolationException violationException) {
+        List<Map<String, String>> errorList = violationException.getConstraintViolations().stream()
+                .map(violation -> Map.of(violation.getPropertyPath().toString(),   // le champ : "beerName"
+                                         violation.getMessage()))                  // le message de @Size
+                .toList();                                                         // [ {beerName=…} ]
+        return ResponseEntity.badRequest().body(errorList);
+    }
+    return ResponseEntity.badRequest().build();   // autre cause (base injoignable…) : 400 sans corps
+}
+```
+
+| Appel | Rend |
+|---|---|
+| `exception` | `TransactionSystemException` (couche 3) |
+| `exception.getCause()` | `RollbackException` (couche 2) : pas encore ce qu'on cherche |
+| `exception.getRootCause()` | `ConstraintViolationException` (couche 1) |
+
+Pourquoi `getRootCause()` plutôt que `getCause().getCause()` : on n'a pas à compter les couches. Si une
+version de Spring ou de Hibernate en ajoute ou en retire une, le code marche toujours.
+
+**Même réponse, quelle que soit la couche qui refuse :**
+
+| Requête | Qui refuse | Exception reçue | Handler | Réponse |
+|---|---|---|---|---|
+| POST / PUT, nom trop long | `@Validated`, dans le contrôleur | `MethodArgumentNotValidException` | `handleBindErrors` | `400` + `[{beerName: …}]` |
+| PATCH, nom trop long | `@Size` sur l'entité, au commit | `TransactionSystemException` → `getRootCause()` | `handleJPAViolations` | `400` + `[{beerName: …}]` |
+
+**Exemple dans le projet :** `src/main/java/guru/springframework/spring7restmvc/controller/CustomErrorController.java:24`
+
+**Preuve :** `BeerControllerIT.testPatchBeerBadName`, qui vérifie `$[0].beerName` (commit `7ea665b3`).
+Couche 3 vérifiée dans `spring-orm-7.0.9.jar` : `JpaTransactionManager.doCommit` attrape la
+`RollbackException` et lance `new TransactionSystemException("Could not commit JPA transaction", ex)`.
+
 ---
 
 ## 4. Tests
