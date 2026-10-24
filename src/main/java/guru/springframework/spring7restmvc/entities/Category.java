@@ -1,15 +1,32 @@
 package guru.springframework.spring7restmvc.entities;
 
-import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.Version;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+/**
+ * Modified by Pierrot on 24-10-2026
+ */
 @Builder
 @Getter
 @Setter
@@ -22,7 +39,7 @@ public class Category {
     @GeneratedValue(generator = "UUID")
     @UuidGenerator
     @JdbcTypeCode(SqlTypes.CHAR)
-    @Column(length = 36, columnDefinition = "varchar(36)", updatable = false, nullable = false )
+    @Column(length = 36, columnDefinition = "varchar(36)", updatable = false, nullable = false)
     private UUID id;
 
     @Version
@@ -30,29 +47,28 @@ public class Category {
 
     @CreationTimestamp
     @Column(updatable = false)
-    private Timestamp createdDate;
+    private LocalDateTime createdDate;
 
     @UpdateTimestamp
-    private Timestamp lastModifiedDate;
+    private LocalDateTime lastModifiedDate;
 
     private String description;
 
     @Builder.Default
     @ManyToMany
     @JoinTable(name = "beer_category",
-      joinColumns = @JoinColumn(name = "category_id"),
-      inverseJoinColumns = @JoinColumn(name = "beer_id"))
+            joinColumns = @JoinColumn(name = "category_id"),
+            inverseJoinColumns = @JoinColumn(name = "beer_id"))
     private Set<Beer> beers = new HashSet<>();
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Category)) return false;
+        if (!(o instanceof Category category)) return false;
         if (!super.equals(o)) return false;
 
-        Category category = (Category) o;
-
-        return getDescription() != null ? getDescription().equals(category.getDescription()) : category.getDescription() == null;
+        return getDescription() != null ?
+                getDescription().equals(category.getDescription()) : category.getDescription() == null;
     }
 
     @Override

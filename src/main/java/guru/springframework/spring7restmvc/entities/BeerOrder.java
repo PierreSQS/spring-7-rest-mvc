@@ -16,7 +16,15 @@
  */
 package guru.springframework.spring7restmvc.entities;
 
-import jakarta.persistence.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Version;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,10 +35,13 @@ import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.UUID;
 
+/**
+ * Modified by Pierrot on 24-10-2026
+ */
 @Getter
 @Setter
 @Entity
@@ -38,7 +49,7 @@ import java.util.UUID;
 @Builder
 public class BeerOrder {
 
-    public BeerOrder(UUID id, Long version, Timestamp createdDate, Timestamp lastModifiedDate, String customerRef,
+    public BeerOrder(UUID id, Long version, LocalDateTime createdDate, LocalDateTime lastModifiedDate, String customerRef,
                      Customer customer, Set<BeerOrderLine> beerOrderLines, BeerOrderShipment beerOrderShipment) {
         this.id = id;
         this.version = version;
@@ -62,10 +73,10 @@ public class BeerOrder {
 
     @CreationTimestamp
     @Column(updatable = false)
-    private Timestamp createdDate;
+    private LocalDateTime createdDate;
 
     @UpdateTimestamp
-    private Timestamp lastModifiedDate;
+    private LocalDateTime lastModifiedDate;
 
     public boolean isNew() {
         return this.id == null;
