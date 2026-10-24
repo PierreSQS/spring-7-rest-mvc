@@ -35,3 +35,7 @@ build/
 ### Local secrets ###
 # passwords for compose.yaml - never commit them, the template is .env.example
 .env
+
+### Local debug settings ###
+# my own Spring Boot overrides (read after src/main/resources), never committed
+/config/
