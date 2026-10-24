@@ -5,23 +5,21 @@ import guru.springframework.spring7restmvc.mappers.BeerMapper;
 import guru.springframework.spring7restmvc.model.BeerDTO;
 import guru.springframework.spring7restmvc.model.BeerStyle;
 import guru.springframework.spring7restmvc.repositories.BeerRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.core.IsNull;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.annotation.Rollback;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.context.WebApplicationContext;
-import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,12 +28,18 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+/**
+ * Modified by Pierrot on 24-10-2026
+ */
+@Slf4j
 @SpringBootTest
+@AutoConfigureMockMvc
 class BeerControllerIT {
     @Autowired
     BeerController beerController;
@@ -47,24 +51,15 @@ class BeerControllerIT {
     BeerMapper beerMapper;
 
     @Autowired
-    ObjectMapper objectMapper;
+    JsonMapper jsonMapper;
 
     @Autowired
-    WebApplicationContext wac;
-
     MockMvc mockMvc;
 
-    @BeforeEach
-    void setUp() {
-        mockMvc = MockMvcBuilders.webAppContextSetup(wac)
-                .apply(springSecurity())
-                .build();
-    }
-
-    @Disabled // just for demo purposes
+    @Disabled("just for demo purposes")
     @Test
     void testUpdateBeerBadVersion() throws Exception {
-        Beer beer = beerRepository.findAll().get(0);
+        Beer beer = beerRepository.findAll().getFirst();
 
         BeerDTO beerDTO = beerMapper.beerToBeerDto(beer);
 
@@ -73,22 +68,22 @@ class BeerControllerIT {
         MvcResult result = mockMvc.perform(put(BeerController.BEER_PATH_ID, beer.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(beerDTO)))
+                        .content(jsonMapper.writeValueAsString(beerDTO)))
                 .andExpect(status().isNoContent())
                 .andReturn();
 
-        System.out.println(result.getResponse().getContentAsString());
+        log.info(result.getResponse().getContentAsString());
 
         beerDTO.setBeerName("Updated Name 2");
 
         MvcResult result2 = mockMvc.perform(put(BeerController.BEER_PATH_ID, beer.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(beerDTO)))
+                        .content(jsonMapper.writeValueAsString(beerDTO)))
                 .andExpect(status().isNoContent())
                 .andReturn();
 
-        System.out.println(result2.getResponse().getStatus());
+        log.info(String.valueOf(result2.getResponse().getStatus()));
     }
 
     @Test
@@ -174,7 +169,7 @@ class BeerControllerIT {
 
     @Test
     void testPatchBeerBadName() throws Exception {
-        Beer beer = beerRepository.findAll().get(0);
+        Beer beer = beerRepository.findAll().getFirst();
 
         Map<String, Object> beerMap = new HashMap<>();
         beerMap.put("beerName", "New Name 1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890");
@@ -183,57 +178,55 @@ class BeerControllerIT {
                         .with(BeerControllerTest.jwtRequestPostProcessor)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(beerMap)))
+                        .content(jsonMapper.writeValueAsString(beerMap)))
                 .andExpect(status().isBadRequest())
                 .andReturn();
 
-        System.out.println(result.getResponse().getContentAsString());   }
+        log.info(result.getResponse().getContentAsString());
+    }
 
     @Test
     void testDeleteByIDNotFound() {
-        assertThrows(NotFoundException.class, () -> {
-            beerController.deleteById(UUID.randomUUID());
-        });
+        UUID beerId = UUID.randomUUID();
+        assertThrows(NotFoundException.class, () -> beerController.deleteById(beerId));
     }
 
-    @Rollback
     @Transactional
     @Test
     void deleteByIdFound() {
-        Beer beer = beerRepository.findAll().get(0);
+        Beer beer = beerRepository.findAll().getFirst();
 
-        ResponseEntity responseEntity = beerController.deleteById(beer.getId());
+        ResponseEntity<Void> responseEntity = beerController.deleteById(beer.getId());
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(204));
 
-        assertThat(beerRepository.findById(beer.getId()).isEmpty());
+        assertThat(beerRepository.findById(beer.getId())).isEmpty();
     }
 
     @Test
     void testUpdateNotFound() {
-        assertThrows(NotFoundException.class, () -> {
-            beerController.updateById(UUID.randomUUID(), BeerDTO.builder().build());
-        });
+        UUID beerId = UUID.randomUUID();
+        BeerDTO beerDTO = BeerDTO.builder().build();
+        assertThrows(NotFoundException.class, () ->
+                beerController.updateById(beerId, beerDTO));
     }
 
-    @Rollback
     @Transactional
     @Test
     void updateExistingBeer() {
-        Beer beer = beerRepository.findAll().get(0);
+        Beer beer = beerRepository.findAll().getFirst();
         BeerDTO beerDTO = beerMapper.beerToBeerDto(beer);
         beerDTO.setId(null);
         beerDTO.setVersion(null);
         final String beerName = "UPDATED";
         beerDTO.setBeerName(beerName);
 
-        ResponseEntity responseEntity = beerController.updateById(beer.getId(), beerDTO);
+        ResponseEntity<Void> responseEntity = beerController.updateById(beer.getId(), beerDTO);
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(204));
 
         Beer updatedBeer = beerRepository.findById(beer.getId()).get();
         assertThat(updatedBeer.getBeerName()).isEqualTo(beerName);
     }
 
-    @Rollback
     @Transactional
     @Test
     void saveNewBeerTest() {
@@ -241,7 +234,7 @@ class BeerControllerIT {
                 .beerName("New Beer")
                 .build();
 
-        ResponseEntity responseEntity = beerController.handlePost(beerDTO);
+        ResponseEntity<Void> responseEntity = beerController.handlePost(beerDTO);
 
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(201));
         assertThat(responseEntity.getHeaders().getLocation()).isNotNull();
@@ -255,14 +248,13 @@ class BeerControllerIT {
 
     @Test
     void testBeerIdNotFound() {
-        assertThrows(NotFoundException.class, () -> {
-            beerController.getBeerById(UUID.randomUUID());
-        });
+        UUID beerId = UUID.randomUUID();
+        assertThrows(NotFoundException.class, () -> beerController.getBeerById(beerId));
     }
 
     @Test
     void testGetById() {
-        Beer beer = beerRepository.findAll().get(0);
+        Beer beer = beerRepository.findAll().getFirst();
 
         BeerDTO dto = beerController.getBeerById(beer.getId());
 
@@ -273,17 +265,16 @@ class BeerControllerIT {
     void testListBeers() {
         Page<BeerDTO> dtos = beerController.listBeers(null, null, false, 1, 2413);
 
-        assertThat(dtos.getContent().size()).isEqualTo(1000);
+        assertThat(dtos.getContent()).hasSize(1000);
     }
 
-    @Rollback
     @Transactional
     @Test
     void testEmptyList() {
         beerRepository.deleteAll();
         Page<BeerDTO> dtos = beerController.listBeers(null, null, false, 1, 25);
 
-        assertThat(dtos.getContent().size()).isEqualTo(0);
+        assertThat(dtos.getContent()).isEmpty();
     }
 }
 
