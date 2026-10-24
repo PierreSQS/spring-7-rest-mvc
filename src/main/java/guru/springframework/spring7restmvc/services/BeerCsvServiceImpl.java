@@ -22,8 +22,8 @@ public class BeerCsvServiceImpl implements BeerCsvService {
             return new CsvToBeanBuilder<BeerCSVRecord>(r)
                     .withType(BeerCSVRecord.class)
                     .build().parse();
-        } catch (UncheckedIOException | IOException e) {
-            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 }
