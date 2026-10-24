@@ -98,7 +98,8 @@ class BeerControllerTest {
         verify(beerService).patchBeerById(uuidArgumentCaptor.capture(), beerArgumentCaptor.capture());
 
         assertThat(uuidArgumentCaptor.getValue()).isEqualTo(beer.getId());
-        assertThat(beerMap).containsEntry(beerArgumentCaptor.getValue().getBeerName(),"beerName");
+        assertThat(beerArgumentCaptor.getValue().getBeerName())
+                .isEqualTo(beerMap.get("beerName"));
     }
 
     @Test
