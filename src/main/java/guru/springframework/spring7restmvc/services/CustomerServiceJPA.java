@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 /**
  * Created by jt, Spring Framework Guru.
@@ -26,15 +25,14 @@ public class CustomerServiceJPA implements CustomerService {
 
     @Override
     public Optional<CustomerDTO> getCustomerById(UUID uuid) {
-        return Optional.ofNullable(customerMapper
-                .customerToCustomerDto(customerRepository.findById(uuid).orElse(null)));
+        return customerRepository.findById(uuid).map(customerMapper::customerToCustomerDto);
     }
 
     @Override
     public List<CustomerDTO> getAllCustomers() {
         return customerRepository.findAll().stream()
                 .map(customerMapper::customerToCustomerDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
