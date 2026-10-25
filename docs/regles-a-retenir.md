@@ -8,6 +8,60 @@ Créé le 17-10-2026.
 
 ---
 
+## Table des matières
+
+23 règles, numérotées R1 à R23 dans l'ordre où elles ont été apprises - donc pas dans
+l'ordre des sections : R19 est rangée avec les fichiers, R20-R21 avec les lambdas, R22-R23 avec Hibernate.
+
+
+**1. MapStruct et DTO**
+
+- [R1 — Dans le sens DTO → entité, ignorer ce qui appartient à la base](#r1--dans-le-sens-dto--entité-ignorer-ce-qui-appartient-à-la-base)
+- [R2 — Dans le sens entité → DTO, tout renvoyer](#r2--dans-le-sens-entité--dto-tout-renvoyer)
+
+**2. PUT et PATCH**
+
+- [R3 — PATCH ne copie que ce qui est envoyé, PUT remplace tout](#r3--patch-ne-copie-que-ce-qui-est-envoyé-put-remplace-tout)
+- [R4 — Un texte vide `""` n'est pas `null`](#r4--un-texte-vide--nest-pas-null)
+
+**3. Hibernate et transactions**
+
+- [R5 — Certaines choses n'arrivent qu'au moment où Hibernate écrit en base](#r5--certaines-choses-narrivent-quau-moment-où-hibernate-écrit-en-base)
+- [R6 — Dans une transaction, `findById` lit la mémoire d'Hibernate, pas la base](#r6--dans-une-transaction-findbyid-lit-la-mémoire-dhibernate-pas-la-base)
+- [R7 — L'`id` et la `version` appartiennent à Hibernate](#r7--lid-et-la-version-appartiennent-à-hibernate)
+- [R8 — `@Column(updatable = false)` protège la date de création](#r8--columnupdatable--false-protège-la-date-de-création)
+- [R22 — Une entité lue est surveillée : la modifier, c'est l'écrire en base](#r22--une-entité-lue-est-surveillée--la-modifier-cest-lécrire-en-base)
+- [R23 — Une validation refusée au commit arrive emballée : `getRootCause()` retrouve le champ et le message](#r23--une-validation-refusée-au-commit-arrive-emballée--getrootcause-retrouve-le-champ-et-le-message)
+
+**4. Tests**
+
+- [R9 — `@Transactional`, `flush()` ou ni l'un ni l'autre ?](#r9--transactional-flush-ou-ni-lun-ni-lautre-)
+- [R10 — Un test doit prouver quelque chose : le faire échouer une fois](#r10--un-test-doit-prouver-quelque-chose--le-faire-échouer-une-fois)
+- [R11 — `@WebMvcTest` ne charge que la couche web](#r11--webmvctest-ne-charge-que-la-couche-web)
+
+**5. Spring Security**
+
+- [R12 — Une chaîne de filtres personnalisée remplace celle de Spring Boot](#r12--une-chaîne-de-filtres-personnalisée-remplace-celle-de-spring-boot)
+- [R13 — 401 ou 403 ?](#r13--401-ou-403-)
+- [R14 — `user(...)` ou `httpBasic(...)` dans un test MockMvc](#r14--user-ou-httpbasic-dans-un-test-mockmvc)
+- [R15 — Désactiver CSRF seulement pour l'API, et seulement pour des clients non-navigateurs](#r15--désactiver-csrf-seulement-pour-lapi-et-seulement-pour-des-clients-non-navigateurs)
+- [R16 — Ne jamais mettre de mot de passe en clair dans Git](#r16--ne-jamais-mettre-de-mot-de-passe-en-clair-dans-git)
+
+**6. Entités**
+
+- [R17 — `equals` / `hashCode` : l'identité d'`Object` suffit souvent avec Hibernate](#r17--equals--hashcode--lidentité-dobject-suffit-souvent-avec-hibernate)
+- [R18 — Une méthode d'aide bidirectionnelle met à jour les deux côtés](#r18--une-méthode-daide-bidirectionnelle-met-à-jour-les-deux-côtés)
+
+**7. Fichiers et encodage**
+
+- [R19 — Lire un fichier du classpath en flux, et toujours en UTF-8](#r19--lire-un-fichier-du-classpath-en-flux-et-toujours-en-utf-8)
+
+**8. Java : lambdas et threads**
+
+- [R20 — `AtomicReference` sert aux threads ; pour sortir une valeur d'un lambda, ce n'est qu'une boîte](#r20--atomicreference-sert-aux-threads--pour-sortir-une-valeur-dun-lambda-ce-nest-quune-boîte)
+- [R21 — `Optional.map` / `flatMap` : transformer la valeur d'un `Optional`, au lieu de la sortir dans une `AtomicReference` (la « boîte » de R20)](#r21--optionalmap--flatmap--transformer-la-valeur-dun-optional-au-lieu-de-la-sortir-dans-une-atomicreference-la--boîte--de-r20) - *et le piège : `map` emballe toujours ce que le lambda renvoie*
+
+---
 ## 1. MapStruct et DTO
 
 ### R1 — Dans le sens DTO → entité, ignorer ce qui appartient à la base
@@ -412,6 +466,62 @@ return Optional.empty();
 
 **Pourquoi c'est mieux que la boîte de JT (R20) :** le lambda **renvoie** son résultat (`return`) au lieu
 de le déposer dans une `AtomicReference`. Plus de boîte, plus de règle « effectively final » à contourner.
+
+#### Le piège de `map` : il emballe TOUJOURS ce que le lambda renvoie
+
+**Contexte :** le PUT d'une bière, le 25-10-2026, première écriture de la version sans `AtomicReference`.
+
+- **Où :** `src/main/java/guru/springframework/spring7restmvc/services/BeerServiceJPA.java`,
+  méthode `updateBeerById` (puis `patchBeerById`, et les deux mêmes méthodes de `CustomerServiceJPA`).
+- **Branche :** `126-springdoc-maven-jt-sb412` (le code d'origine de JT, Section 40 Chapitre 374).
+- **Le diff réel :** [commit 14c8cbba](https://github.com/PierreSQS/spring-7-rest-mvc/commit/14c8cbba).
+
+**La règle :** `map` ne regarde pas ce que le lambda lui renvoie. Quoi que ce soit, il le met dans un
+`Optional`. Donc si le lambda renvoie **déjà** un `Optional`, on se retrouve avec deux couches.
+
+**Version écrite d'abord — elle marche, mais fait un détour :**
+
+```java
+return beerRepository.findById(beerId).map(foundBeer -> {
+    foundBeer.setBeerName(beer.getBeerName());
+    // ... les autres setXxx
+    return Optional.of(beerMapper.beerToBeerDto(beerRepository.save(foundBeer)));
+    //     ^^^^^^^^^^^ le lambda renvoie un Optional<BeerDTO>
+}).orElse(Optional.empty());
+//  ^^^^^^ obligatoire : enlève la couche fabriquée juste au-dessus
+```
+
+| Étape | Expression | Type |
+|---|---|---|
+| 1 | `beerRepository.findById(beerId)` | `Optional<Beer>` |
+| 2 | `.map(... return Optional.of(dto))` | `Optional<Optional<BeerDTO>>` |
+| 3 | `.orElse(Optional.empty())` | `Optional<BeerDTO>` |
+
+**Version finale — le lambda renvoie la `BeerDTO` toute nue :**
+
+```java
+return beerRepository.findById(beerId).map(foundBeer -> {
+    foundBeer.setBeerName(beer.getBeerName());
+    // ... les autres setXxx
+    return beerMapper.beerToBeerDto(beerRepository.save(foundBeer));
+    //     le lambda renvoie une BeerDTO -> map emballe UNE fois -> Optional<BeerDTO>
+});
+```
+
+Même comportement, mêmes tests verts (`BeerControllerIT` 18 tests, `BeerControllerTest` 9 tests,
+le 25-10-2026), mais plus de type `Optional<Optional<BeerDTO>>` au milieu et deux bouts de code en moins.
+
+**Comment repérer le piège :** dès qu'on écrit `.orElse(Optional.empty())` à la fin d'un `map`, c'est
+qu'on a emballé deux fois. Le compilateur le dit aussi, en nommant le type `Optional<Optional<BeerDTO>>`
+dans son message d'erreur si on se trompe de déclaration.
+
+**Et quand on veut vraiment renvoyer un `Optional` depuis le lambda ?** C'est le rôle de `flatMap` : il
+attend un lambda qui rend déjà un `Optional` et n'ajoute **pas** de couche. Cas typique : le lambda
+appelle une méthode qui rend elle-même un `Optional` (`findById`, `findByUpc`…).
+
+**Preuve :** [commit `14c8cbba`](https://github.com/PierreSQS/spring-7-rest-mvc/commit/14c8cbba) — les quatre
+méthodes des services JPA (`updateBeerById`, `patchBeerById`, `updateCustomerById`, `patchCustomerById`)
+passées de la boîte `AtomicReference` à `Optional.map`, tests verts : 18 + 9 (bière), 9 + 7 (client).
 
 #### Les classes des exemples ci-dessous
 
