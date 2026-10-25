@@ -1,8 +1,8 @@
 package guru.springframework.spring7restmvc.services;
 
 import guru.springframework.spring7restmvc.model.BeerCSVRecord;
+import org.springframework.core.io.Resource;
 
-import java.io.Reader;
 import java.util.List;
 
 /**
@@ -10,5 +10,5 @@ import java.util.List;
  * Modified by Pierrot on 25-10-2026
  */
 public interface BeerCsvService {
-    List<BeerCSVRecord> convertCSV(Reader reader);
+    List<BeerCSVRecord> convertCSV(Resource resource);
 }

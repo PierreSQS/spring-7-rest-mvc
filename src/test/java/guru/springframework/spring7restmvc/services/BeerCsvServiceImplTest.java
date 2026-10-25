@@ -4,9 +4,6 @@ import guru.springframework.spring7restmvc.model.BeerCSVRecord;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -19,12 +16,11 @@ class BeerCsvServiceImplTest {
     BeerCsvService beerCsvService = new BeerCsvServiceImpl();
 
     @Test
-    void convertCSV() throws IOException {
+    void convertCSV() {
 
         ClassPathResource classPathResource = new ClassPathResource("csvdata/beers.csv");
 
-        List<BeerCSVRecord> recs = beerCsvService.convertCSV(
-                new InputStreamReader(classPathResource.getInputStream(), StandardCharsets.UTF_8));
+        List<BeerCSVRecord> recs = beerCsvService.convertCSV(classPathResource);
 
         System.out.println(recs.size());
 

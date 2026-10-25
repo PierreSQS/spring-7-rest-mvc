@@ -15,10 +15,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -42,12 +39,11 @@ public class BootstrapData implements CommandLineRunner {
         loadCustomerData();
     }
 
-    private void loadCsvData() throws IOException {
+    private void loadCsvData() {
         if (beerRepository.count() < 10){
             Resource res = new ClassPathResource("csvdata/beers.csv");
 
-            List<BeerCSVRecord> recs = beerCsvService.convertCSV(
-                    new InputStreamReader(res.getInputStream(), StandardCharsets.UTF_8));
+            List<BeerCSVRecord> recs = beerCsvService.convertCSV(res);
 
             recs.forEach(beerCSVRecord -> {
                 BeerStyle beerStyle = switch (beerCSVRecord.getStyle()) {
