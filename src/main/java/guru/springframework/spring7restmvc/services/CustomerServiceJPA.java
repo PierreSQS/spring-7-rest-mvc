@@ -11,10 +11,10 @@ import org.springframework.util.StringUtils;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Created by jt, Spring Framework Guru.
+ * Modified by Pierrot on 25-10-2026
  */
 @Service
 @Primary
@@ -43,17 +43,11 @@ public class CustomerServiceJPA implements CustomerService {
 
     @Override
     public Optional<CustomerDTO> updateCustomerById(UUID customerId, CustomerDTO customer) {
-        AtomicReference<Optional<CustomerDTO>> atomicReference = new AtomicReference<>();
-
-        customerRepository.findById(customerId).ifPresentOrElse(foundCustomer -> {
+        return customerRepository.findById(customerId).map(foundCustomer -> {
             foundCustomer.setName(customer.getName());
-            atomicReference.set(Optional.of(customerMapper
-                    .customerToCustomerDto(customerRepository.save(foundCustomer))));
-        }, () -> {
-            atomicReference.set(Optional.empty());
+            return customerMapper.customerToCustomerDto(customerRepository.save(foundCustomer));
         });
 
-        return atomicReference.get();
     }
 
     @Override
@@ -67,18 +61,12 @@ public class CustomerServiceJPA implements CustomerService {
 
     @Override
     public Optional<CustomerDTO> patchCustomerById(UUID customerId, CustomerDTO customer) {
-        AtomicReference<Optional<CustomerDTO>> atomicReference = new AtomicReference<>();
-
-        customerRepository.findById(customerId).ifPresentOrElse(foundCustomer -> {
+        return customerRepository.findById(customerId).map(foundCustomer -> {
             if (StringUtils.hasText(customer.getName())){
                 foundCustomer.setName(customer.getName());
             }
-            atomicReference.set(Optional.of(customerMapper
-                    .customerToCustomerDto(customerRepository.save(foundCustomer))));
-        }, () -> {
-            atomicReference.set(Optional.empty());
+            return customerMapper.customerToCustomerDto(customerRepository.save(foundCustomer));
         });
 
-        return atomicReference.get();
     }
 }
