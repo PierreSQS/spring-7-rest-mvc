@@ -35,7 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Modified by Pierrot on 24-10-2026
+ * Modified by Pierrot on 26-10-2026
  */
 @Slf4j
 @SpringBootTest
@@ -168,6 +168,20 @@ class BeerControllerIT {
     }
 
     @Test
+    void testPatchBeerNotFound() throws Exception {
+        UUID beerId = UUID.randomUUID();
+        Map<String, Object> beerMap = new HashMap<>();
+        beerMap.put("beerName", "Updated Name");
+
+        mockMvc.perform(patch(BeerController.BEER_PATH_ID, beerId)
+                        .with(BeerControllerTest.jwtRequestPostProcessor)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(jsonMapper.writeValueAsString(beerMap)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     void testPatchBeerBadName() throws Exception {
         Beer beer = beerRepository.findAll().getFirst();
 
@@ -277,7 +291,6 @@ class BeerControllerIT {
         assertThat(dtos.getContent()).isEmpty();
     }
 }
-
 
 
 

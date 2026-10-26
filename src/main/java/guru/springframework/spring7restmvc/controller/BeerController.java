@@ -16,7 +16,7 @@ import java.util.UUID;
 
 /**
  * Created by jt, Spring Framework Guru.
- * Modified by Pierrot on 24-10-2026
+ * Modified by Pierrot on 26-10-2026
  */
 @Slf4j
 @RequiredArgsConstructor
@@ -29,9 +29,11 @@ public class BeerController {
     private final BeerService beerService;
 
     @PatchMapping(BEER_PATH_ID)
-    public ResponseEntity<Void> updateBeerPatchById(@PathVariable("beerId")UUID beerId, @RequestBody BeerDTO beer){
+    public ResponseEntity<Void> patchBeerById(@PathVariable("beerId")UUID beerId, @RequestBody BeerDTO beer){
 
-        beerService.patchBeerById(beerId, beer);
+        if( beerService.patchBeerById(beerId, beer).isEmpty()){
+            throw new NotFoundException();
+        }
 
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
