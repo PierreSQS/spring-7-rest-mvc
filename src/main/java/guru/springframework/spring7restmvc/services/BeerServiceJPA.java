@@ -19,7 +19,7 @@ import java.util.UUID;
 
 /**
  * Created by jt, Spring Framework Guru.
- * Modified by Pierrot on 25-10-2026
+ * Modified by Pierrot on 26-10-2026
  */
 @Service
 @Primary
@@ -101,18 +101,14 @@ public class BeerServiceJPA implements BeerService {
     }
 
     @Override
-    public BeerDTO saveNewBeer(BeerDTO beer) {
-        return beerMapper.beerToBeerDto(beerRepository.save(beerMapper.beerDtoToBeer(beer)));
+    public BeerDTO saveNewBeer(BeerDTO beerDTO) {
+        return beerMapper.beerToBeerDto(beerRepository.save(beerMapper.beerDtoToBeer(beerDTO)));
     }
 
     @Override
-    public Optional<BeerDTO> updateBeerById(UUID beerId, BeerDTO beer) {
+    public Optional<BeerDTO> updateBeerById(UUID beerId, BeerDTO beerDTO) {
         return beerRepository.findById(beerId).map(foundBeer -> {
-            foundBeer.setBeerName(beer.getBeerName());
-            foundBeer.setBeerStyle(beer.getBeerStyle());
-            foundBeer.setUpc(beer.getUpc());
-            foundBeer.setPrice(beer.getPrice());
-            foundBeer.setQuantityOnHand(beer.getQuantityOnHand());
+            beerMapper.updateBeerFromDto(beerDTO, foundBeer);
             return beerMapper.beerToBeerDto(beerRepository.save(foundBeer));
         });
     }
@@ -127,24 +123,10 @@ public class BeerServiceJPA implements BeerService {
     }
 
     @Override
-    public Optional<BeerDTO> patchBeerById(UUID beerId, BeerDTO beer) {
+    public Optional<BeerDTO> patchBeerById(UUID beerId, BeerDTO beerDTO) {
 
         return beerRepository.findById(beerId).map(foundBeer -> {
-            if (StringUtils.hasText(beer.getBeerName())){
-                foundBeer.setBeerName(beer.getBeerName());
-            }
-            if (beer.getBeerStyle() != null){
-                foundBeer.setBeerStyle(beer.getBeerStyle());
-            }
-            if (StringUtils.hasText(beer.getUpc())){
-                foundBeer.setUpc(beer.getUpc());
-            }
-            if (beer.getPrice() != null){
-                foundBeer.setPrice(beer.getPrice());
-            }
-            if (beer.getQuantityOnHand() != null){
-                foundBeer.setQuantityOnHand(beer.getQuantityOnHand());
-            }
+            beerMapper.patchBeerFromDto(beerDTO, foundBeer);
             return beerMapper.beerToBeerDto(beerRepository.save(foundBeer));
         });
     }

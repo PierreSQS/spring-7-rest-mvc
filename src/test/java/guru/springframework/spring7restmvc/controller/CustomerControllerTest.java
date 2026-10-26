@@ -39,7 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Modified by Pierrot on 24-10-2026
+ * Modified by Pierrot on 26-10-2026
  */
 @WebMvcTest(CustomerController.class)
 @Import(SpringSecConfig.class)
@@ -108,6 +108,7 @@ class CustomerControllerTest {
     @Test
     void testUpdateCustomer() throws Exception {
         CustomerDTO customer = customerServiceImpl.getAllCustomers().getFirst();
+        customer.setEmail("test@example.com");
 
         given(customerService.updateCustomerById(any(), any())).willReturn(Optional.of(CustomerDTO.builder()
                 .build()));
@@ -129,6 +130,7 @@ class CustomerControllerTest {
         CustomerDTO customer = customerServiceImpl.getAllCustomers().getFirst();
         customer.setId(null);
         customer.setVersion(null);
+        customer.setEmail("test@example.com");
 
         given(customerService.saveNewCustomer(any(CustomerDTO.class)))
                 .willReturn(customerServiceImpl.getAllCustomers().get(1));
