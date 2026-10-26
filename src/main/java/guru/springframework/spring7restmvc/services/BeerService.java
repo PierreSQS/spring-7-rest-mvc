@@ -9,6 +9,7 @@ import java.util.UUID;
 
 /**
  * Created by jt, Spring Framework Guru.
+ * Modified by Pierrot on 26-10-2026
  */
 public interface BeerService {
 
@@ -20,7 +21,7 @@ public interface BeerService {
 
     Optional<BeerDTO> updateBeerById(UUID beerId, BeerDTO beer);
 
-    Boolean deleteById(UUID beerId);
+    boolean deleteById(UUID beerId);
 
     Optional<BeerDTO> patchBeerById(UUID beerId, BeerDTO beer);
 }

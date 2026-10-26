@@ -14,6 +14,7 @@ import java.util.*;
 
 /**
  * Created by jt, Spring Framework Guru.
+ * Modified by Pierrot on 26-10-2026
  */
 @Slf4j
 @Service
@@ -93,7 +94,7 @@ public class BeerServiceImpl implements BeerService {
     }
 
     @Override
-    public Boolean deleteById(UUID beerId) {
+    public boolean deleteById(UUID beerId) {
         beerMap.remove(beerId);
 
         return true;

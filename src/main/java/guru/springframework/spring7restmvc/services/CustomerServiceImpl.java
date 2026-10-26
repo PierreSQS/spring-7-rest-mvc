@@ -9,6 +9,7 @@ import java.util.*;
 
 /**
  * Created by jt, Spring Framework Guru.
+ * Modified by Pierrot on 26-10-2026
  */
 @Service
 public class CustomerServiceImpl implements CustomerService {
@@ -58,7 +59,7 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public Boolean deleteCustomerById(UUID customerId) {
+    public boolean deleteCustomerById(UUID customerId) {
         customerMap.remove(customerId);
 
         return true;
