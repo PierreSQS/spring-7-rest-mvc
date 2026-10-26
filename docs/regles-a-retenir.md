@@ -10,8 +10,9 @@ Créé le 17-10-2026.
 
 ## Table des matières
 
-23 règles, numérotées R1 à R23 dans l'ordre où elles ont été apprises - donc pas dans
-l'ordre des sections : R19 est rangée avec les fichiers, R20-R21 avec les lambdas, R22-R23 avec Hibernate.
+24 règles, numérotées R1 à R24 dans l'ordre où elles ont été apprises - donc pas dans
+l'ordre des sections : R19 est rangée avec les fichiers, R20-R21 avec les lambdas, R22-R23 avec Hibernate,
+R24 avec PUT et PATCH.
 
 
 **1. MapStruct et DTO**
@@ -23,6 +24,7 @@ l'ordre des sections : R19 est rangée avec les fichiers, R20-R21 avec les lambd
 
 - [R3 — PATCH ne copie que ce qui est envoyé, PUT remplace tout](#r3--patch-ne-copie-que-ce-qui-est-envoyé-put-remplace-tout)
 - [R4 — Un texte vide `""` n'est pas `null`](#r4--un-texte-vide--nest-pas-null)
+- [R24 — Bean Validation : seules `@NotNull`, `@NotEmpty` et `@NotBlank` refusent `null`](#r24--bean-validation--seules-notnull-notempty-et-notblank-refusent-null)
 
 **3. Hibernate et transactions**
 
@@ -119,6 +121,67 @@ elle garderait l'ancienne valeur (122).
 | sans `@NotBlank` | **le nom est effacé**, et l'API répond quand même 204 |
 
 **Preuves :** `testPatchBeerBlankName`, `testPatchCustomerBlankNameIsRejected` (commits `0fdf1b0f`, `c6ed24ff`).
+
+### R24 — Bean Validation : seules `@NotNull`, `@NotEmpty` et `@NotBlank` refusent `null`
+
+**Contexte :** la suite directe de R4, le 26-10-2026, sur la branche `126-springdoc-maven-jt-sb412` (Section 40).
+Le PATCH d'un client effaçait le nom ou l'email envoyé vide (le piège de R4, revenu avec `patchCustomerFromDto`).
+Pour l'email, on voulait : **facultatif** (les anciens clients n'en ont pas) **mais jamais vide**.
+
+- **Où :** `src/main/java/guru/springframework/spring7restmvc/entities/Customer.java`, champ `email`.
+- **Le bug :** [commit b0ce1d6a](https://github.com/PierreSQS/spring-7-rest-mvc/commit/b0ce1d6a) (`-NOK`).
+- **La correction :** [commit af6b987d](https://github.com/PierreSQS/spring-7-rest-mvc/commit/af6b987d).
+
+**La règle :** chaque contrainte a un seul travail. Celles qui ne s'appellent pas « Not… » (`@Size`, `@Pattern`,
+`@Email`, `@Min`…) vérifient la **forme** d'une valeur : si la valeur est `null`, elles n'ont rien à vérifier et
+disent « OK ». Refuser l'absence de valeur, c'est le travail exclusif des trois « Not ».
+
+| Valeur | `@NotNull` | `@NotEmpty` | `@NotBlank` | `@Size(min = 1)` | `@Pattern(regexp = "\\s*\\S.*")` |
+|---|---|---|---|---|---|
+| `null` | ❌ | ❌ | ❌ | ✅ rien à vérifier | ✅ rien à vérifier |
+| `""` | ✅ | ❌ | ❌ | ❌ | ❌ |
+| `"   "` | ✅ | ✅ | ❌ | ✅ | ❌ |
+| `"pierre@exemple.com"` | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+**Pourquoi la spécification fait ça :** pour pouvoir **combiner**. `@Pattern(...)` seul = facultatif mais jamais
+vide ; `@NotNull @Pattern(...)` = obligatoire et jamais vide. Si `@Pattern` refusait déjà `null`, on ne
+pourrait plus exprimer « facultatif ».
+
+**Dans le projet — le code final :**
+
+```java
+// email optional but never blank: null is accepted (old customers have none),
+// "" and "   " are rejected - @Size and @Pattern let null through, only @NotXxx refuse it
+@Column(length = 255)
+@Size(max = 255)                                             // pas plus long que la colonne
+@Pattern(regexp = "\\s*\\S.*", message = "must not be blank")  // au moins un caractère qui n'est pas un espace
+private String email;
+```
+
+L'expression `\s*\S.*` se lit : des espaces éventuels (`\s*`), puis **un** caractère qui n'est pas un espace
+(`\S`), puis n'importe quoi (`.*`). `""` et `"   "` n'ont aucun `\S`, donc ils échouent. En Java la barre se
+double dans une chaîne : `"\\s*\\S.*"`.
+
+**Pourquoi pas `.*\S.*` (la première version) :** elle donne le même résultat, mais SonarQube la signale
+(*« Simplify this regular expression… super-linear performance due to backtracking »*). Le premier `.*` peut
+avaler n'importe quoi, y compris le caractère que `\S` cherche : le moteur doit essayer toutes les découpes
+possibles avant de conclure. Dans `\s*\S.*`, `\s*` (des espaces) et `\S` (pas un espace) ne
+peuvent jamais prendre le même caractère : une seule découpe possible, plus d'hésitation.
+
+**Les deux essais qui ont cassé le démarrage :**
+
+| Essai | Message au démarrage | Pourquoi |
+|---|---|---|
+| `@NotNull` | `darf nicht null sein`, `propertyPath=email` | refuse `null`, et `BootstrapData` crée ses clients sans email ; en plus laisse passer `""` |
+| `@NotEmpty` | `darf nicht leer sein`, `propertyPath=email` | refuse aussi `null` (pour lui, `null` compte comme vide) |
+
+**Le piège à retenir :** une contrainte sur l'**entité** est revérifiée à **chaque** enregistrement, sur **tous**
+les champs. Si des lignes déjà en base ne la respectent pas (ici : des clients sans email), elles ne peuvent plus
+être enregistrées — ni créées par le bootstrap, ni modifiées par un PATCH qui ne touche que le nom.
+
+**Preuve :** un test temporaire a fait valider les 4 valeurs par Hibernate Validator sur `Customer.email`
+(26-10-2026) : `null` accepté, `""` refusé, `"   "` refusé, une adresse de 29 caractères acceptée. Tests verts
+après la correction : `BootstrapDataTest` 1, `CustomerControllerIT` 9, `CustomerControllerTest` 7.
 
 ---
 
