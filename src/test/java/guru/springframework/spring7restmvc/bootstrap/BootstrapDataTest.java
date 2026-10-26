@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Import;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Modified by Pierrot on 25-10-2026
+ * Modified by Pierrot on 26-10-2026
  */
 @DataJpaTest
 @Import({BeerCsvServiceImpl.class, BootstrapData.class})
@@ -24,7 +24,7 @@ class BootstrapDataTest {
     CustomerRepository customerRepository;
 
     @Test
-    void Testrun() {
+    void testRun() {
 
         assertThat(beerRepository.count()).isEqualTo(2413);
         assertThat(customerRepository.count()).isEqualTo(3);
