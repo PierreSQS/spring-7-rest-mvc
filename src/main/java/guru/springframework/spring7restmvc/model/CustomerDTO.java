@@ -2,6 +2,7 @@ package guru.springframework.spring7restmvc.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Data;
 import tools.jackson.databind.annotation.JsonDeserialize;
@@ -21,10 +22,11 @@ public class CustomerDTO {
     private UUID id;
 
     @JsonProperty("name")
+    @NotBlank
     private String name;
 
     @JsonProperty("email")
-    @NotBlank
+    @Size(min = 1, max = 20)
     private String email;
 
     @JsonProperty("version")
