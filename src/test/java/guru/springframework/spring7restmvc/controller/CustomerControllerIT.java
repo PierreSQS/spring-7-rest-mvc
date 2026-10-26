@@ -4,24 +4,43 @@ import guru.springframework.spring7restmvc.entities.Customer;
 import guru.springframework.spring7restmvc.mappers.CustomerMapper;
 import guru.springframework.spring7restmvc.model.CustomerDTO;
 import guru.springframework.spring7restmvc.repositories.CustomerRepository;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.json.JsonMapper;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Modified by Pierrot on 24-10-2026
+ * Modified by Pierrot on 26-10-2026
  */
 @SpringBootTest
+@AutoConfigureMockMvc
 class CustomerControllerIT {
+
+    @Autowired
+    MockMvc mockMvc;
+
+    @Autowired
+    JsonMapper jsonMapper;
+
+    @Autowired
+    EntityManager entityManager;
 
     @Autowired
     CustomerRepository customerRepository;
@@ -121,14 +140,62 @@ class CustomerControllerIT {
         CustomerDTO customerDTO = customerController.getCustomerById(customer.getId());
         assertThat(customerDTO).isNotNull();
     }
+
+    @Transactional   // rolled back at the end: the bootstrap customer keeps its name for the other tests
+    @Test
+    void testPatchCustomer() throws Exception {
+        Customer customer = customerRepository.findAll().getFirst();
+
+        Map<String, Object> customerMap = new HashMap<>();
+        customerMap.put("name", "Patched Name");
+
+        mockMvc.perform(patch(CustomerController.CUSTOMER_PATH_ID, customer.getId())
+                        .with(BeerControllerTest.jwtRequestPostProcessor)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonMapper.writeValueAsString(customerMap)))
+                .andExpect(status().isNoContent());
+
+        // write to the database, then forget Hibernate's memory, so findById reads the real row (R6)
+        entityManager.flush();
+        entityManager.clear();
+
+        assertThat(customerRepository.findById(customer.getId()))
+                .get()
+                .extracting(Customer::getName)
+                .isEqualTo("Patched Name");
+    }
+
+    // NO @Transactional (R9): the entity is validated when the transaction commits. Inside a test
+    // transaction nothing would be committed, @NotBlank would never run and the PATCH would answer 204.
+    @Test
+    void testPatchCustomerBlankName() throws Exception {
+        Customer customer = customerRepository.findAll().getFirst();
+        String originalName = customer.getName();
+
+        Map<String, Object> customerMap = new HashMap<>();
+        customerMap.put("name", "");
+
+        mockMvc.perform(patch(CustomerController.CUSTOMER_PATH_ID, customer.getId())
+                        .with(BeerControllerTest.jwtRequestPostProcessor)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonMapper.writeValueAsString(customerMap)))
+                .andExpect(status().isBadRequest());
+
+        assertThat(customerRepository.findById(customer.getId()))
+                .get()
+                .extracting(Customer::getName)
+                .isEqualTo(originalName);
+    }
+
+    @Test
+    void testPatchCustomerNotFound() throws Exception {
+        Map<String, Object> customerMap = new HashMap<>();
+        customerMap.put("name", "Patched Name");
+
+        mockMvc.perform(patch(CustomerController.CUSTOMER_PATH_ID, UUID.randomUUID())
+                        .with(BeerControllerTest.jwtRequestPostProcessor)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonMapper.writeValueAsString(customerMap)))
+                .andExpect(status().isNotFound());
+    }
 }
-
-
-
-
-
-
-
-
-
-
