@@ -75,6 +75,9 @@ class CustomerControllerTest {
         Map<String, Object> customerMap = new HashMap<>();
         customerMap.put("name", "New Name");
 
+        given(customerService.patchCustomerById(any(UUID.class), any(CustomerDTO.class)))
+                .willReturn(Optional.of(customer));
+
         mockMvc.perform(patch( CustomerController.CUSTOMER_PATH_ID, customer.getId())
                         .with(BeerControllerTest.jwtRequestPostProcessor)
                 .contentType(MediaType.APPLICATION_JSON)
