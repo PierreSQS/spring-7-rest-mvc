@@ -1,12 +1,15 @@
-# Build and test on every push.
+# Build and test on every push (except pushes that change only documentation).
 # A green check on a commit = the whole test suite passed on GitHub.
 # Used to decide that an issue is fixed (pushed + green + "Done when" met).
 
 name: Build and test
 
 on:
-  push:                # every push, on every branch that contains this file
-  workflow_dispatch:   # "Run workflow" button on GitHub, to rerun by hand
+  push:                # every push, on every branch that contains this file...
+    paths-ignore:      # ...except a push that changes ONLY these files
+      - 'docs/**'      # the docs folder
+      - '**/*.md'      # any Markdown file (README, ...)
+  workflow_dispatch:   # "Run workflow" button on GitHub, to rerun by hand (also for docs-only pushes)
 
 jobs:
   build:
