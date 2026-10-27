@@ -16,7 +16,10 @@ import java.math.BigDecimal;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@DataJpaTest
+/**
+ * Modified by Pierrot on 27-10-2026
+ */
+@DataJpaTest(showSql = false)
 @Import({BootstrapData.class, BeerCsvServiceImpl.class})
 class BeerRepositoryTest {
 

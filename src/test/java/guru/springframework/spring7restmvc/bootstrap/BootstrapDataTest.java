@@ -11,9 +11,9 @@ import org.springframework.context.annotation.Import;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Modified by Pierrot on 26-10-2026
+ * Modified by Pierrot on 27-10-2026
  */
-@DataJpaTest
+@DataJpaTest(showSql = false)
 @Import({BeerCsvServiceImpl.class, BootstrapData.class})
 class BootstrapDataTest {
 

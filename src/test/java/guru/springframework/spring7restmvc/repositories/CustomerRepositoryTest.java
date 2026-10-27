@@ -7,7 +7,10 @@ import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DataJpaTest
+/**
+ * Modified by Pierrot on 27-10-2026
+ */
+@DataJpaTest(showSql = false)
 class CustomerRepositoryTest {
 
     @Autowired
