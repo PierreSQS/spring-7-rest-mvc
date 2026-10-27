@@ -37,7 +37,7 @@ R24 avec PUT et PATCH.
 
 **4. Tests**
 
-- [R9 — `@Transactional`, `flush()` ou ni l'un ni l'autre ?](#r9--transactional-flush-ou-ni-lun-ni-lautre-)
+- [R9 — Un test `@Transactional` n'écrit jamais en base : quand ajouter `flush()`, quand retirer `@Transactional`](#r9--un-test-transactional-nécrit-jamais-en-base--quand-ajouter-flush-quand-retirer-transactional)
 - [R10 — Un test doit prouver quelque chose : le faire échouer une fois](#r10--un-test-doit-prouver-quelque-chose--le-faire-échouer-une-fois)
 - [R11 — `@WebMvcTest` ne charge que la couche web](#r11--webmvctest-ne-charge-que-la-couche-web)
 
@@ -319,7 +319,7 @@ Couche 3 vérifiée dans `spring-orm-7.0.9.jar` : `JpaTransactionManager.doCommi
 
 ## 4. Tests
 
-### R9 — `@Transactional`, `flush()` ou ni l'un ni l'autre ?
+### R9 — Un test `@Transactional` n'écrit jamais en base : quand ajouter `flush()`, quand retirer `@Transactional`
 
 Une seule question : **« ce que je vérifie arrive-t-il au moment de l'écriture en base ? »** (voir R5)
 
@@ -337,6 +337,92 @@ l'écriture réussit laisserait ses données en base.
 
 **Signe d'alerte :** un test qui attend une exception de validation et ne la reçoit jamais,
 ou qui reste vert même quand on retire la contrainte.
+
+#### Ce que montre le log SQL (démonstration du 27-10-2026)
+
+**Contexte.** On a lancé des tests en regardant le log SQL
+(`logging.level.org.hibernate.SQL=debug` : chaque requête **réellement envoyée** à la base
+apparaît dans le log). Pas de requête dans le log = la base n'a rien reçu ni rien contrôlé.
+
+**Exemple 1 : le test de JT** (projet, branche `126-springdoc-maven-jt-sb412`,
+`src/test/java/guru/springframework/spring7restmvc/repositories/CategoryRepositoryTest.java:27-39`) :
+
+```java
+@BeforeEach
+void setUp() {
+    testBeer = beerRepository.findAll().get(0);      // la première bière de la base
+}
+
+@Transactional
+@Test
+void testAddCategory() {
+    Category savedCat = categoryRepository.save(Category.builder()
+                    .description("Ales")
+            .build());
+
+    testBeer.addCategory(savedCat);                  // relie la bière et la catégorie en Java
+    Beer saveBeer = beerRepository.save(testBeer);   // le lien doit aller dans la table beer_category
+
+    System.out.println(saveBeer.getBeerName());
+}
+```
+
+`testBeer.addCategory(...)` touche `Beer.categories`, une collection **lazy** : Hibernate doit
+d'abord la charger depuis la base.
+
+**Exemple 2 : un test jetable** (écrit pour la démonstration, puis supprimé). `Customer.name` porte
+`@NotBlank`, donc un nom vide doit être refusé :
+
+```java
+@Transactional
+@Test
+void testSaveCustomerBlankName() {
+    assertThatThrownBy(() -> customerRepository.save(Customer.builder()   // puis : saveAndFlush
+                    .name("")
+                    .build()))
+            .isInstanceOf(ConstraintViolationException.class);
+}
+```
+
+**Ce qu'on a observé :**
+
+| Situation dans le test | `INSERT` envoyé à la base ? | Contraintes vérifiées ? | Données après le test |
+|---|---|---|---|
+| `@Transactional`, sans `flush()` | non | non | rien (rollback) |
+| `@Transactional` + `flush()` / `saveAndFlush()` | oui | oui | rien (rollback) |
+| sans `@Transactional` | oui, commit à chaque `save()` | oui | **restent en base** |
+
+Ligne par ligne :
+
+1. **`@Transactional`, sans `flush()`.** Exemple 1 : aucun `insert into category`, aucun
+   `insert into beer_category` dans le log, et le test est vert (il n'a pas d'assertion).
+   Exemple 2 : **rouge**, « Expecting code to raise a throwable » : le nom vide n'a jamais été
+   validé. Le test se trompe donc sur le code, alors que l'application refuse bien un nom vide.
+2. **`@Transactional` + `flush()`.** Exemple 1 avec `entityManager.flush()` après le second
+   `save()` : `insert into category`, `update beer ... version=?` (la collection de la bière a
+   changé, donc sa `@Version` augmente) et `insert into beer_category` apparaissent **exactement**
+   au moment du `flush()`, pas au moment des `save()`. Après le test : 0 catégorie en base
+   (compté dans une méthode `@AfterTransaction`, qui tourne après le rollback).
+   Exemple 2 avec `saveAndFlush` (= `save` + `flush()`) : **vert**. Aucun `insert into customer`
+   n'apparaît : Hibernate valide l'entité **avant** de construire l'`INSERT`, donc la requête
+   n'est jamais envoyée.
+3. **Sans `@Transactional`.** Exemple 1 : `insert into category`, puis
+   **`LazyInitializationException`** sur `addCategory`. `findAll()` (dans `setUp`) a tourné
+   dans **sa propre** transaction : une fois celle-ci terminée, `testBeer` est détachée et sa
+   collection lazy ne peut plus être chargée. La catégorie « Ales », déjà commitée, **reste en
+   base**.
+
+**À retenir :** dans un test, `@Transactional` fait **deux** choses :
+
+- il annule tout à la fin (rollback), donc la base reste propre ;
+- il garde le persistence context ouvert pendant tout le test, donc le lazy loading fonctionne.
+
+Mais il **empêche** l'écriture réelle. Pour qu'elle ait lieu dans le test, il faut un `flush()`.
+
+**`saveAndFlush` ou pas de `@Transactional` ?** Dans un test de **repository**, `saveAndFlush`
+suffit : l'exception de validation est levée directement par l'appel. Dans un test **HTTP**
+(MockMvc) qui attend un `400`, il faut que le commit du service ait lieu, donc **pas** de
+`@Transactional` sur le test (ligne 3 du premier tableau).
 
 ### R10 — Un test doit prouver quelque chose : le faire échouer une fois
 
