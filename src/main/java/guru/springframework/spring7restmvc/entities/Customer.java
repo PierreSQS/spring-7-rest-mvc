@@ -2,7 +2,6 @@ package guru.springframework.spring7restmvc.entities;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Version;
@@ -25,7 +24,7 @@ import java.util.UUID;
 
 /**
  * Created by jt, Spring Framework Guru.
- * Modified by Pierrot on 26-10-2026
+ * Modified by Pierrot on 27-10-2026
  */
 @Getter
 @Setter
@@ -35,9 +34,8 @@ import java.util.UUID;
 @NoArgsConstructor
 public class Customer {
     @Id
-    @GeneratedValue(generator = "UUID")
     @UuidGenerator
-    @Column(length = 36, columnDefinition = "varchar", updatable = false, nullable = false)
+    @Column(columnDefinition = "varchar(36)", updatable = false, nullable = false)
     @JdbcTypeCode(SqlTypes.CHAR)
     private UUID id;
 

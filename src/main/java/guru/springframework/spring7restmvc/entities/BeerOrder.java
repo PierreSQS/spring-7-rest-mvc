@@ -19,7 +19,6 @@ package guru.springframework.spring7restmvc.entities;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
@@ -40,7 +39,7 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * Modified by Pierrot on 24-10-2026
+ * Modified by Pierrot on 27-10-2026
  */
 @Getter
 @Setter
@@ -62,10 +61,9 @@ public class BeerOrder {
     }
 
     @Id
-    @GeneratedValue(generator = "UUID")
     @UuidGenerator
     @JdbcTypeCode(SqlTypes.CHAR)
-    @Column(length = 36, columnDefinition = "varchar(36)", updatable = false, nullable = false )
+    @Column(columnDefinition = "varchar(36)", updatable = false, nullable = false)
     private UUID id;
 
     @Version
@@ -89,12 +87,17 @@ public class BeerOrder {
 
     public void setCustomer(Customer customer) {
         this.customer = customer;
-        customer.getBeerOrders().add(this);
+        if(customer != null) {
+            customer.getBeerOrders().add(this);
+        }
     }
 
     public void setBeerOrderShipment(BeerOrderShipment beerOrderShipment) {
         this.beerOrderShipment = beerOrderShipment;
-        beerOrderShipment.setBeerOrder(this);
+        if(beerOrderShipment != null) {
+            beerOrderShipment.setBeerOrder(this);
+        }
+
     }
 
     @OneToMany(mappedBy = "beerOrder")

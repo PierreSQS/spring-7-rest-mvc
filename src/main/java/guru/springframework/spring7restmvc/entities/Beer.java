@@ -20,7 +20,7 @@ import java.util.UUID;
 
 /**
  * Created by jt, Spring Framework Guru.
- * Modified by Pierrot on 24-10-2026
+ * Modified by Pierrot on 27-10-2026
  */
 @Getter
 @Setter
@@ -31,16 +31,14 @@ import java.util.UUID;
 public class Beer {
 
     @Id
-    @GeneratedValue(generator = "UUID")
     @UuidGenerator
-    @Column(length = 36, columnDefinition = "varchar", updatable = false, nullable = false)
+    @Column(columnDefinition = "varchar(36)", updatable = false, nullable = false)
     @JdbcTypeCode(SqlTypes.CHAR)
     private UUID id;
 
     @Version
     private Integer version;
 
-    @NotNull
     @NotBlank
     @Size(max = 50)
     @Column(length = 50)
@@ -50,7 +48,6 @@ public class Beer {
     @JdbcTypeCode(value = SqlTypes.SMALLINT)
     private BeerStyle beerStyle;
 
-    @NotNull
     @NotBlank
     @Size(max = 255)
     private String upc;

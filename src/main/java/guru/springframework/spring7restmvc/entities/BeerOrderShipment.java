@@ -2,7 +2,6 @@ package guru.springframework.spring7restmvc.entities;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Version;
@@ -22,7 +21,7 @@ import java.util.UUID;
 
 /**
  * Created by jt, Spring Framework Guru.
- * Modified by Pierrot on 24-10-2026
+ * Modified by Pierrot on 27-10-2026
  */
 @Getter
 @Setter
@@ -32,10 +31,9 @@ import java.util.UUID;
 @Builder
 public class BeerOrderShipment {
     @Id
-    @GeneratedValue(generator = "UUID")
     @UuidGenerator
     @JdbcTypeCode(SqlTypes.CHAR)
-    @Column(length = 36, columnDefinition = "varchar(36)", updatable = false, nullable = false )
+    @Column(columnDefinition = "varchar(36)", updatable = false, nullable = false)
     private UUID id;
 
     @Version
@@ -45,11 +43,6 @@ public class BeerOrderShipment {
     private BeerOrder beerOrder;
 
     private String trackingNumber;
-
-    @Override
-    public int hashCode() {
-        return super.hashCode();
-    }
 
     @CreationTimestamp
     @Column(updatable = false)

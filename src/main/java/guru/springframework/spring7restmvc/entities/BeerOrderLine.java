@@ -2,7 +2,6 @@ package guru.springframework.spring7restmvc.entities;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Version;
@@ -22,7 +21,7 @@ import java.util.UUID;
 
 /**
  * Created by jt.
- * Modified by Pierrot on 24-10-2026
+ * Modified by Pierrot on 27-10-2026
  */
 @Getter
 @Setter
@@ -33,10 +32,9 @@ import java.util.UUID;
 public class BeerOrderLine {
 
     @Id
-    @GeneratedValue(generator = "UUID")
     @UuidGenerator
     @JdbcTypeCode(SqlTypes.CHAR)
-    @Column(length = 36, columnDefinition = "varchar(36)", updatable = false, nullable = false )
+    @Column(columnDefinition = "varchar(36)", updatable = false, nullable = false)
     private UUID id;
 
     @Version
@@ -59,6 +57,9 @@ public class BeerOrderLine {
     @ManyToOne
     private Beer beer;
 
+    @Builder.Default
     private Integer orderQuantity = 0;
+
+    @Builder.Default
     private Integer quantityAllocated = 0;
 }
