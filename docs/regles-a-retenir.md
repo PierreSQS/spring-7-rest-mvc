@@ -509,12 +509,122 @@ reste dans l'historique : il faut alors la changer.
 
 ### R17 — `equals` / `hashCode` : l'identité d'`Object` suffit souvent avec Hibernate
 
-- `super.equals(o)` dans une classe sans `extends` appelle `Object.equals` : « même objet ? ».
+- `super.equals(o)` dans une classe sans `extends` appelle `Object.equals`.
+  `Object.equals` pose la question **« même objet ? »** (`this == o`).
   Toute comparaison après cette ligne ne sert à rien.
 - Un `hashCode` basé sur un champ modifiable (comme une description) perd l'objet dans un `HashSet`
   si le champ change après l'ajout.
-- Dans une même transaction, Hibernate renvoie le même objet Java pour la même ligne :
-  l'identité suffit.
+- Dans une même transaction, Hibernate renvoie le même objet Java pour la même ligne **d'une table**
+  (par exemple la ligne de la table `category` dont l'`id` est X) : l'identité suffit (voir R6).
+
+#### Démonstration du 28-10-2026
+
+**Contexte.** Le `Category` de JT avait ces deux méthodes (supprimées depuis, sur les branches 123 et 126) :
+
+```java
+public class Category {                                // pas de "extends" : la classe parente est Object
+
+    private String description;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;                    // (1)
+        if (!(o instanceof Category category)) return false;  // (2)
+        if (!super.equals(o)) return false;            // (3) super.equals(o) = Object.equals(o)
+        return getDescription() != null ?              // (4) compare les descriptions
+                getDescription().equals(category.getDescription()) : category.getDescription() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (getDescription() != null ? getDescription().hashCode() : 0);  // dépend de description
+        return result;
+    }
+}
+```
+
+Le code de `Object.equals` dans le JDK :
+
+```java
+public boolean equals(Object obj) {
+    return (this == obj);                              // « même objet ? »
+}
+```
+
+**« Même objet » ou « même contenu » :**
+
+```java
+Category a = new Category("Ales");     // new -> un 1er objet en mémoire
+Category b = new Category("Ales");     // new -> un 2e objet, avec le même contenu
+Category c = a;                        // pas de new : c désigne le même objet que a
+
+a == c;    // true  : un seul objet, deux noms
+a == b;    // false : deux objets différents, même si le contenu est identique
+```
+
+**Partie 1 : le `equals` de JT ne compare jamais les descriptions.** Avec `a.equals(b)` :
+
+- (1) `a == b` ? faux, donc pas de `return`, on continue ;
+- (2) `b` est une `Category` ? oui, on continue ;
+- (3) `Object.equals(b)`, c'est-à-dire `a == b` ? faux, donc `return false` : **la méthode s'arrête ici** ;
+- (4) n'est **jamais** atteinte.
+
+(1) et (3) posent la même question. Ce `equals` revient donc à « même objet », exactement comme s'il
+n'y avait pas de méthode `equals` du tout.
+
+**Partie 2 : le `hashCode` de JT perd l'objet dans un `HashSet`.** Un `HashSet` :
+
+- `add(x)` : calcule `x.hashCode()` et range l'objet **à l'endroit** qui correspond à ce nombre ;
+- `contains(x)` / `remove(x)` : recalcule `x.hashCode()`, **cherche seulement à cet endroit**,
+  puis compare avec `equals`.
+
+Test jetable (écrit pour la démonstration, puis supprimé), avec une classe qui recopie les deux méthodes de JT :
+
+```java
+Set<Category> categories = new HashSet<>();
+Category ales = new Category("Ales");
+
+categories.add(ales);
+ales.setDescription("Stouts");         // le hashCode change
+
+categories.contains(ales);
+categories.remove(ales);
+categories.size();
+```
+
+Sortie :
+
+```
+hashCode() with description Ales   : 1990154381
+contains(ales) before the change   : true
+hashCode() with description Stouts : 179914554
+contains(ales) after the change    : false
+remove(ales)                       : false
+size() after remove(ales)          : 1
+```
+
+L'objet est toujours **dans** le `HashSet`, rangé à l'endroit de « Ales ». `contains` et `remove` le
+cherchent à l'endroit de « Stouts » et ne le trouvent pas. `remove` échoue **sans erreur**.
+
+**Exemple dans le projet :** `src/main/java/guru/springframework/spring7restmvc/entities/Beer.java:76-79`
+
+```java
+public void removeCategory(Category category){
+    this.categories.remove(category);                  // avec le hashCode de JT : échoue si la description a changé
+    category.getBeers().remove(this);
+}
+```
+
+Avec le `hashCode` de JT, si la description de la catégorie avait changé entre-temps, le lien
+bière ↔ catégorie restait dans le `Set`, donc en base, sans aucune erreur.
+
+**À retenir :**
+
+- le `equals` de JT ne servait à rien : il faisait déjà ce que fait `Object` ;
+- son `hashCode` était dangereux : il changeait avec `description` ;
+- la correction : **supprimer les deux méthodes**. `Category` utilise alors l'identité d'`Object`,
+  qui ne change jamais, et Hibernate garantit un seul objet Java par ligne dans une transaction.
 
 ### R18 — Une méthode d'aide bidirectionnelle met à jour les deux côtés
 
