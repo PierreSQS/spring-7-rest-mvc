@@ -35,7 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Modified by Pierrot on 26-10-2026
+ * Modified by Pierrot on 29-10-2026
  */
 @Slf4j
 @SpringBootTest
@@ -109,7 +109,7 @@ class BeerControllerIT {
                         .queryParam("showInventory", "true")
                         .queryParam("pageSize", "800"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content.size()", is(310)))
+                .andExpect(jsonPath("$.content.size()", is(324)))
                 .andExpect(jsonPath("$.content[0].quantityOnHand").value(IsNull.notNullValue()));
     }
 
@@ -122,7 +122,7 @@ class BeerControllerIT {
                         .queryParam("showInventory", "false")
                         .queryParam("pageSize", "800"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content.size()", is(310)))
+                .andExpect(jsonPath("$.content.size()", is(324)))
                 .andExpect(jsonPath("$.content[0].quantityOnHand").value(IsNull.nullValue()));
     }
 
@@ -134,7 +134,7 @@ class BeerControllerIT {
                         .queryParam("beerStyle", BeerStyle.IPA.name())
                         .queryParam("pageSize", "800"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content.size()", is(310)));
+                .andExpect(jsonPath("$.content.size()", is(324)));
     }
 
     @Test
@@ -154,7 +154,7 @@ class BeerControllerIT {
                         .queryParam("beerStyle", BeerStyle.IPA.name())
                         .queryParam("pageSize", "800"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content.size()", is(548)));
+                .andExpect(jsonPath("$.content.size()", is(572)));
     }
 
     @Test

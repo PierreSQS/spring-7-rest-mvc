@@ -10,6 +10,7 @@ import guru.springframework.spring7restmvc.services.BeerCsvService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.jspecify.annotations.NonNull;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -18,10 +19,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by jt, Spring Framework Guru.
- * Modified by Pierrot on 28-10-2026
+ * Modified by Pierrot on 29-10-2026
  */
 @Slf4j
 @Component
@@ -33,7 +35,7 @@ public class BootstrapData implements CommandLineRunner {
 
     @Transactional
     @Override
-    public void run(String... args) {
+    public void run(String @NonNull ... args) {
         loadBeerData();
         loadCsvData();
         loadCustomerData();
@@ -45,34 +47,48 @@ public class BootstrapData implements CommandLineRunner {
 
             List<BeerCSVRecord> recs = beerCsvService.convertCSV(res);
 
-            recs.forEach(beerCSVRecord -> {
-                BeerStyle beerStyle = switch (beerCSVRecord.getStyle()) {
-                    case "American Pale Lager" -> BeerStyle.LAGER;
-                    case "American Pale Ale (APA)", "American Black Ale", "Belgian Dark Ale", "American Blonde Ale" ->
-                            BeerStyle.ALE;
-                    case "American IPA", "American Double / Imperial IPA", "Belgian IPA" -> BeerStyle.IPA;
-                    case "American Porter" -> BeerStyle.PORTER;
-                    case "Oatmeal Stout", "American Stout" -> BeerStyle.STOUT;
-                    case "Saison / Farmhouse Ale" -> BeerStyle.SAISON;
-                    case "Fruit / Vegetable Beer", "Winter Warmer", "Berliner Weissbier" -> BeerStyle.WHEAT;
-                    case "English Pale Ale" -> BeerStyle.PALE_ALE;
-                    default -> BeerStyle.PILSNER;
-                };
-
-                beerRepository.save(Beer.builder()
-                                .beerName(StringUtils.abbreviate(beerCSVRecord.getBeer(), 50))
-                                .beerStyle(beerStyle)
-                                .price(BigDecimal.TEN)
-                                .upc(beerCSVRecord.getRow().toString())
-                                .quantityOnHand(beerCSVRecord.getCount())
-                        .build());
-            });
+            recs.forEach(beerCSVRecord -> beerRepository.save(Beer.builder()
+                            .beerName(StringUtils.abbreviate(beerCSVRecord.getBeer(), 50))
+                            .beerStyle(beerStyleOf(beerCSVRecord.getStyle()))
+                            .price(BigDecimal.TEN)
+                            .upc(beerCSVRecord.getRow().toString())
+                            .quantityOnHand(beerCSVRecord.getCount())
+                    .build()));
 
             log.info("### loaded {} Beers from CSV-File ###", recs.size());
             log.info("### total Beers loaded: {} ###", beerRepository.count());
         } else {
             log.info("### More than 10 Beers present. CSV-Data loading skipped!! ###");
         }
+    }
+
+    /**
+     * Maps the free-text style of the CSV (e.g. "American IPA") to a {@link BeerStyle} by keyword.
+     * The order matters: "American Pale Wheat Ale" must become WHEAT and
+     * "English India Pale Ale (IPA)" IPA before the "PALE ALE" rule can catch them.
+     * Styles without a known keyword are almost all ales, so ALE is the default.
+     * Same keywords as branch 122-server-port-mapping-jt-sb411 (commit 00a1d8b2).
+     * Locale.ROOT so that "pils" never becomes "PİLS" on a Turkish machine.
+     */
+    static BeerStyle beerStyleOf(String csvStyle) {
+        if (csvStyle == null) return BeerStyle.ALE;
+
+        String style = csvStyle.toUpperCase(Locale.ROOT);
+
+        if (style.contains("IPA")) return BeerStyle.IPA;
+        if (style.contains("STOUT")) return BeerStyle.STOUT;
+        if (style.contains("PORTER")) return BeerStyle.PORTER;
+        if (style.contains("GOSE")) return BeerStyle.GOSE;
+        if (style.contains("SAISON") || style.contains("FARMHOUSE")) return BeerStyle.SAISON;
+        if (style.contains("WHEAT") || style.contains("WITBIER") || style.contains("WEISS")
+                || style.contains("WEIZEN") || style.contains("HEFE")) return BeerStyle.WHEAT;
+        if (style.contains("PALE ALE")) return BeerStyle.PALE_ALE;
+        if (style.contains("PILSNER") || style.contains("PILSENER") || style.contains("PILS")) return BeerStyle.PILSNER;
+        if (style.contains("LAGER") || style.contains("BOCK") || style.contains("RZEN")
+                || style.contains("OKTOBERFEST") || style.contains("HELLES") || style.contains("DUNKEL")
+                || style.contains("SCHWARZ") || style.contains("VIENNA")) return BeerStyle.LAGER;
+
+        return BeerStyle.ALE;
     }
 
     private void loadBeerData() {
