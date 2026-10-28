@@ -46,7 +46,6 @@ public class Customer {
 
     // email optional but never blank: null is accepted (old customers have none),
     // "" and "   " are rejected - @Size and @Pattern let null through, only @NotXxx refuse it
-    @Column(length = 255)
     @Size(max = 255)
     @Pattern(regexp = "\\s*\\S.*", message = "must not be blank")
     private String email;

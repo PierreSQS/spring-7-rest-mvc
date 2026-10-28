@@ -6,6 +6,7 @@ import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
 /**
  * Created by jt, Spring Framework Guru.
@@ -35,7 +36,7 @@ public interface CustomerMapper {
     @Mapping(target = "createdDate", ignore = true)
     @Mapping(target = "updateDate", ignore = true)
     @Mapping(target = "beerOrders", ignore = true)
-    @BeanMapping(nullValuePropertyMappingStrategy = org.mapstruct.NullValuePropertyMappingStrategy.IGNORE)
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void patchCustomerFromDto(CustomerDTO dto, @MappingTarget Customer customer);
 
 }
