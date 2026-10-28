@@ -21,7 +21,7 @@ import java.util.UUID;
 
 /**
  * Created by jt.
- * Modified by Pierrot on 27-10-2026
+ * Modified by Pierrot on 28-10-2026
  */
 @Getter
 @Setter
@@ -46,10 +46,6 @@ public class BeerOrderLine {
 
     @UpdateTimestamp
     private LocalDateTime lastModifiedDate;
-
-    public boolean isNew() {
-        return this.id == null;
-    }
 
     @ManyToOne
     private BeerOrder beerOrder;

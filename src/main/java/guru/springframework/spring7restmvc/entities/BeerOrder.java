@@ -39,7 +39,7 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * Modified by Pierrot on 27-10-2026
+ * Modified by Pierrot on 28-10-2026
  */
 @Getter
 @Setter
@@ -75,10 +75,6 @@ public class BeerOrder {
 
     @UpdateTimestamp
     private LocalDateTime lastModifiedDate;
-
-    public boolean isNew() {
-        return this.id == null;
-    }
 
     private String customerRef;
 
