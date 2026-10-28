@@ -10,9 +10,9 @@ Créé le 17-10-2026.
 
 ## Table des matières
 
-24 règles, numérotées R1 à R24 dans l'ordre où elles ont été apprises - donc pas dans
+25 règles, numérotées R1 à R25 dans l'ordre où elles ont été apprises - donc pas dans
 l'ordre des sections : R19 est rangée avec les fichiers, R20-R21 avec les lambdas, R22-R23 avec Hibernate,
-R24 avec PUT et PATCH.
+R24 avec PUT et PATCH, R25 avec la base de données.
 
 
 **1. MapStruct et DTO**
@@ -62,6 +62,10 @@ R24 avec PUT et PATCH.
 
 - [R20 — `AtomicReference` sert aux threads ; pour sortir une valeur d'un lambda, ce n'est qu'une boîte](#r20--atomicreference-sert-aux-threads--pour-sortir-une-valeur-dun-lambda-ce-nest-quune-boîte)
 - [R21 — `Optional.map` / `flatMap` : transformer la valeur d'un `Optional`, au lieu de la sortir dans une `AtomicReference` (la « boîte » de R20)](#r21--optionalmap--flatmap--transformer-la-valeur-dun-optional-au-lieu-de-la-sortir-dans-une-atomicreference-la--boîte--de-r20) - *et le piège : `map` emballe toujours ce que le lambda renvoie*
+
+**9. Base de données : Flyway et Docker Compose**
+
+- [R25 — Une migration Flyway déjà appliquée ne se modifie plus, même d'une ligne](#r25--une-migration-flyway-déjà-appliquée-ne-se-modifie-plus-même-dune-ligne)
 
 ---
 ## 1. MapStruct et DTO
@@ -948,3 +952,86 @@ return beerRepository.findById(id).map(beerMapper::beerToBeerDto);
 Ici `x` = `beerRepository.findById(id)` (un `Optional<Beer>`) et `f` = `beerMapper::beerToBeerDto`
 (`Beer` → `BeerDTO`, 3e ligne du tableau) ; le résultat est un `Optional<BeerDTO>`.
 `flatMap` n'est pas encore utilisé dans le projet.
+
+
+## 9. Base de données : Flyway et Docker Compose
+
+### R25 — Une migration Flyway déjà appliquée ne se modifie plus, même d'une ligne
+
+**Contexte.** Flyway applique les fichiers `src/main/resources/db/migration/V1__...sql`, `V2__...sql`, ...
+dans l'ordre, et note chaque migration appliquée dans la table `flyway_schema_history` de la base.
+Pour chaque fichier, il y garde une **somme de contrôle** (*checksum*) : un nombre calculé sur le
+**contenu** du fichier, ligne par ligne. À chaque démarrage, il recalcule ce nombre pour chaque fichier
+et le compare à celui de la table.
+
+**La règle.**
+
+- Une migration déjà appliquée sur une base ne se modifie plus : ni une ligne en moins, ni une autre
+  mise en forme. Sinon Flyway refuse de démarrer : « Migration checksum mismatch for migration version 1 ».
+- Pour changer le schéma, on écrit une **nouvelle** migration (V8, V9, ...).
+- Deux branches qui partagent une même base Docker doivent avoir **exactement les mêmes fichiers**
+  de migration.
+
+**Exemple dans le projet** (ticket #6, branche `126-springdoc-maven-jt-sb412`, 28-10-2026).
+La base Docker `sec22-assn25` a été construite avec les migrations de la branche 123. La branche 126
+avait les fichiers originaux de JT : même schéma, mais un contenu différent. Par exemple `V3__add-order-tables.sql` :
+
+```diff
+-drop table if exists beer_order_line;     // version de JT : ces lignes en plus
+-drop table if exists beer_order;
+-
+ create table beer_order ( ...             // la suite est identique
+```
+
+Sur une base neuve, ces `drop` ne suppriment rien : les deux versions créent exactement les mêmes tables.
+Mais pour Flyway, le contenu est différent, donc la somme de contrôle aussi :
+
+```
+                       V1        V2   V3        V4        V5        V6      V7
+fichiers de la 123     OK        OK   OK        OK        OK        OK      OK
+fichiers de JT (126)   mismatch  OK   mismatch  mismatch  mismatch  absent  absent
+```
+
+Correction : la 126 a repris les fichiers V1 à V7 de la 123, tels quels.
+
+**Comment savoir si Flyway a accepté une base existante.** Au démarrage, deux logs sont possibles :
+
+- **la base existante est utilisée** : Flyway compare les sommes de contrôle, tout correspond, rien à appliquer :
+
+  ```
+  Successfully validated 7 migrations
+  Schema `jt_spring7_rest_sec22_assn25_db` is up to date. No migration necessary.
+  ```
+
+  C'est la preuve que les fichiers correspondent à la base.
+
+- **la base est neuve** (volume vide) : Flyway applique tout depuis zéro :
+
+  ```
+  Migrating schema `jt_spring7_rest_sec22_assn25_db` to version "1 - init-mysql-database"
+  ...
+  Successfully applied 7 migrations
+  ```
+
+  L'application démarre aussi, mais ça ne prouve **rien** sur une base existante.
+
+**Piège : `docker compose down -v` cache le problème.** `down -v` supprime le conteneur **et son volume** :
+chaque démarrage repart d'une base neuve (2e cas), et un mismatch ne se voit jamais. Avec
+`docker compose stop`, le volume survit à l'arrêt de l'application, et les sommes de contrôle sont
+vérifiées contre la base existante à chaque démarrage. Réglage dans `application-localmysql.properties` :
+`spring.docker.compose.stop.command`.
+
+**Vérifier soi-même** (lecture seule), le conteneur étant démarré :
+
+```bash
+docker exec mysql-spring7-rest-sec22-assn25 sh -c \
+  'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "select version, checksum from $MYSQL_DATABASE.flyway_schema_history order by installed_rank"'
+```
+
+`$MYSQL_ROOT_PASSWORD` et `$MYSQL_DATABASE` sont les variables d'environnement **du conteneur**
+(venues du fichier `.env`) : le mot de passe ne s'affiche jamais dans le terminal.
+
+**Repartir d'une base propre** (les données changent, pas le schéma) : `docker compose down -v`, puis
+démarrer l'application. Docker recrée une base vide avec les mêmes noms, Flyway y applique V1 à V7.
+Des **nouveaux noms** (projet, conteneur, volume, base) ne sont nécessaires que quand le **schéma** change
+(une nouvelle migration).
