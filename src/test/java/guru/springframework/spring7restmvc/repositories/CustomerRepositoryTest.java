@@ -8,7 +8,7 @@ import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Modified by Pierrot on 27-10-2026
+ * Modified by Pierrot on 28-10-2026
  */
 @DataJpaTest(showSql = false)
 class CustomerRepositoryTest {
@@ -24,5 +24,16 @@ class CustomerRepositoryTest {
 
         assertThat(customer.getId()).isNotNull();
 
+    }
+
+    @Test
+    void testSaveCustomerGetsCreatedAndUpdateDate() {
+        // saveAndFlush: Hibernate fills @CreationTimestamp / @UpdateTimestamp when it writes the INSERT
+        Customer customer = customerRepository.saveAndFlush(Customer.builder()
+                        .name("New Name")
+                .build());
+
+        assertThat(customer.getCreatedDate()).isNotNull();
+        assertThat(customer.getUpdateDate()).isNotNull();
     }
 }
