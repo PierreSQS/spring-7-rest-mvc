@@ -18,10 +18,10 @@ services:
       # host port 3308 -> container port 3306
       - '3308:3306'
     volumes:
-      # named volume for the data directory. The localmysql profile wipes it on every graceful
-      # shutdown ('docker compose down -v'), so this is not about keeping data: it is about the
-      # case where the app is killed instead of stopped. The leftover is then a volume with a
-      # name that can be inspected or removed, not an anonymous hash nothing points to.
+      # named volume for the data directory. The localmysql profile only stops the container on
+      # shutdown ('docker compose stop'), so the data survives and the next start reuses it. The
+      # explicit name makes the volume easy to inspect or remove ('docker compose down -v'), instead
+      # of an anonymous hash nothing points to.
       - 'mysql-spring7-rest-sec22-assn25-data:/var/lib/mysql'
 
 volumes:
