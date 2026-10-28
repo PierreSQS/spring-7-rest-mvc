@@ -22,7 +22,7 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * Modified by Pierrot on 27-10-2026
+ * Modified by Pierrot on 28-10-2026
  */
 @Builder
 @Getter
@@ -39,14 +39,14 @@ public class Category {
     private UUID id;
 
     @Version
-    private Long version;
+    private Integer version;
 
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdDate;
 
     @UpdateTimestamp
-    private LocalDateTime lastModifiedDate;
+    private LocalDateTime updateDate;
 
     private String description;
 

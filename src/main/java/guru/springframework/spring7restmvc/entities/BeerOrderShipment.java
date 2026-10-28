@@ -21,7 +21,7 @@ import java.util.UUID;
 
 /**
  * Created by jt, Spring Framework Guru.
- * Modified by Pierrot on 27-10-2026
+ * Modified by Pierrot on 28-10-2026
  */
 @Getter
 @Setter
@@ -37,7 +37,7 @@ public class BeerOrderShipment {
     private UUID id;
 
     @Version
-    private Long version;
+    private Integer version;
 
     @OneToOne
     private BeerOrder beerOrder;
@@ -49,5 +49,5 @@ public class BeerOrderShipment {
     private LocalDateTime createdDate;
 
     @UpdateTimestamp
-    private LocalDateTime lastModifiedDate;
+    private LocalDateTime updateDate;
 }

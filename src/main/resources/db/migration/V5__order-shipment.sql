@@ -1,5 +1,3 @@
-drop table if exists beer_order_shipment;
-
 CREATE TABLE beer_order_shipment
 (
     id                 VARCHAR(36) NOT NULL PRIMARY KEY,

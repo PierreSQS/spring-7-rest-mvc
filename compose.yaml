@@ -1,17 +1,13 @@
-# TEMPORARY names ('-tmp'): this branch starts from JT's code, whose schema stops at migration V5.
-# The sec22-assn25 container and volume hold the V7 schema, which Flyway would reject here. Once
-# the entities are harmonized again (V6 dates, V7 versions), switch back to the sec22-assn25 names
-# and delete this container and its volume.
 # own Compose project name, so Docker never mixes this lecture's container up with other
 # containers of the 'spring-7-rest-mvc' project (the default name is the folder name)
-name: 'spring-7-rest-mvc-jt-sb412-sec40-chap374-tmp'
+name: 'spring-7-rest-mvc-jt-sb411-sec22-assn25'
 
 services:
   mysql:
-    container_name: 'mysql-spring7-rest-sec40-chap374-tmp'
+    container_name: 'mysql-spring7-rest-sec22-assn25'
     image: 'mysql:9.5'
     environment:
-      - 'MYSQL_DATABASE=jt_spring7_rest_sec40_chap374_tmp_db'
+      - 'MYSQL_DATABASE=jt_spring7_rest_sec22_assn25_db'
       # username and passwords live in the .env file next to this one, which is not in Git
       # (see .env.example); ':?' makes Compose fail with that message instead of starting MySQL
       # without a password
@@ -22,13 +18,13 @@ services:
       # host port 3308 -> container port 3306
       - '3308:3306'
     volumes:
-      # named volume for the data directory. The localmysql profile wipes it on every graceful
-      # shutdown ('docker compose down -v'), so this is not about keeping data: it is about the
-      # case where the app is killed instead of stopped. The leftover is then a volume with a
-      # name that can be inspected or removed, not an anonymous hash nothing points to.
-      - 'mysql-spring7-rest-sec40-chap374-tmp-data:/var/lib/mysql'
+      # named volume for the data directory. The localmysql profile only stops the container on
+      # shutdown ('docker compose stop'), so the data survives and the next start reuses it. The
+      # explicit name makes the volume easy to inspect or remove ('docker compose down -v'), instead
+      # of an anonymous hash nothing points to.
+      - 'mysql-spring7-rest-sec22-assn25-data:/var/lib/mysql'
 
 volumes:
-  mysql-spring7-rest-sec40-chap374-tmp-data:
-    # without this, Compose would prefix the project name: 'spring-7-rest-mvc-jt-sb412-sec40-chap374-tmp_mysql-...'
-    name: 'mysql-spring7-rest-sec40-chap374-tmp-data'
+  mysql-spring7-rest-sec22-assn25-data:
+    # without this, Compose would prefix the project name: 'spring-7-rest-mvc-jt-sb411-sec22-assn25_mysql-...'
+    name: 'mysql-spring7-rest-sec22-assn25-data'

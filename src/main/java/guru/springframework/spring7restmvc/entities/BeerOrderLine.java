@@ -38,14 +38,14 @@ public class BeerOrderLine {
     private UUID id;
 
     @Version
-    private Long version;
+    private Integer version;
 
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdDate;
 
     @UpdateTimestamp
-    private LocalDateTime lastModifiedDate;
+    private LocalDateTime updateDate;
 
     @ManyToOne
     private BeerOrder beerOrder;
