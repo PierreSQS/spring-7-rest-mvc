@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -24,10 +25,12 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Modified by Pierrot on 26-10-2026
+ * Modified by Pierrot on 28-10-2026
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -89,7 +92,7 @@ class CustomerControllerIT {
         ResponseEntity<Void> responseEntity = customerController.updateCustomerByID(customer.getId(), customerDTO);
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(204));
 
-        Customer updatedCustomer = customerRepository.findById(customer.getId()).get();
+        Customer updatedCustomer = customerRepository.findById(customer.getId()).orElseThrow();
         assertThat(updatedCustomer.getName()).isEqualTo(customerName);
     }
 
@@ -108,7 +111,7 @@ class CustomerControllerIT {
         String[] locationUUID = responseEntity.getHeaders().getLocation().getPath().split("/");
         UUID savedUUID = UUID.fromString(locationUUID[4]);
 
-        Customer customer = customerRepository.findById(savedUUID).get();
+        Customer customer = customerRepository.findById(savedUUID).orElseThrow();
         assertThat(customer).isNotNull();
     }
 
@@ -197,5 +200,36 @@ class CustomerControllerIT {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonMapper.writeValueAsString(customerMap)))
                 .andExpect(status().isNotFound());
+    }
+
+    // the POST request carries its own id and version: the API must ignore both (issue #15, R1)
+    @Transactional
+    @Test
+    void testPostCustomerIgnoresIdAndVersionSentByCustomer() throws Exception {
+        // 1. a DTO with a name, a chosen id and a version
+        CustomerDTO customerDTO = CustomerDTO.builder()
+                .name("New Customer")
+                .id(UUID.randomUUID())
+                .version(5)
+                .build();
+
+        // 2. POST it as JSON, expect 201 Created
+        MvcResult mvcResult = mockMvc.perform(post(CustomerController.CUSTOMER_PATH)
+                        .with(BeerControllerTest.jwtRequestPostProcessor)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonMapper.writeValueAsString(customerDTO)))
+                .andExpect(status().isCreated())
+                .andDo(print()) // just for debugging purposes, to see the Location header in the console
+                .andReturn();
+
+        // 3. read the id of the new customer from the Location header
+        String[] locationParts = mvcResult.getResponse().getHeader("Location").split("/");
+
+        // 4. the new id is not the one sent, and the customer read back has the first version (0)
+        UUID savedUUID = UUID.fromString(locationParts[locationParts.length - 1]);
+        Customer savedCustomer = customerRepository.findById(savedUUID).orElseThrow();
+        assertThat(savedCustomer.getId()).isNotEqualTo(customerDTO.getId());
+        assertThat(savedCustomer.getVersion()).isZero();
+
     }
 }

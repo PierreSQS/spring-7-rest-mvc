@@ -9,11 +9,15 @@ import org.mapstruct.MappingTarget;
 
 /**
  * Created by jt, Spring Framework Guru.
- * Modified by Pierrot on 26-10-2026
+ * Modified by Pierrot on 28-10-2026
  */
 @Mapper
 public interface CustomerMapper {
 
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "version", ignore = true)
+    @Mapping(target = "createdDate", ignore = true)
+    @Mapping(target = "updateDate", ignore = true)
     @Mapping(target = "beerOrders", ignore = true)
     Customer customerDtoToCustomer(CustomerDTO dto);
 
