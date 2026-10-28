@@ -33,7 +33,7 @@ public class BootstrapData implements CommandLineRunner {
 
     @Transactional
     @Override
-    public void run(String... args) throws Exception {
+    public void run(String... args) {
         loadBeerData();
         loadCsvData();
         loadCustomerData();

@@ -20,6 +20,7 @@ import tools.jackson.databind.json.JsonMapper;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -223,7 +224,8 @@ class CustomerControllerIT {
                 .andReturn();
 
         // 3. read the id of the new customer from the Location header
-        String[] locationParts = mvcResult.getResponse().getHeader("Location").split("/");
+        String[] locationParts = Objects.requireNonNull(mvcResult.getResponse()
+                .getHeader("Location")).split("/");
 
         // 4. the new id is not the one sent, and the customer read back has the first version (0)
         UUID savedUUID = UUID.fromString(locationParts[locationParts.length - 1]);

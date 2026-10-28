@@ -34,6 +34,6 @@ public class MySqlIT {
     void testListBeers() {
         List<Beer> beers = beerRepository.findAll();
 
-        assertThat(beers.size()).isGreaterThan(0);
+        assertThat(beers).hasSizeGreaterThan(0);
     }
 }
