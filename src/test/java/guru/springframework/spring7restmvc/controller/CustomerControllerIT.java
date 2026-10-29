@@ -28,10 +28,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Modified by Pierrot on 28-10-2026
+ * Modified by Pierrot on 29-10-2026
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -233,5 +235,104 @@ class CustomerControllerIT {
         assertThat(savedCustomer.getId()).isNotEqualTo(customerDTO.getId());
         assertThat(savedCustomer.getVersion()).isZero();
 
+    }
+
+    // an email of spaces passes the DTO but not the entity: Hibernate refuses it at commit (issue #7)
+    // no @Transactional: the service transaction must commit, otherwise Hibernate never validates (R9)
+    @Test
+    void testPostCustomerBlankEmail() throws Exception {
+        // 1. a DTO with a valid name and an email of 3 spaces
+        CustomerDTO customerDTO = CustomerDTO.builder()
+                .name("New Customer")
+                .email("   ")
+                .build();
+
+        // 2. POST it as JSON, expect 400 Bad Request, 3. the response body is empty
+        mockMvc.perform(post(CustomerController.CUSTOMER_PATH)
+                        .with(BeerControllerTest.jwtRequestPostProcessor)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonMapper.writeValueAsString(customerDTO)))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(""));
+    }
+
+    // an empty email is refused by the DTO already: the answer names the field (issue #7)
+    // only the field is checked, not the message: its text depends on the locale and on @Size
+    @Test
+    void testPostCustomerEmptyEmail() throws Exception {
+        // 1. a DTO with a valid name and an empty email
+        CustomerDTO customerDTO = CustomerDTO.builder()
+                .name("New Customer")
+                .email("")
+                .build();
+
+        // 2. POST it as JSON, expect 400 Bad Request
+        // 3. the body is a list of {"<field>": "<message>"}: the first entry names the field "email"
+        mockMvc.perform(post(CustomerController.CUSTOMER_PATH)
+                        .with(BeerControllerTest.jwtRequestPostProcessor)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonMapper.writeValueAsString(customerDTO)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$[0].email").exists());
+    }
+
+    // a real email longer than 20 characters must be accepted: the DTO must allow what the column allows (issue #7)
+    @Transactional
+    @Test
+    void testPostCustomerLongEmail() throws Exception {
+        // 1. a DTO with a valid name and an email of 25 characters: pierre.dupont@example.com
+        CustomerDTO customerDTO = CustomerDTO.builder()
+                .name("New Customer")
+                .email("pierre.dupont@example.com")
+                .build();
+
+        // 2. POST it as JSON, expect 201 Created
+        MvcResult mvcResult = mockMvc.perform(post(CustomerController.CUSTOMER_PATH)
+                        .with(BeerControllerTest.jwtRequestPostProcessor)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonMapper.writeValueAsString(customerDTO)))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        // send the INSERT (Hibernate validates the entity now) and forget Hibernate's memory,
+        // so findById reads the real row; @Transactional still rolls everything back (R6, R9)
+        entityManager.flush();
+        entityManager.clear();
+
+        // 3. the customer read back from the database has this email
+        String[] locationParts = Objects.requireNonNull(mvcResult.getResponse()
+                .getHeader("Location")).split("/");
+        UUID savedUUID = UUID.fromString(locationParts[locationParts.length - 1]);
+        Customer savedCustomer = customerRepository.findById(savedUUID).orElseThrow();
+        assertThat(savedCustomer.getEmail()).isEqualTo("pierre.dupont@example.com");
+    }
+
+    // the email is optional: a customer without one must be accepted (issue #7)
+    @Transactional
+    @Test
+    void testPostCustomerWithoutEmail() throws Exception {
+        // 1. a DTO with a valid name and no email at all
+        CustomerDTO customerDTO = CustomerDTO.builder()
+                .name("New Customer")
+                .build();
+
+        // 2. POST it as JSON, expect 201 Created
+        MvcResult mvcResult = mockMvc.perform(post(CustomerController.CUSTOMER_PATH)
+                        .with(BeerControllerTest.jwtRequestPostProcessor)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonMapper.writeValueAsString(customerDTO)))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        // 3. send the INSERT and forget Hibernate's memory (R6, R9)
+        entityManager.flush();
+        entityManager.clear();
+
+        // 4. the customer read back from the database has no email
+        String[] locationParts = Objects.requireNonNull(mvcResult.getResponse()
+                .getHeader("Location")).split("/");
+        UUID savedUUID = UUID.fromString(locationParts[locationParts.length - 1]);
+        Customer savedCustomer = customerRepository.findById(savedUUID).orElseThrow();
+        assertThat(savedCustomer.getEmail()).isNull();
     }
 }
