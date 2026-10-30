@@ -21,7 +21,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import tools.jackson.databind.json.JsonMapper;
 
-import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -44,7 +43,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Modified by Pierrot on 24-10-2026
+ * Modified by Pierrot on 30-10-2026
  */
 @Slf4j
 @WebMvcTest(BeerController.class)
@@ -74,12 +73,9 @@ class BeerControllerTest {
         beerServiceImpl = new BeerServiceImpl();
     }
 
-    public static final SecurityMockMvcRequestPostProcessors.JwtRequestPostProcessor jwtRequestPostProcessor =
-            jwt().jwt(jwt ->
-                    jwt.claims(claims ->
-                                    claims.put("scope", "message-read message-write"))
-                            .subject("messaging-client")
-                            .notBefore(Instant.now().minusSeconds(5L)));
+    // SpringSecConfig only checks that the request is authenticated: no scope, subject or date is read.
+    // jwt() also skips the CSRF filter, like a real Bearer token. Without it: PATCH -> 403 (CSRF), GET -> 401.
+    public static final SecurityMockMvcRequestPostProcessors.JwtRequestPostProcessor jwtRequestPostProcessor = jwt();
 
     @Test
     void testPatchBeer() throws Exception {
