@@ -35,7 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Modified by Pierrot on 29-10-2026
+ * Modified by Pierrot on 31-10-2026
  */
 @Slf4j
 @SpringBootTest
@@ -194,6 +194,7 @@ class BeerControllerIT {
                         .accept(MediaType.APPLICATION_JSON)
                         .content(jsonMapper.writeValueAsString(beerMap)))
                 .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$[0].beerName").value("Beer Name must be maximum 50 characters"))
                 .andReturn();
 
         log.info(result.getResponse().getContentAsString());

@@ -26,7 +26,7 @@ import java.util.UUID;
 
 /**
  * Created by jt, Spring Framework Guru.
- * Modified by Pierrot on 28-10-2026
+ * Modified by Pierrot on 31-10-2026
  */
 @Getter
 @Setter
@@ -41,7 +41,7 @@ public class Customer {
     @JdbcTypeCode(SqlTypes.CHAR)
     private UUID id;
 
-    @NotBlank
+    @NotBlank(message = "Customer name must not be blank")
     private String name;
 
     // email optional but never blank: null is accepted (old customers have none),

@@ -14,7 +14,7 @@ import java.util.UUID;
 
 /**
  * Created by jt, Spring Framework Guru.
- * Modified by Pierrot on 26-10-2026
+ * Modified by Pierrot on 31-10-2026
  */
 
 @RequiredArgsConstructor
@@ -25,6 +25,8 @@ public class CustomerController {
 
     private final CustomerService customerService;
 
+    // no @Validated on purpose: a PATCH sends only some fields, CustomerDTO's rules expect a complete customer.
+    // The entity Customer validates the result when it is saved.
     @PatchMapping(CUSTOMER_PATH_ID)
     public ResponseEntity<Void> patchCustomerById(@PathVariable UUID customerId,
                                                 @RequestBody CustomerDTO customer){

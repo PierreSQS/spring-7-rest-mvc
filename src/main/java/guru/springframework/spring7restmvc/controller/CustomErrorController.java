@@ -1,5 +1,6 @@
 package guru.springframework.spring7restmvc.controller;
 
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.TransactionSystemException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -12,13 +13,25 @@ import java.util.Map;
 
 /**
  * Created by jt, Spring Framework Guru.
- * Modified by Pierrot on 25-10-2026
+ * Modified by Pierrot on 31-10-2026
  */
 @ControllerAdvice
 public class CustomErrorController {
 
     @ExceptionHandler
-    ResponseEntity<Void> handleJPAViolations(TransactionSystemException exception){
+    ResponseEntity<List<Map<String, String>>> handleJPAViolations(TransactionSystemException exception){
+        Throwable rootCause = exception.getRootCause();
+
+        if (rootCause instanceof ConstraintViolationException cve){
+            List<Map<String, String>> errorList = cve.getConstraintViolations().stream()
+                    .map(violation -> {
+                        Map<String, String> errorMap = new HashMap<>();
+                        errorMap.put(violation.getPropertyPath().toString(), violation.getMessage());
+                        return errorMap;
+                    }).toList();
+
+            return ResponseEntity.badRequest().body(errorList);
+        }
         return ResponseEntity.badRequest().build();
     }
 
