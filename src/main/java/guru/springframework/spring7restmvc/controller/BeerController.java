@@ -16,7 +16,7 @@ import java.util.UUID;
 
 /**
  * Created by jt, Spring Framework Guru.
- * Modified by Pierrot on 26-10-2026
+ * Modified by Pierrot on 31-10-2026
  */
 @Slf4j
 @RequiredArgsConstructor
@@ -28,6 +28,8 @@ public class BeerController {
 
     private final BeerService beerService;
 
+    // no @Validated on purpose: a PATCH sends only some fields, BeerDTO's rules expect a complete beer.
+    // The entity Beer validates the result when it is saved.
     @PatchMapping(BEER_PATH_ID)
     public ResponseEntity<Void> patchBeerById(@PathVariable("beerId")UUID beerId, @RequestBody BeerDTO beer){
 

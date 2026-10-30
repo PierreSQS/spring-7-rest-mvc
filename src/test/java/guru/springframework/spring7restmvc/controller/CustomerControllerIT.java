@@ -33,7 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Modified by Pierrot on 29-10-2026
+ * Modified by Pierrot on 31-10-2026
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -185,7 +185,8 @@ class CustomerControllerIT {
                         .with(BeerControllerTest.jwtRequestPostProcessor)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonMapper.writeValueAsString(customerMap)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$[0].name").value("Customer name must not be blank"));
 
         assertThat(customerRepository.findById(customer.getId()))
                 .get()
