@@ -83,3 +83,25 @@ et les notes mémoire de Claude (relues au début de chaque conversation).
 **La règle :**
 - au quotidien, conversation trop longue -> `/clear`
 - après un changement de réglage, de plugin, ou une mise à jour -> `/exit` puis `claude`
+
+## 4. Nommer les conversations : `/rename`
+
+**Contexte :** je travaille sur plusieurs sections du cours en parallèle, une conversation
+par section, chacune sur sa branche. Sans nom, je ne sais plus laquelle est laquelle.
+
+**La convention :** `secNN-<sujet-de-la-section>-N`
+- `NN` = numéro de la section du cours, `<sujet>` = titre court de la section,
+- `N` = numéro de la conversation pour cette section : quand elle devient trop longue,
+  j'en ouvre une nouvelle avec le même nom et `N+1`.
+
+**Exemple :** section 40 « OpenAPI with Spring Boot », branche `126-springdoc-maven-jt-sb412`
+- `sec40-openapi-with-sb-6` devenue trop longue (~330k tokens, voir section 1)
+- -> `/clear`, puis `/rename sec40-openapi-with-sb-7`
+
+**Pourquoi ça aide :**
+- dans la liste de `/resume`, je retrouve tout de suite la bonne conversation,
+- au début de chaque conversation, Claude lit le nom et retrouve dans ses notes mémoire
+  la section, la branche, le préfixe de commit et le travail ouvert qui vont avec.
+
+**Piège vu :** une faute de frappe dans le nom (`sec4-...` au lieu de `sec40-...`,
+`sec28-...` au lieu de `sec38-...`) brouille ce lien. `/rename` corrige le nom à tout moment.
