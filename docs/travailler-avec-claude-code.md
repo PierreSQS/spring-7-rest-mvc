@@ -61,3 +61,25 @@ pour un seul message.
 **Pourquoi on ne perd rien :** ce qui doit survivre d'une conversation à l'autre est
 écrit ailleurs : le code et les commits dans Git, les tâches dans les issues GitHub,
 et les notes mémoire de Claude (relues au début de chaque conversation).
+
+## 3. `/clear` ou `/exit` + `claude` ?
+
+**Contexte :** les deux donnent une conversation neuve. Quelle différence ?
+
+**Ce que fait chacun** (doc officielle, page « Commands », vérifiée le 30-10-2026) :
+- `/clear` : nouvelle conversation, contexte vide, **dans le même programme**.
+  L'ancienne conversation n'est pas perdue : on la retrouve avec `/resume`.
+  `/clear un-nom` donne un nom à l'ancienne conversation dans la liste de `/resume`.
+- `/exit` puis `claude` : on **quitte le programme** et on le relance. Au démarrage,
+  il relit tout : réglages, plugins, serveurs MCP, et il prend une mise à jour
+  de Claude Code déjà installée.
+
+**Recharger sans redémarrer :**
+- `/reload-plugins` : recharge les plugins.
+- `/reload-skills` : relit les skills ajoutées ou changées sur le disque.
+- `/mcp` : gère les serveurs MCP (`/mcp reconnect all` pour les reconnecter).
+- `/restart` existe aussi, mais seulement sur macOS / Linux : pas sur mon Windows.
+
+**La règle :**
+- au quotidien, conversation trop longue -> `/clear`
+- après un changement de réglage, de plugin, ou une mise à jour -> `/exit` puis `claude`
