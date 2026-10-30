@@ -40,3 +40,24 @@ le cache a expiré et tout est relu au prix fort. C'est pour ça que Claude Code
 - après une longue pause -> nouvelle conversation plutôt que « Resume »
 - ne pas coller de sorties lourdes (`/context`, captures d'écran) sans besoin :
   elles sont relues à chaque message suivant.
+
+## 2. « Resume this conversation? » : oui ou non ?
+
+**Contexte :** quand je reviens sur une conversation déjà longue, Claude Code me pose
+cette question avant d'envoyer mon message.
+
+**Le problème :** dire oui, c'est renvoyer toute la conversation au modèle (voir section 1).
+Si la pause a été longue, le cache a expiré : tout est relu au prix fort.
+Observé le 30-10-2026 sur la -6 (~330k tokens) : environ 5 % de la limite de 5 heures
+pour un seul message.
+
+**La règle :**
+| Situation | Choix |
+|---|---|
+| pause courte, la conversation n'est pas trop longue | Resume |
+| longue pause (par exemple le lendemain) | nouvelle conversation |
+| conversation déjà très longue (`/context` montre des centaines de milliers de tokens) | nouvelle conversation, même sans pause |
+
+**Pourquoi on ne perd rien :** ce qui doit survivre d'une conversation à l'autre est
+écrit ailleurs : le code et les commits dans Git, les tâches dans les issues GitHub,
+et les notes mémoire de Claude (relues au début de chaque conversation).
