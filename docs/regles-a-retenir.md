@@ -974,7 +974,8 @@ et le compare à celui de la table.
   de migration.
 
 **Exemple dans le projet** (ticket #6, branche `126-springdoc-maven-jt-sb412`, 28-10-2026).
-La base Docker `sec22-assn25` a été construite avec les migrations de la branche 123. La branche 126
+La base Docker `sec22-assn25` a été construite avec les migrations des branches de la Section 38 (fichiers V1 à V7
+identiques depuis `122-server-port-mapping-jt-sb411`, commit `5a5581d0`). La branche 126
 avait les fichiers originaux de JT : même schéma, mais un contenu différent. Par exemple `V3__add-order-tables.sql` :
 
 ```diff
@@ -989,11 +990,11 @@ Mais pour Flyway, le contenu est différent, donc la somme de contrôle aussi :
 
 ```
                        V1        V2   V3        V4        V5        V6      V7
-fichiers de la 123     OK        OK   OK        OK        OK        OK      OK
+fichiers de la 122     OK        OK   OK        OK        OK        OK      OK
 fichiers de JT (126)   mismatch  OK   mismatch  mismatch  mismatch  absent  absent
 ```
 
-Correction : la 126 a repris les fichiers V1 à V7 de la 123, tels quels.
+Correction : la 126 a repris les fichiers V1 à V7 de la 122, tels quels.
 
 **Comment savoir si Flyway a accepté une base existante.** Au démarrage, deux logs sont possibles :
 
@@ -1042,7 +1043,7 @@ Des **nouveaux noms** (projet, conteneur, volume, base) ne sont nécessaires que
 **Contexte.** Section 38 (Spring Boot Maven Plugin) : JT démarre l'application avec
 `java -jar target/spring-7-rest-mvc-0.0.1-SNAPSHOT.jar`, au lieu de `./mvnw spring-boot:run`.
 Le jar contient le code, les fichiers `src/main/resources` et les bibliothèques. Deux surprises
-(31-10-2026, branche `123-spring-boot-run-profile-jt-sb411`).
+(31-10-2026, branche `125-build-info-jt-sb411`, commit `9d444bda`).
 
 **La règle.**
 
