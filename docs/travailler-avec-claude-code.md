@@ -105,3 +105,24 @@ par section, chacune sur sa branche. Sans nom, je ne sais plus laquelle est laqu
 
 **Piège vu :** une faute de frappe dans le nom (`sec4-...` au lieu de `sec40-...`,
 `sec28-...` au lieu de `sec38-...`) brouille ce lien. `/rename` corrige le nom à tout moment.
+
+## 5. La branche affichée dans `/resume`
+
+**Contexte :** dans la liste de `/resume`, toutes mes conversations affichaient
+`126-springdoc-maven-jt-sb412`, même `sec38-sb-maven-plugin`, créée et menée sur 122 puis 123.
+
+**Comment ça marche :** une conversation n'est PAS liée à une branche. À chaque message,
+Claude Code note la branche checkoutée à ce moment-là dans le dépôt. `/resume` affiche la
+branche du DERNIER message.
+
+**Exemple :** messages enregistrés dans `sec38-sb-maven-plugin` (vérifié le 31-10-2026)
+- 140 sur `122-server-port-mapping-jt-sb411`
+- 159 sur `123-spring-boot-run-profile-jt-sb411`
+- 3 sur `126-springdoc-maven-jt-sb412` -> rouverte un instant pendant que j'étais sur 126,
+  donc `/resume` affiche 126.
+
+**La règle :**
+- la branche de `/resume` = où j'étais la dernière fois, pas la branche de la conversation ;
+- le vrai repère est le nom donné avec `/rename` (section 4) ;
+- reprendre une conversation ne change PAS de branche : d'abord `git switch <branche>`,
+  ensuite `/resume`.
