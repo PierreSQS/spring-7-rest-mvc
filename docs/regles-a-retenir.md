@@ -10,9 +10,9 @@ Créé le 17-10-2026.
 
 ## Table des matières
 
-25 règles, numérotées R1 à R25 dans l'ordre où elles ont été apprises - donc pas dans
+26 règles, numérotées R1 à R26 dans l'ordre où elles ont été apprises - donc pas dans
 l'ordre des sections : R19 est rangée avec les fichiers, R20-R21 avec les lambdas, R22-R23 avec Hibernate,
-R24 avec PUT et PATCH, R25 avec la base de données.
+R24 avec PUT et PATCH, R25-R26 avec la base de données.
 
 
 **1. MapStruct et DTO**
@@ -66,6 +66,7 @@ R24 avec PUT et PATCH, R25 avec la base de données.
 **9. Base de données : Flyway et Docker Compose**
 
 - [R25 — Une migration Flyway déjà appliquée ne se modifie plus, même d'une ligne](#r25--une-migration-flyway-déjà-appliquée-ne-se-modifie-plus-même-dune-ligne)
+- [R26 — `java -jar` : le dossier de lancement compte, et Docker Compose n'est pas dans le jar](#r26--java--jar--le-dossier-de-lancement-compte-et-docker-compose-nest-pas-dans-le-jar)
 
 ---
 ## 1. MapStruct et DTO
@@ -1035,3 +1036,63 @@ docker exec mysql-spring7-rest-sec22-assn25 sh -c \
 démarrer l'application. Docker recrée une base vide avec les mêmes noms, Flyway y applique V1 à V7.
 Des **nouveaux noms** (projet, conteneur, volume, base) ne sont nécessaires que quand le **schéma** change
 (une nouvelle migration).
+
+### R26 — `java -jar` : le dossier de lancement compte, et Docker Compose n'est pas dans le jar
+
+**Contexte.** Section 38 (Spring Boot Maven Plugin) : JT démarre l'application avec
+`java -jar target/spring-7-rest-mvc-0.0.1-SNAPSHOT.jar`, au lieu de `./mvnw spring-boot:run`.
+Le jar contient le code, les fichiers `src/main/resources` et les bibliothèques. Deux surprises
+(31-10-2026, branche `123-spring-boot-run-profile-jt-sb411`).
+
+**La règle.**
+
+- Spring Boot lit aussi un dossier **`config/` dans le dossier d'où on lance la commande**, et ses
+  valeurs remplacent celles du jar. Le même jar se comporte donc différemment selon ce dossier.
+- Le module `spring-boot-docker-compose` n'est **pas** mis dans le jar (Spring Boot l'exclut : il ne
+  sert qu'au développement). Avec `java -jar`, personne ne démarre le conteneur MySQL ni ne donne
+  son adresse : il faut la passer soi-même.
+
+**Exemple 1 : racine du projet ou `target/`.** Le dossier `config/` (ignoré par Git, réglages de debug)
+est à la racine du projet :
+
+```
+spring-7-rest-mvc/
+├── config/application.properties   <- logging.level.org.hibernate.SQL=debug
+└── target/spring-7-rest-mvc-0.0.1-SNAPSHOT.jar
+```
+
+| Lancé depuis | Commande | `config/` lu ? | Lignes de log `org.hibernate.SQL` |
+|---|---|---|---|
+| racine du projet | `java -jar target/spring-7-rest-mvc-0.0.1-SNAPSHOT.jar` | oui | 2443 |
+| `target/` | `java -jar spring-7-rest-mvc-0.0.1-SNAPSHOT.jar` | non (pas de `target/config/`) | 0 |
+
+**Exemple 2 : `-Dspring.profiles.active=localmysql` plante dans Flyway**, même avec le conteneur
+MySQL démarré à la main :
+
+1. Le profil `localmysql` ne contient pas d'URL de base : c'est Docker Compose qui la fournit, et il
+   n'est pas dans le jar.
+2. Spring Boot trouve H2 dans le jar et crée une base H2 en mémoire :
+   `RestDB-Pool - Added connection conn0: url=jdbc:h2:mem:...`
+3. Flyway exécute les scripts **MySQL** sur cette base **H2** et échoue au premier :
+   `Failed to execute script V1__init-mysql-database.sql` - `Unbekannter Datentyp: "DATETIME"`.
+
+Le message parle de Flyway, mais la vraie cause est la mauvaise base : la ligne `url=jdbc:h2:mem`
+le montre.
+
+**La commande qui marche** (Git Bash, depuis la racine du projet, le conteneur
+`mysql-spring7-rest-sec22-assn25` déjà démarré) :
+
+```bash
+set -a; . ./.env; set +a
+java -Dspring.profiles.active=localmysql -jar target/spring-7-rest-mvc-0.0.1-SNAPSHOT.jar \
+  --spring.datasource.url=jdbc:mysql://localhost:3308/jt_spring7_rest_sec22_assn25_db \
+  --spring.datasource.username="$MYSQL_USER" \
+  --spring.datasource.password="$MYSQL_PASSWORD"
+```
+
+- La 1re ligne charge `MYSQL_USER` et `MYSQL_PASSWORD` depuis `.env` : le mot de passe ne s'écrit
+  pas dans la commande.
+- Les trois `--spring.datasource...` remplacent ce que Docker Compose donnait avec `spring-boot:run`.
+
+Preuve (31-10-2026) : `Database: jdbc:mysql://localhost:3308/jt_spring7_rest_sec22_assn25_db`,
+`Schema ... is up to date`, `Tomcat started on port 8081`.
