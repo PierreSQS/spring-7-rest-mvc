@@ -18,6 +18,8 @@
         <org.mapstruct.version>1.6.3</org.mapstruct.version>
         <!-- profile used by "mvnw spring-boot:run" without -D: MySQL via Docker Compose, port 8081 -->
         <spring-boot.run.profiles>localmysql</spring-boot.run.profiles>
+        <!-- resource filtering: Maven copies this value into application-ci.properties (@jwt-uri@) at build -->
+        <jwt-uri>http://example.com:9090</jwt-uri>
     </properties>
     <dependencies>
         <dependency>
