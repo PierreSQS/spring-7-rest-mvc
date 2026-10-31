@@ -28,7 +28,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -248,13 +247,13 @@ class CustomerControllerIT {
                 .email("   ")
                 .build();
 
-        // 2. POST it as JSON, expect 400 Bad Request, 3. the response body is empty
+        // 2. POST it as JSON, expect 400 Bad Request, 3. the response body is not empty
         mockMvc.perform(post(CustomerController.CUSTOMER_PATH)
                         .with(BeerControllerTest.jwtRequestPostProcessor)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonMapper.writeValueAsString(customerDTO)))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string(""));
+                .andExpect(jsonPath("$[0].email").exists());
     }
 
     // an empty email is refused by the DTO already: the answer names the field (issue #7)
