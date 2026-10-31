@@ -9,8 +9,10 @@ on:
     paths-ignore:      # ...except a push that changes ONLY these files
       - 'docs/**'      # the docs folder
       - '**/*.md'      # any Markdown file (README, ...)
-  workflow_dispatch:   # manual run ("Run workflow" in the Actions tab) - only once this file is on the default
-                       # branch; master has none (kept identical to JT), so rerun with "Re-run all jobs" on a run
+  # workflow_dispatch: # manual trigger ("Run workflow" button, `gh workflow run`), kept commented out:
+  #                    # GitHub only accepts it when this file is on the default branch, and master has
+  #                    # none (kept identical to JT). To rerun by hand: open a run in the Actions tab,
+  #                    # then "Re-run all jobs".
 
 jobs:
   build:
