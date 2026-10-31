@@ -46,7 +46,7 @@ Chaque ticket a toujours les mêmes parties, en anglais :
 |---|---|---|
 | **Branch** | sur quelle branche corriger (les branches de leçon ne sont jamais fusionnées) | `126-springdoc-maven-jt-sb412` |
 | **Problem** | ce qui ne va pas, avec le fichier et la ligne | `BootstrapData.java:49-61`, le `switch` sur les noms exacts |
-| **Rules** | la règle de `docs/regles-a-retenir.md` (branche 123) qui s'applique | R19 |
+| **Rules** | la règle de `docs/regles-a-retenir.md` (branche `125-build-info-jt-sb411`) qui s'applique | R19 |
 | **Done when** | à quoi on reconnaît que c'est fini | « `beers.csv` has no `â€` sequence left » |
 
 **Ce qu'un ticket `training` ne contient jamais : la solution.** Il dit *quoi* et *où*, pas *comment* :
@@ -68,7 +68,7 @@ Sur GitHub on ne peut pas « assigner » un ticket à Claude (il n'a pas de comp
 Quand le même bug existe sur plusieurs branches, il y a **un ticket par branche**, chacun avec
 l'étiquette de sa section, et les tickets se renvoient l'un à l'autre :
 
-> Same bug on branch 123: #7
+> Same bug on branch `125-build-info-jt-sb411`: #7
 
 Fermer un ticket ne concerne donc que **sa** branche. On voit d'un coup d'œil où le bug est
 déjà corrigé et où il reste à faire. Corriger le même bug plusieurs fois est voulu : c'est un exercice de plus.
@@ -176,5 +176,6 @@ Le fichier de JT avait des **espaces**. Le shell ne trouvait jamais la fin du bl
 à la ligne 154 et s'arrête avant d'arriver au bloc cassé. Sur Windows, c'est de toute façon `mvnw.cmd` qui sert.
 Il fallait une machine vierge pour le voir — c'est exactement à ça que sert une CI.
 
-**À savoir** : le même `mvnw` cassé est sur la branche 123 (fichier identique). À corriger le jour où elle reçoit la pipeline.
+**À savoir** : le même `mvnw` cassé était sur la branche `125-build-info-jt-sb411` (fichier identique) ; corrigé là aussi
+(commit `645bc49a`, 31-10-2026), qui a maintenant la pipeline.
 Détail complet : commentaire sur le commit [448cc5a7](https://github.com/PierreSQS/spring-7-rest-mvc/commit/448cc5a74091bacc098805bd6b0c7f1b2c4bb6ee#commitcomment-206853544).
