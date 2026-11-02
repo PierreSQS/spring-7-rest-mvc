@@ -3,6 +3,7 @@ package guru.springframework.spring7restmvc.model;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Data;
 import tools.jackson.databind.annotation.JsonDeserialize;
@@ -27,6 +28,7 @@ public class BeerDTO {
     private Integer version;
 
     @JsonProperty("beerName")
+    @Size(max = 50, message = "The Beer Name must be maximum 50 characters")
     @NotBlank
     private String beerName;
 

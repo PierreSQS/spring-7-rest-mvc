@@ -21,6 +21,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.json.JsonMapper;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -30,12 +31,13 @@ import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Modified by Pierrot on 31-10-2026
+ * Modified by Pierrot on 02-11-2026
  */
 @Slf4j
 @SpringBootTest
@@ -84,6 +86,28 @@ class BeerControllerIT {
                 .andReturn();
 
         log.info(String.valueOf(result2.getResponse().getStatus()));
+    }
+
+    @Transactional
+    @Test
+    void testPostBeerNameTooLong() throws Exception {
+        BeerDTO beerDTO = BeerDTO.builder()
+                .beerName("A".repeat(51))
+                .upc("123456789012")
+                .beerStyle(BeerStyle.PALE_ALE)
+                .price(new BigDecimal("9.99"))
+                .build();
+
+        MvcResult result = mockMvc.perform(post(BeerController.BEER_PATH)
+                        .with(BeerControllerTest.jwtRequestPostProcessor)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(jsonMapper.writeValueAsString(beerDTO)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$[0].beerName").value("The Beer Name must be maximum 50 characters"))
+                .andReturn();
+
+        log.info("status: {}, body: {}", result.getResponse().getStatus(), result.getResponse().getContentAsString());
     }
 
     @Test
