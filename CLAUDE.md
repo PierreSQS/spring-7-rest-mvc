@@ -72,7 +72,7 @@ Do not fix JT's code on the side: name the problem, propose an issue, let him de
 
 | Package | Responsibility | Rules to preserve |
 |---|---|---|
-| `config` | `SpringSecConfig`: the security filter chain | See section 4. |
+| `config` | `SpringSecConfig`: the security filter chain; `OpenApiConfig`: OpenAPI documentation (Bearer JWT scheme, #27) | See section 4. `OpenApiConfig` only documents: it opens or protects nothing. |
 | `controller` | REST endpoints, `CustomErrorController`, `NotFoundException` | Reuse the path constants (`BEER_PATH` = `/api/v1/beer`, `BEER_PATH_ID`, `CUSTOMER_PATH`, `CUSTOMER_PATH_ID`); tests reference them. `@Validated` on POST and PUT, **not** on PATCH: a PATCH body may be partial. Writes return `ResponseEntity<Void>`. |
 | `model` | `BeerDTO`, `CustomerDTO`, `BeerStyle`, `BeerCSVRecord` | Keep the Bean Validation annotations (`BeerDTO`: `beerName`, `upc` `@NotBlank`; `beerStyle`, `price` `@NotNull`. `CustomerDTO`: `name` `@NotBlank`, `email` optional, `@Size(1..255)` when present) and the Jackson annotations (section 6). |
 | `entities` | `Beer`, `Customer`, `Category`, `BeerOrder`, `BeerOrderLine`, `BeerOrderShipment` | `@UuidGenerator` + `@JdbcTypeCode(SqlTypes.CHAR)` for UUIDs stored as `varchar(36)`. `BeerStyle` as `SMALLINT`. A field initializer used with `@Builder` needs `@Builder.Default`. |

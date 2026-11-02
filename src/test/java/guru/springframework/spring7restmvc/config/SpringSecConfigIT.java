@@ -32,6 +32,17 @@ class SpringSecConfigIT {
     }
 
     @Test
+    void testApiDocsDeclareBearerJwt() throws Exception {
+        // GET /v3/api-docs -> a Bearer JWT security scheme, required by every operation (Authorize button, #27)
+        mockMvc.perform(get("/v3/api-docs"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.components.securitySchemes.bearerAuth.type").value("http"))
+                .andExpect(jsonPath("$.components.securitySchemes.bearerAuth.scheme").value("bearer"))
+                .andExpect(jsonPath("$.components.securitySchemes.bearerAuth.bearerFormat").value("JWT"))
+                .andExpect(jsonPath("$.security[0].bearerAuth").exists());
+    }
+
+    @Test
     void testBeerListNeedsToken() throws Exception {
         // GET /api/v1/beer without a token -> 401 with WWW-Authenticate: Bearer
         mockMvc.perform(get(BeerController.BEER_PATH))
