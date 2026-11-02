@@ -13,6 +13,7 @@ import java.util.UUID;
 
 /**
  * Created by jt, Spring Framework Guru.
+ * Modified by Pierrot on 02-11-2026
  */
 @JsonDeserialize(builder = BeerDTO.BeerDTOBuilder.class)
 @Builder
@@ -27,7 +28,6 @@ public class BeerDTO {
 
     @JsonProperty("beerName")
     @NotBlank
-    @NotNull
     private String beerName;
 
     @JsonProperty("beerStyle")
@@ -35,7 +35,6 @@ public class BeerDTO {
     private BeerStyle beerStyle;
 
     @JsonProperty("upc")
-    @NotNull
     @NotBlank
     private String upc;
 

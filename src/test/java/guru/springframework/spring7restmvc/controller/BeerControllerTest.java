@@ -43,7 +43,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Modified by Pierrot on 30-10-2026
+ * Modified by Pierrot on 02-11-2026
  */
 @Slf4j
 @WebMvcTest(BeerController.class)
@@ -179,10 +179,14 @@ class BeerControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonMapper.writeValueAsString(beerDTO)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.length()", is(6)))
+                .andExpect(jsonPath("$.length()", is(4)))
+                .andExpect(jsonPath("$..beerName").exists())
+                .andExpect(jsonPath("$..beerStyle").exists())
+                .andExpect(jsonPath("$..upc").exists())
+                .andExpect(jsonPath("$..price").exists())
                 .andReturn();
 
-        log.info(mvcResult.getResponse().getContentAsString());
+        log.info("the error JSON: {}", mvcResult.getResponse().getContentAsString());
     }
 
     @Test
