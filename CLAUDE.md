@@ -12,11 +12,11 @@ A beer and customer REST API built alongside John Thompson's **Spring Framework 
 |---|---|
 | Runtime | Java 25, Spring Boot 4.0.6, Spring Framework 7.0, Spring Security 7.0 |
 | Persistence / JSON | Hibernate 7.2, Jackson 3 |
-| Libraries | Spring Data JPA, MapStruct 1.6.3, Lombok, Flyway, OAuth2 resource server, springdoc-openapi 2.0.2 (JT's version) |
+| Libraries | Spring Data JPA, MapStruct 1.6.3, Lombok, Flyway, OAuth2 resource server, springdoc-openapi 3.0.3 (JT: 2.0.2; issue #26) |
 | Root package | `guru.springframework.spring7restmvc` |
 | Entry point | `Spring7RestMvcApplication` |
-| Branches | One per lesson, named after JT's branch plus a suffix: this one is `126-springdoc-maven-jt-sb412`, created from JT's `126-springdoc-maven`. Branches are **never merged**: each documents an improved variant of JT's lecture (`-sbNNN` = target Boot version; 126 still runs 4.0.6 until issue #13). |
-| Commits | Prefix with section and chapter: `Sec40_Chap374: ...`; `-X` for own additions, `-NOK` when tests are knowingly left red. `#N` in a message refers to GitHub issue N. |
+| Branches | One per lesson, named after JT's branch plus a suffix: this one is `127-springdoc-security-cfg-jt-sb412` (Chap375), created from `126-springdoc-maven-jt-sb412` (Chap374, itself from JT's `126-springdoc-maven`). Branches are **never merged**: each documents an improved variant of JT's lecture (`-sbNNN` = target Boot version; the branch still runs 4.0.6 until issue #13). |
+| Commits | Prefix with section and chapter: `Sec40_Chap375: ...`; `-X` for own additions, `-NOK` when tests are knowingly left red. `#N` in a message refers to GitHub issue N. |
 | Open work | GitHub issues of `PierreSQS/spring-7-rest-mvc` (label `sec40`); every `gh` command takes `-R PierreSQS/spring-7-rest-mvc`. |
 
 ### Documentation
@@ -92,6 +92,7 @@ Do not fix JT's code on the side: name the problem, propose an issue, let him de
 | Outcome | Response |
 |---|---|
 | No or invalid Bearer token | `401` for `GET`; `403` for writes (CSRF only ignored with a Bearer token) |
+| springdoc URLs (`/v3/api-docs`, `/swagger-ui/index.html`) | `200` without a token |
 | `GET` on the beer list | a serialized Spring Data `Page` |
 | `GET` on the customer list | a plain JSON array |
 | Successful POST | `201` with a `Location` header |
@@ -104,12 +105,16 @@ Do not fix JT's code on the side: name the problem, propose an issue, let him de
 
 ## 4. Security
 
-The API is an **OAuth2 resource server** (`spring-boot-starter-oauth2-resource-server`). `SpringSecConfig` (`@EnableWebSecurity`) requires authentication on every request and validates JWTs:
+The API is an **OAuth2 resource server** (`spring-boot-starter-oauth2-resource-server`). `SpringSecConfig` (`@EnableWebSecurity`) leaves the springdoc URLs open (Chap375) and requires authentication on every other request, validating JWTs:
 
 ```java
-http.authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated())
+http.authorizeHttpRequests(authorize -> authorize
+        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+        .anyRequest().authenticated())
     .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
 ```
+
+Rules are read top to bottom, first match wins: `anyRequest()` stays last.
 
 | Detail | Behavior |
 |---|---|

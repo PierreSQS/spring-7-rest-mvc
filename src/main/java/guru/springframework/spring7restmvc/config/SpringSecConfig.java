@@ -9,6 +9,7 @@ import org.springframework.security.web.SecurityFilterChain;
 
 /**
  * Created by jt, Spring Framework Guru.
+ * Modified by Pierrot on 02-11-2026
  */
 @Configuration
 @EnableWebSecurity
@@ -16,9 +17,11 @@ public class SpringSecConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) {
-        http.authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated())
-               .oauth2ResourceServer(httpSecurityOAuth2ResourceServerConfigurer ->
-                       httpSecurityOAuth2ResourceServerConfigurer.jwt(Customizer.withDefaults()));
+        http.authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .anyRequest().authenticated())
+                .oauth2ResourceServer(httpOAuth2ResServerConfigurer ->
+                        httpOAuth2ResServerConfigurer.jwt(Customizer.withDefaults()));
 
         return http.build();
     }
