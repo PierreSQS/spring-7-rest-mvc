@@ -25,6 +25,7 @@ class SpringSecConfigIT {
 
     @Test
     void testApiDocsOpenWithoutToken() throws Exception {
+        // GET /v3/api-docs without a token -> 200 with the OpenAPI JSON
         mockMvc.perform(get("/v3/api-docs"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.openapi").value("3.1.0"));
@@ -32,9 +33,25 @@ class SpringSecConfigIT {
 
     @Test
     void testBeerListNeedsToken() throws Exception {
+        // GET /api/v1/beer without a token -> 401 with WWW-Authenticate: Bearer
         mockMvc.perform(get(BeerController.BEER_PATH))
                 .andExpect(status().isUnauthorized())
                 .andExpect(header().string("WWW-Authenticate",
                         containsString("Bearer")));
+    }
+
+    @Test
+    void testSwaggerUiOpenWithoutToken() throws Exception {
+        // GET /swagger-ui/index.html without a token -> 200
+        mockMvc.perform(get("/swagger-ui/index.html"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void testSwaggerUiShortUrlRedirects() throws Exception {
+        // GET /swagger-ui.html without a token -> 302 to /swagger-ui/index.html
+        mockMvc.perform(get("/swagger-ui.html"))
+                .andExpect(status().isFound())
+                .andExpect(header().string("Location", "/swagger-ui/index.html"));
     }
 }
