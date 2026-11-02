@@ -44,8 +44,8 @@ Use **JDK 25** (`JAVA_HOME`) and the Maven wrapper, which pins **Maven 3.9.11**.
 | Full verification | `./mvnw clean verify` | Yes |
 | One integration test class, plus unit tests | `./mvnw verify -Dit.test=MySqlIT` | Yes |
 | Build without integration tests | `./mvnw verify -DskipITs` | No |
-| Run with H2 | `./mvnw spring-boot:run` | No |
-| Run with Compose MySQL | `./mvnw spring-boot:run -Dspring-boot.run.profiles=localmysql` | Yes |
+| Run with Compose MySQL | `./mvnw spring-boot:run` (profile `localmysql` set in `pom.xml`) | Yes |
+| Run with H2 | `./mvnw spring-boot:run -Dspring-boot.run.profiles=default` | No |
 
 No linter or formatter is configured. Calling the running API needs a JWT from an authorization server on `http://localhost:9000` (see section 4).
 
@@ -127,7 +127,7 @@ Two topics live in their own file and load only when Claude works on matching fi
 
 | File | Topic | Loaded for |
 |---|---|---|
-| `.claude/rules/database.md` | H2 / Compose MySQL / `MySqlIT` / `ci` profile, Compose lifecycle, migration rule | `compose.yaml`, `.env.example`, `src/main/resources/**`, `MySqlIT.java` |
+| `.claude/rules/database.md` | H2 / Compose MySQL / `MySqlIT`, Compose lifecycle, migration rule | `compose.yaml`, `.env.example`, `src/main/resources/**`, `MySqlIT.java` |
 | `.claude/rules/testing.md` | test classes and their setup, seeded data, flush/clear, `MySqlIT` | `src/test/**` |
 
 ### Assertions (always loaded)
