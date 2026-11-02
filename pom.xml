@@ -16,6 +16,8 @@
     <properties>
         <java.version>25</java.version>
         <org.mapstruct.version>1.6.3</org.mapstruct.version>
+        <opencsv.version>5.12.0</opencsv.version>
+        <springdoc.version>3.0.3</springdoc.version>
         <spring-boot.run.profiles>localmysql</spring-boot.run.profiles>
         <jwt-uri>http://example.com:9090</jwt-uri>
     </properties>
@@ -77,17 +79,12 @@
         <dependency>
             <groupId>com.opencsv</groupId>
             <artifactId>opencsv</artifactId>
-            <version>5.12.0</version>
+            <version>${opencsv.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-            <version>2.0.2</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-starter-common</artifactId>
-            <version>2.0.2</version>
+            <version>${springdoc.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
