@@ -24,6 +24,7 @@ A beer and customer REST API built alongside John Thompson's **Spring Framework 
 | File | Content |
 |---|---|
 | `docs/procedures-tickets-et-ci.md` | How issues and the CI are handled on this branch (in French). |
+| `docs/openapi-annotations-et-json.md` | Which OpenAPI annotation of `OpenApiConfig` produces which part of `/v3/api-docs`, and what Swagger UI does with it (in French). On branch **`notes`** (not here). |
 | `docs/regles-a-retenir.md` | The project's rules (R1, R2, ...), in French. **Not on this branch**: read it on `125-build-info-jt-sb411`. |
 | Lesson reviews | One snapshot per section, `docs/secNN[-chapNNN]-<topic>-improvements.md`, on branch **`notes`** (not here). Each names the lesson branch + commit it describes and is never updated afterwards (issue #20). |
 
