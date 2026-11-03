@@ -10,9 +10,9 @@ Créé le 17-10-2026.
 
 ## Table des matières
 
-26 règles, numérotées R1 à R26 dans l'ordre où elles ont été apprises - donc pas dans
+27 règles, numérotées R1 à R27 dans l'ordre où elles ont été apprises - donc pas dans
 l'ordre des sections : R19 est rangée avec les fichiers, R20-R21 avec les lambdas, R22-R23 avec Hibernate,
-R24 avec PUT et PATCH, R25-R26 avec la base de données.
+R24 avec PUT et PATCH, R25-R26 avec la base de données, R27 avec Spring Security.
 
 
 **1. MapStruct et DTO**
@@ -48,6 +48,7 @@ R24 avec PUT et PATCH, R25-R26 avec la base de données.
 - [R14 — `user(...)` ou `httpBasic(...)` dans un test MockMvc](#r14--user-ou-httpbasic-dans-un-test-mockmvc)
 - [R15 — Désactiver CSRF seulement pour l'API, et seulement pour des clients non-navigateurs](#r15--désactiver-csrf-seulement-pour-lapi-et-seulement-pour-des-clients-non-navigateurs)
 - [R16 — Ne jamais mettre de mot de passe en clair dans Git](#r16--ne-jamais-mettre-de-mot-de-passe-en-clair-dans-git)
+- [R27 — Trouver les adresses d'un serveur d'autorisation : partir de l'`issuer-uri`](#r27--trouver-les-adresses-dun-serveur-dautorisation--partir-de-lissuer-uri)
 
 **6. Entités**
 
@@ -507,6 +508,43 @@ déjà le CSRF pour toute requête qui porte un en-tête `Authorization: Bearer 
 Le lire depuis `.env` (ignoré par Git) ou une variable d'environnement :
 `spring.security.user.password=${SPRING_SECURITY_USER_PASSWORD}`. Une valeur publiée une fois
 reste dans l'historique : il faut alors la changer.
+
+### R27 — Trouver les adresses d'un serveur d'autorisation : partir de l'`issuer-uri`
+
+**Le contexte :** une API protégée par des jetons JWT (un *resource server*) ne fabrique pas ses
+jetons. Un autre programme les délivre : le **serveur d'autorisation** (ici, le nôtre tourne sur le
+port 9000). Pour obtenir un jeton à la main (Postman, Swagger UI, curl), il faut l'adresse où le
+demander, le *token endpoint*. Elle n'est écrite nulle part dans le projet.
+
+**La règle :** l'API connaît l'adresse de base de son serveur d'autorisation, l'**issuer**
+(« l'émetteur » des jetons), par la propriété
+`spring.security.oauth2.resourceserver.jwt.issuer-uri`. La norme OpenID Connect fixe une adresse
+unique qui décrit tout le serveur :
+
+    <issuer> + /.well-known/openid-configuration
+
+Ce document JSON liste toutes les autres adresses :
+
+| Champ | Ce que c'est |
+|---|---|
+| `token_endpoint` | l'adresse où demander un jeton |
+| `jwks_uri` | les clés publiques qui servent à vérifier la signature des jetons |
+| `token_endpoint_auth_methods_supported` | comment envoyer `client_id` et `client_secret` (`client_secret_basic` = en-tête, `client_secret_post` = dans le corps) |
+
+Spring Boot fait la même chose au démarrage : il lit ce document pour trouver `jwks_uri`.
+
+**Exemple dans le projet :** `src/main/resources/application.properties:10`
+(`issuer-uri=http://localhost:9000`) → `http://localhost:9000/.well-known/openid-configuration`
+→ `token_endpoint` = `http://localhost:9000/oauth2/token`.
+
+**Le piège :** un 401 de l'API renvoie l'en-tête
+`WWW-Authenticate: Bearer resource_metadata=".../.well-known/oauth-protected-resource"`
+(nouveau avec Spring Security 7). On pourrait croire que cette adresse mène au serveur d'autorisation :
+avec notre configuration, elle **ne le nomme pas** (pas de champ `authorization_servers`, vérifié
+le 03-11-2026).
+
+**Preuve :** la page `/.well-known/openid-configuration` ouverte dans le navigateur le 03-11-2026,
+et le jeton obtenu au port 9000 accepté par Swagger UI (#27, branche `127-springdoc-security-cfg-jt-sb412`).
 
 ---
 
