@@ -16,7 +16,8 @@ import org.springframework.context.annotation.Configuration;
  * {@code info} is mandatory in OpenAPI: once this annotation exists, springdoc no longer fills its default title.
  */
 @Configuration
-@SecurityScheme(name = "bearerAuth", type = SecuritySchemeType.HTTP, scheme = "bearer", bearerFormat = "JWT")
+@SecurityScheme(name = "bearerAuth", type = SecuritySchemeType.HTTP, scheme = "bearer", bearerFormat = "JWT",
+        description = "Get a token from the authorization server http://localhost:9000/oauth2/token (client credentials), then paste it here.")
 @OpenAPIDefinition(
         info = @Info(title = "Beer and Customer API", version = "v1"),
         security = @SecurityRequirement(name = "bearerAuth"))

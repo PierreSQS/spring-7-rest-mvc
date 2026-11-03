@@ -41,6 +41,8 @@ class SpringSecConfigIT {
                 .andExpect(jsonPath("$.components.securitySchemes.bearerAuth.type").value("http"))
                 .andExpect(jsonPath("$.components.securitySchemes.bearerAuth.scheme").value("bearer"))
                 .andExpect(jsonPath("$.components.securitySchemes.bearerAuth.bearerFormat").value("JWT"))
+                .andExpect(jsonPath("$.components.securitySchemes.bearerAuth.description",
+                        containsString("http://localhost:9000/oauth2/token")))
                 .andExpect(jsonPath("$.security[0].bearerAuth").exists());
     }
 
