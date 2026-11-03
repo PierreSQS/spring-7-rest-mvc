@@ -19,7 +19,7 @@ import java.util.UUID;
 
 /**
  * Created by jt, Spring Framework Guru.
- * Modified by Pierrot on 26-10-2026
+ * Modified by Pierrot on 03-11-2026
  */
 @Service
 @Primary
@@ -67,7 +67,7 @@ public class BeerServiceJPA implements BeerService {
             queryPageNumber = DEFAULT_PAGE;
         }
 
-        if (pageSize == null) {
+        if (pageSize == null || pageSize <= 0) {
             queryPageSize = DEFAULT_PAGE_SIZE;
         } else {
             if (pageSize > 1000) {

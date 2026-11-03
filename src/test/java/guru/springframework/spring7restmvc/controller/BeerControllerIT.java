@@ -9,6 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.core.IsNull;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -37,7 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Modified by Pierrot on 02-11-2026
+ * Modified by Pierrot on 03-11-2026
  */
 @Slf4j
 @SpringBootTest
@@ -135,6 +137,17 @@ class BeerControllerIT {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.size()", is(324)))
                 .andExpect(jsonPath("$.content[0].quantityOnHand").value(IsNull.notNullValue()));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"0", "-5"})
+    void testListBeersPageSizeBelowOne(String pageSize) throws Exception {
+        // a pageSize below 1 is treated like a missing pageSize: the default page of 25 beers (#21)
+        mockMvc.perform(get(BeerController.BEER_PATH)
+                        .with(BeerControllerTest.jwtRequestPostProcessor)
+                        .queryParam("pageSize", pageSize))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.size()", is(25)));
     }
 
     @Test
