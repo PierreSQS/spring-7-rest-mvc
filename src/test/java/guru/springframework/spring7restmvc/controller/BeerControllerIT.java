@@ -5,6 +5,7 @@ import guru.springframework.spring7restmvc.mappers.BeerMapper;
 import guru.springframework.spring7restmvc.model.BeerDTO;
 import guru.springframework.spring7restmvc.model.BeerStyle;
 import guru.springframework.spring7restmvc.repositories.BeerRepository;
+import jakarta.persistence.EntityManager;
 import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.core.IsNull;
 import org.junit.jupiter.api.Disabled;
@@ -59,6 +60,9 @@ class BeerControllerIT {
 
     @Autowired
     MockMvc mockMvc;
+
+    @Autowired
+    EntityManager entityManager;
 
     @Disabled("just for demo purposes")
     @Test
@@ -161,6 +165,30 @@ class BeerControllerIT {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.size()", is(324)))
                 .andExpect(jsonPath("$.content[0].quantityOnHand").value(IsNull.nullValue()));
+    }
+
+    @Transactional
+    @Test
+    void testListBeersShowInventoryFalseKeepsStockInDatabase() throws Exception {
+        // showInventory=false must hide the stock in the response only, never in the database (#22).
+        // The test transaction surrounds the request, so a changed entity would be written at flush.
+        MvcResult result = mockMvc.perform(get(BeerController.BEER_PATH)
+                        .with(BeerControllerTest.jwtRequestPostProcessor)
+                        .queryParam("showInventory", "false"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // the first beer of the page the client received
+        UUID firstBeerId = UUID.fromString(jsonMapper.readTree(result.getResponse().getContentAsString())
+                .get("content").get(0).get("id").asString());
+
+        // write pending changes, then re-read from the database instead of Hibernate's cache
+        entityManager.flush();
+        entityManager.clear();
+
+        Beer firstBeer = beerRepository.findById(firstBeerId).orElseThrow();
+
+        assertThat(firstBeer.getQuantityOnHand()).isNotNull();
     }
 
     @Test

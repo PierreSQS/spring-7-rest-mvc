@@ -49,11 +49,15 @@ public class BeerServiceJPA implements BeerService {
             beerPage = beerRepository.findAll(pageRequest);
         }
 
+        Page<BeerDTO> beerDtoPage = beerPage.map(beerMapper::beerToBeerDto);
+
+        // hide the stock on the DTOs the client gets, never on the entities: inside a transaction,
+        // Hibernate would take the emptied field for a change and write the null to the database (#22)
         if (showInventory != null && !showInventory) {
-            beerPage.forEach(beer -> beer.setQuantityOnHand(null));
+            beerDtoPage.forEach(beerDto -> beerDto.setQuantityOnHand(null));
         }
 
-        return beerPage.map(beerMapper::beerToBeerDto);
+        return beerDtoPage;
 
     }
 
