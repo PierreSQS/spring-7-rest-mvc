@@ -25,10 +25,12 @@ class SpringSecConfigIT {
 
     @Test
     void testApiDocsOpenWithoutToken() throws Exception {
-        // GET /v3/api-docs without a token -> 200 with the OpenAPI JSON
+        // GET /v3/api-docs without a token -> 200 with the OpenAPI JSON (info is mandatory in OpenAPI)
         mockMvc.perform(get("/v3/api-docs"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.openapi").value("3.1.0"));
+                .andExpect(jsonPath("$.openapi").value("3.1.0"))
+                .andExpect(jsonPath("$.info.title").value("Beer and Customer API"))
+                .andExpect(jsonPath("$.info.version").value("v1"));
     }
 
     @Test
