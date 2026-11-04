@@ -179,3 +179,36 @@ Il fallait une machine vierge pour le voir — c'est exactement à ça que sert 
 **À savoir** : le même `mvnw` cassé était sur la branche `125-build-info-jt-sb411` (fichier identique) ; corrigé là aussi
 (commit `645bc49a`, 31-10-2026), qui a maintenant la pipeline.
 Détail complet : commentaire sur le commit [448cc5a7](https://github.com/PierreSQS/spring-7-rest-mvc/commit/448cc5a74091bacc098805bd6b0c7f1b2c4bb6ee#commitcomment-206853544).
+
+### 6.2 Une pipeline bloquée en « Queued » (panne de GitHub, 04-11-2026)
+
+**Symptôme** : le run du commit de merge `ccb04cea` (127) affiche **Queued** pendant plusieurs minutes,
+avec le petit rond orange, au lieu de passer à *In progress*.
+
+**Comment trouver la cause, en 3 questions** :
+
+1. **Est-ce mon code ?** Non. *Queued* veut dire « en file d'attente » : GitHub n'a pas encore trouvé
+   de machine (un *runner*) pour lancer le build. Le build **n'a pas commencé**, donc mon code,
+   ma version de Spring Boot et mes tests ne peuvent pas être la cause.
+2. **Alors, d'où vient le blocage ?** Il n'y a que deux possibilités :
+   - **mon dépôt** : trop de builds en même temps, ou plus de minutes gratuites ;
+   - **GitHub lui-même** : pas assez de machines, ou une panne.
+
+   La veille, sur le même dépôt, les runs avaient démarré tout de suite. Mon dépôt n'a donc pas changé :
+   c'est sûrement GitHub.
+3. **Comment le vérifier ?** GitHub publie l'état de ses services sur **https://www.githubstatus.com**.
+   Le 04-11-2026, la page disait `Actions: partial_outage` (panne partielle). Le run est parti tout seul
+   quand GitHub est allé mieux, et il est passé au vert.
+
+**Les commandes** (Git Bash) :
+
+| Je veux… | Commande |
+|---|---|
+| savoir si le build a démarré | `gh run view <id> -R PierreSQS/spring-7-rest-mvc --json status,jobs --jq '.jobs[] \| "\(.name): \(.status)"'` → `build: queued` = pas encore démarré |
+| l'état de GitHub Actions | `curl -s https://www.githubstatus.com/api/v2/components.json \| jq -r '.components[] \| select(.name\|test("Actions")) \| "\(.name): \(.status)"'` → `Actions: operational` (tout va bien) ou `partial_outage`, `major_outage` (panne) |
+
+Sans commande : ouvrir https://www.githubstatus.com (vert = tout va bien, orange ou rouge = problème ;
+l'historique est en bas de la page, *Past Incidents*).
+
+**Ce qu'on fait** : rien, on attend. Le run démarre tout seul. S'il ne bouge toujours pas au bout d'une heure,
+bouton **« Re-run all jobs »** sur la page du run.
