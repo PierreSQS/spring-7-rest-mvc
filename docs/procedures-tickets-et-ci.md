@@ -46,7 +46,7 @@ Chaque ticket a toujours les mêmes parties, en anglais :
 |---|---|---|
 | **Branch** | sur quelle branche corriger (les branches de leçon ne sont jamais fusionnées) | `126-springdoc-maven-jt-sb412` |
 | **Problem** | ce qui ne va pas, avec le fichier et la ligne | `BootstrapData.java:49-61`, le `switch` sur les noms exacts |
-| **Rules** | la règle de `docs/regles-a-retenir.md` (branche `125-build-info-jt-sb411`) qui s'applique | R19 |
+| **Rules** | la règle de `docs/regles-a-retenir.md` (branche `notes`) qui s'applique | R19 |
 | **Done when** | à quoi on reconnaît que c'est fini | « `beers.csv` has no `â€` sequence left » |
 
 **Ce qu'un ticket `training` ne contient jamais : la solution.** Il dit *quoi* et *où*, pas *comment* :
