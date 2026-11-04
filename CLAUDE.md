@@ -104,7 +104,7 @@ Do not fix JT's code on the side: name the problem, propose an issue, let him de
 
 ## 4. Security
 
-The API is an **OAuth2 resource server** (`spring-boot-starter-oauth2-resource-server`). `SpringSecConfig` (`@EnableWebSecurity`) requires authentication on every request and validates JWTs:
+The API is an **OAuth2 resource server** (`spring-boot-starter-security-oauth2-resource-server`). `SpringSecConfig` (`@EnableWebSecurity`) requires authentication on every request and validates JWTs:
 
 ```java
 http.authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated())
@@ -117,7 +117,7 @@ http.authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated())
 | Issuer | `spring.security.oauth2.resourceserver.jwt.issuer-uri=http://localhost:9000`. The `JwtDecoder` is created lazily, so the application and the tests start even when the authorization server is down. |
 | CSRF | Ignored by the resource-server configurer for requests with a Bearer token; no `csrf(...)` configuration. |
 | No security user | No `spring.security.user.*` properties. |
-| Tests | Every `MockMvc` request carries `.with(BeerControllerTest.jwtRequestPostProcessor)`, a shared bare `jwt()` (`SecurityMockMvcRequestPostProcessors`). No claims or scopes are needed: the chain only checks `authenticated()`. `spring-security-test` is test-scoped. |
+| Tests | Every `MockMvc` request carries `.with(BeerControllerTest.jwtRequestPostProcessor)`, a shared bare `jwt()` (`SecurityMockMvcRequestPostProcessors`). No claims or scopes are needed: the chain only checks `authenticated()`. `spring-security-test` comes through `spring-boot-starter-security-test` (test scope). |
 
 ---
 
