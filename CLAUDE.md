@@ -10,12 +10,12 @@ A beer and customer REST API built alongside John Thompson's **Spring Framework 
 
 | Area | Reference |
 |---|---|
-| Runtime | Java 25, Spring Boot 4.0.6, Spring Framework 7.0, Spring Security 7.0 |
-| Persistence / JSON | Hibernate 7.2, Jackson 3 |
-| Libraries | Spring Data JPA, MapStruct 1.6.3, Lombok, Flyway, OAuth2 resource server, springdoc-openapi 2.0.2 (JT's version) |
+| Runtime | Java 25, Spring Boot 4.1.2, Spring Framework 7.0, Spring Security 7.1 |
+| Persistence / JSON | Hibernate 7.4, Jackson 3.1 |
+| Libraries | Spring Data JPA, MapStruct 1.6.3, Lombok, Flyway, OAuth2 resource server, springdoc-openapi 3.2.0 (JT: 2.0.2; issues #26, #13) |
 | Root package | `guru.springframework.spring7restmvc` |
 | Entry point | `Spring7RestMvcApplication` |
-| Branches | One per lesson, named after JT's branch plus a suffix: this one is `126-springdoc-maven-jt-sb412`, created from JT's `126-springdoc-maven`. Branches are **never merged**: each documents an improved variant of JT's lecture (`-sbNNN` = target Boot version; 126 still runs 4.0.6 until issue #13). |
+| Branches | One per lesson, named after JT's branch plus a suffix: this one is `126-springdoc-maven-jt-sb412`, created from JT's `126-springdoc-maven`. Branches are **never merged**: each documents an improved variant of JT's lecture (`-sbNNN` = Boot version; 126 runs 4.1.2 since issue #13). |
 | Commits | Prefix with section and chapter: `Sec40_Chap374: ...`; `-X` for own additions, `-NOK` when tests are knowingly left red. `#N` in a message refers to GitHub issue N. |
 | Open work | GitHub issues of `PierreSQS/spring-7-rest-mvc` (label `sec40`); every `gh` command takes `-R PierreSQS/spring-7-rest-mvc`. |
 
@@ -34,7 +34,7 @@ Older lesson branches carry older copies of this file; they describe their own c
 
 ## 2. Build, test and run
 
-Use **JDK 25** (`JAVA_HOME`) and the Maven wrapper, which pins **Maven 3.9.11**. Commands below use Git Bash; in PowerShell replace `./mvnw` with `.\mvnw.cmd`.
+Use **JDK 25** (`JAVA_HOME`) and the Maven wrapper, which pins **Maven 3.9.16**. Commands below use Git Bash; in PowerShell replace `./mvnw` with `.\mvnw.cmd`.
 
 | Task | Command | Docker |
 |---|---|---|
@@ -152,7 +152,7 @@ direct controller calls of issue #11 and disappear with it.
 
 ## 6. Gotchas
 
-Traps of this stack (Boot 4.0 / Spring 7 / Hibernate 7.2 / Jackson 3 / Java 25). Check here before assuming an API behaves as in earlier versions.
+Traps of this stack (Boot 4.1 / Spring 7 / Hibernate 7.4 / Jackson 3 / Java 25). Check here before assuming an API behaves as in earlier versions.
 
 | Topic | Rule |
 |---|---|
@@ -164,6 +164,6 @@ Traps of this stack (Boot 4.0 / Spring 7 / Hibernate 7.2 / Jackson 3 / Java 25).
 | `@WebMvcTest` placeholders | The slice has no `PropertyPlaceholderAutoConfiguration`: an unresolvable `@Value("${...}")` silently keeps the raw text, where `@SpringBootTest` fails. A green `@WebMvcTest` proves nothing about properties (rule R11). |
 | `StringUtils.hasText` | Not the same as `s != null && !s.isEmpty()`: `hasText` also refuses `"   "`. IDE assistants have silently swapped one for the other - check the diff. |
 | Test support modules | Boot 4 splits them (`spring-boot-starter-webmvc-test`, `-data-jpa-test`, `-validation-test`), so `@WebMvcTest` and `@DataJpaTest` live under `org.springframework.boot.<module>.test.autoconfigure` - let the IDE resolve them. |
-| Plugin versions | `maven-compiler-plugin` (3.10.1) and `maven-failsafe-plugin` (3.5.2) are pinned by hand although the Boot parent manages them; to be cleaned up with the upgrade (issue #13). Surefire and Failsafe start the JVM with Mockito as a Java agent (`argLine`, `-Xshare:off`): no "Mockito is currently self-attaching" warning (issue #13). |
+| Plugin versions | Managed by the Boot parent (no version in `pom.xml`). Surefire and Failsafe start the JVM with Mockito as a Java agent (`argLine`, `-Xshare:off`): no "Mockito is currently self-attaching" warning (issue #13). |
 | devtools and H2 | On stop, devtools finds the in-memory H2 already closed (issue #18); the `localmysql` driver line exists for the opposite trap (#16, `.claude/rules/database.md`). |
 | Container credentials | `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DATABASE` only apply to an **empty** volume (`.claude/rules/database.md`). |
