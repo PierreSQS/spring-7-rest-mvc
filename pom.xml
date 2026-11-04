@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.0.6</version>
+        <version>4.1.2</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>guru.springframework</groupId>
@@ -17,7 +17,7 @@
         <java.version>25</java.version>
         <org.mapstruct.version>1.6.3</org.mapstruct.version>
         <opencsv.version>5.12.0</opencsv.version>
-        <springdoc.version>3.0.3</springdoc.version>
+        <springdoc.version>3.2.0</springdoc.version>
         <spring-boot.run.profiles>localmysql</spring-boot.run.profiles>
         <jwt-uri>http://example.com:9090</jwt-uri>
     </properties>
@@ -51,7 +51,7 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+            <artifactId>spring-boot-starter-security-oauth2-resource-server</artifactId>
         </dependency>
         <dependency>
             <groupId>com.h2database</groupId>
@@ -123,8 +123,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.springframework.security</groupId>
-            <artifactId>spring-security-test</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security-test</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
@@ -152,7 +153,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.10.1</version>
                 <configuration>
                     <source>25</source>
                     <target>25</target>
@@ -178,10 +178,29 @@
                     </compilerArgs>
                 </configuration>
             </plugin>
+            <!--
+                Mockito needs a Java agent to create mocks. Without this, it attaches the agent itself
+                while the tests run, and the JDK warns that this "dynamic loading of agents" will be
+                disallowed in a future release. Declaring the agent at JVM start removes the warning.
+                -Xshare:off: the agent extends the JVM's boot class path, which disables part of the
+                JDK's class data sharing (a start-up cache) and prints one more warning; switching the
+                cache off for the test JVM silences it (start-up costs a fraction of a second more).
+                The path points into the local Maven repository so that IntelliJ can resolve it too;
+                mockito.version comes from the Spring Boot parent.
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>-Xshare:off -javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar</argLine>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
-                <version>3.5.2</version>
+                <configuration>
+                    <argLine>-Xshare:off -javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar</argLine>
+                </configuration>
                 <executions>
                     <execution>
                         <goals>
