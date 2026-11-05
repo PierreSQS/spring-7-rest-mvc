@@ -1,0 +1,170 @@
+$kind: 'http-request'
+name: 'Chap374-Patch-BeerName-Empty-JWT-CC'
+order: 1000
+method: 'PATCH'
+url: 'localhost:8081/api/v1/beer/{{beerID}}'
+body:
+  type: 'json'
+  content: '{"beerName":""}'
+auth:
+  type: 'oauth2'
+  credentials:
+    - key: 'clientId'
+      value: '{{oidcClientId}}'
+    - key: 'headerPrefix'
+      value: 'Bearer'
+    - key: 'accessTokenUrl'
+      value: 'http://localhost:9000/oauth2/token'
+    - key: 'authUrl'
+      value: 'http://localhost:8080/oauth2/authorize'
+    - key: 'tokenName'
+      value: 'Sec24-Chap248'
+    - key: 'addTokenTo'
+      value: 'header'
+    - key: 'clientSecret'
+      value: '{{clientSecret}}'
+    - key: 'scope'
+      value: 'message.read message.write'
+    - key: 'state'
+      value: ''
+    - key: 'client_authentication'
+      value: 'header'
+    - key: 'redirect_uri'
+      value: ''
+    - key: 'grant_type'
+      value: 'client_credentials'
+    - key: 'useBrowser'
+      value: true
+scripts:
+  - type: 'afterResponse'
+    code: |-
+      // ── After Response: validate 400 error for empty beerName ──
+
+      // 1. Status code check
+      pm.test("Status code is 400 (Bad Request)", function () {
+          pm.response.to.have.status(400);
+      });
+
+      // 2. Content-Type is application/json
+      pm.test("Response Content-Type is application/json", function () {
+          pm.expect(pm.response.headers.get("Content-Type")).to.include("application/json");
+      });
+
+      // 3. Body contains the expected beerName validation error
+      pm.test("Response body contains beerName validation error", function () {
+          let jsonData;
+          try {
+              jsonData = pm.response.json();
+          } catch (e) {
+              pm.expect.fail("Response body is not valid JSON: " + e.message);
+              return;
+          }
+
+          pm.expect(jsonData).to.be.an("array").that.is.not.empty;
+
+          const beerNameError = jsonData.find(function (err) {
+              return err.beerName !== undefined;
+          });
+
+          pm.expect(beerNameError, "No beerName error found in response").to.exist;
+          pm.expect(beerNameError.beerName).to.equal("darf nicht leer sein");
+      });
+    language: 'text/javascript'
+  - type: 'beforeRequest'
+    code: |-
+      // ── Before Request: reuse cached CC token (refresh only when expired) → set {{beerID}} ──
+
+      const TOKEN_URL     = 'http://localhost:9000/oauth2/token';
+      const CLIENT_ID     = pm.variables.get('oidcClientId');
+      const CLIENT_SECRET = pm.variables.get('clientSecret');
+      const BEERS_URL     = 'http://localhost:8081/api/v1/beer';
+
+      /**
+       * Returns true when the cached token is still valid (with a 30-second safety margin).
+       */
+      function isCachedTokenValid() {
+          const token     = pm.collectionVariables.get('cc_access_token');
+          const expiresAt = parseInt(pm.collectionVariables.get('cc_token_expires_at') || '0', 10);
+          return token && Date.now() < expiresAt - 30_000;
+      }
+
+      /**
+       * Fetches a fresh Client-Credentials token, caches it, then resolves with the token string.
+       */
+      function fetchToken(callback) {
+          const credentials = Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString('base64');
+
+          pm.sendRequest({
+              url:    TOKEN_URL,
+              method: 'POST',
+              header: {
+                  'Content-Type':  'application/x-www-form-urlencoded',
+                  'Authorization': `Basic ${credentials}`
+              },
+              body: {
+                  mode: 'urlencoded',
+                  urlencoded: [
+                      { key: 'grant_type', value: 'client_credentials' },
+                      { key: 'scope',      value: 'message.read message.write' }
+                  ]
+              }
+          }, function (err, res) {
+              if (err) {
+                  console.error('[Pre-request] Token request failed:', err);
+                  return;
+              }
+
+              const body = res.json();
+              if (!body || !body.access_token) {
+                  console.error('[Pre-request] No access_token in response:', JSON.stringify(body));
+                  return;
+              }
+
+              // Cache token + expiry (expires_in is in seconds)
+              const expiresAt = Date.now() + (body.expires_in || 300) * 1000;
+              pm.collectionVariables.set('cc_access_token',    body.access_token);
+              pm.collectionVariables.set('cc_token_expires_at', String(expiresAt));
+              console.log('[Pre-request] Fresh token obtained and cached.');
+
+              callback(body.access_token);
+          });
+      }
+
+      /**
+       * Uses the given token to GET the beer list and sets {{beerID}} to the first result.
+       */
+      function fetchFirstBeerId(accessToken) {
+          pm.sendRequest({
+              url:    BEERS_URL,
+              method: 'GET',
+              header: {
+                  'Authorization': `Bearer ${accessToken}`,
+                  'Content-Type':  'application/json'
+              }
+          }, function (err, res) {
+              if (err) {
+                  console.error('[Pre-request] Get Beers request failed:', err);
+                  return;
+              }
+
+              const body      = res.json();
+              const firstBeer = body && body.content && body.content[0];
+
+              if (!firstBeer || !firstBeer.id) {
+                  console.error('[Pre-request] No beer found in response:', JSON.stringify(body));
+                  return;
+              }
+
+              pm.collectionVariables.set('beerID', firstBeer.id);
+              console.log('[Pre-request] {{beerID}} set to:', firstBeer.id);
+          });
+      }
+
+      // ── Main flow ──
+      if (isCachedTokenValid()) {
+          console.log('[Pre-request] Reusing cached token.');
+          fetchFirstBeerId(pm.collectionVariables.get('cc_access_token'));
+      } else {
+          fetchToken(fetchFirstBeerId);
+      }
+    language: 'text/javascript'

@@ -35,6 +35,8 @@ build/
 ### Local secrets ###
 # passwords for compose.yaml - never commit them, the template is .env.example
 .env
+# Postman secret values - never commit them, the template is postman/environments/local-example.environment.yaml
+postman/environments/local.environment.yaml
 
 ### Local debug settings ###
 # my own Spring Boot overrides (read after src/main/resources), never committed

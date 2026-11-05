@@ -1,0 +1,7 @@
+$kind: 'collection'
+name: 'Sec43'
+order: 16000
+description: |-
+  Tests for Section43:
+
+  Chap408 must be run with the Gateway and the Auth-Server

@@ -1,0 +1,14 @@
+$kind: 'http-request'
+name: 'List Customer'
+order: 1000
+method: 'GET'
+url: 'localhost:8080/api/v1/customer'
+scripts:
+  - type: 'afterResponse'
+    code: |-
+      pm.test("Check that Customers Amount is 3", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData.length).to.eql(3);
+      });
+
+    language: 'text/javascript'

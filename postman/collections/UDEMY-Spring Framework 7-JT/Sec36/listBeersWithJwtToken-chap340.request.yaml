@@ -1,0 +1,38 @@
+$kind: 'http-request'
+name: 'listBeersWithJwtToken-chap340'
+order: 1000
+method: 'GET'
+url: 'localhost:8080/api/v1/beer'
+description: 'Sends a request to Gateway Server which forwards the request to spring-6-rest-mvc Server'
+auth:
+  type: 'oauth2'
+  credentials:
+    - key: 'clientId'
+      value: '{{messagingClientId}}'
+    - key: 'accessTokenUrl'
+      value: 'http://localhost:9000/oauth2/token'
+    - key: 'tokenName'
+      value: 'cliencredential JT'
+    - key: 'addTokenTo'
+      value: 'header'
+    - key: 'clientSecret'
+      value: '{{clientSecret}}'
+    - key: 'scope'
+      value: 'message.read message.write'
+    - key: 'client_authentication'
+      value: 'header'
+    - key: 'grant_type'
+      value: 'client_credentials'
+scripts:
+  - type: 'afterResponse'
+    code: |-
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Total Elements are 2413", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData.totalElements).to.eql(2413);
+      });
+
+    language: 'text/javascript'

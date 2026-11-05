@@ -1,0 +1,4 @@
+$kind: 'collection'
+name: 'Sec22-Chap236'
+order: 9000
+description: 'This Folder practices the **Postman OAUTH2**\-Settings in **Chap236 on Section22** of the JT-Course [Spring Framework 6 - Sec22_Chap236](https://www.udemy.com/course/spring-framework-6-beginner-to-guru/learn/lecture/35624652)'

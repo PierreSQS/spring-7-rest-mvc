@@ -1,0 +1,42 @@
+$kind: 'http-request'
+name: 'listBeers-MySQL-WithJwtToken-Chap406'
+order: 3000
+method: 'GET'
+url: 'localhost:8081/api/v1/beer?pageNumber=1&pageSize=50'
+queryParams:
+  - key: 'pageNumber'
+    value: '1'
+  - key: 'pageSize'
+    value: '50'
+auth:
+  type: 'oauth2'
+  credentials:
+    - key: 'clientId'
+      value: '{{messagingClientId}}'
+    - key: 'accessTokenUrl'
+      value: 'http://localhost:9000/oauth2/token'
+    - key: 'tokenName'
+      value: 'cliencredential Sec47'
+    - key: 'addTokenTo'
+      value: 'header'
+    - key: 'clientSecret'
+      value: '{{clientSecret}}'
+    - key: 'scope'
+      value: 'message.read message.write'
+    - key: 'client_authentication'
+      value: 'header'
+    - key: 'grant_type'
+      value: 'client_credentials'
+scripts:
+  - type: 'afterResponse'
+    code: |-
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("JSON-Content Size is 50", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData.content.length).to.eql(50);
+      });
+
+    language: 'text/javascript'

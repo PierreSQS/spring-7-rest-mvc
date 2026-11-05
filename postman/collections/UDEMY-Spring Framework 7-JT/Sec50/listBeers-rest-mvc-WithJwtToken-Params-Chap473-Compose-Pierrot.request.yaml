@@ -1,0 +1,108 @@
+$kind: 'http-request'
+name: 'listBeers-rest-mvc-WithJwtToken-Params-Chap473-Compose-Pierrot'
+order: 3000
+method: 'GET'
+url: 'localhost:8080/api/v1/beer?pageNumber=2&pageSize=20'
+queryParams:
+  - key: 'pageNumber'
+    value: '2'
+  - key: 'pageSize'
+    value: '20'
+auth:
+  type: 'oauth2'
+  credentials:
+    - key: 'clientId'
+      value: '{{messagingClientId}}'
+    - key: 'accessTokenUrl'
+      value: 'http://localhost:8080/oauth2/token'
+    - key: 'tokenName'
+      value: 'cliencredential JT Compose'
+    - key: 'addTokenTo'
+      value: 'header'
+    - key: 'refreshTokenUrl'
+      value: ''
+    - key: 'clientSecret'
+      value: '{{clientSecret}}'
+    - key: 'scope'
+      value: 'message.read message.write'
+    - key: 'client_authentication'
+      value: 'header'
+    - key: 'grant_type'
+      value: 'client_credentials'
+scripts:
+  - type: 'afterResponse'
+    code: |-
+      // Fixed syntax error, added comments to existing tests, and updated response time test
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200); // Check if the response status code is 200
+      });
+
+      pm.test("TotalElements is 2413", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData.page.totalElements).to.equal(2413); // Check if the total elements in the page are 2413
+      });
+
+      pm.test("TotalPages is 121", function () {
+          pm.expect(pm.response.json().page.totalPages).to.equal(121); 
+      });
+
+
+      pm.test("Page size is 20", function () {
+          pm.expect(pm.response.json().page.size).to.equal(20);
+      });
+
+      pm.test("Current page is 2", function () {
+          // Verify that the current page is 2 (pagination is 0 indexed)
+          pm.expect(pm.response.json().page.number).to.equal(1);
+      });
+
+      pm.test("Last Beer of page has beer name \"30 Min Coma\" and beer style is IPA", function () {
+          var content = pm.response.json().content;
+          var lastElement = content[content.length - 1];
+          pm.expect(lastElement.beerName).to.eql("30 Min Coma"); 
+          pm.expect(lastElement.beerStyle).to.eql("IPA"); 
+      });
+      var template = `
+      <style type="text/css">
+          .tftable {font-size:14px;color:#333333;width:100%;border-width: 1px;border-color: #87ceeb;border-collapse: collapse;}
+          .tftable th {font-size:18px;background-color:#87ceeb;border-width: 1px;padding: 8px;border-style: solid;border-color: #87ceeb;text-align:left;}
+          .tftable tr {background-color:#ffffff;}
+          .tftable td {font-size:14px;border-width: 1px;padding: 8px;border-style: solid;border-color: #87ceeb;}
+          .tftable tr:hover {background-color:#e0ffff;}
+      </style>
+
+      <table class="tftable" border="1">
+          <tr>
+              <th>ID</th>
+              <th>Version</th>
+              <th>Beer Name</th>
+              <th>Beer Style</th>
+              <th>UPC</th>
+              <th>Quantity On Hand</th>
+              <th>Price</th>
+              <th>Created Date</th>
+              <th>Update Date</th>
+          </tr>
+          
+          {{#each response.content}}
+              <tr>
+                  <td>{{id}}</td>
+                  <td>{{version}}</td>
+                  <td>{{beerName}}</td>
+                  <td>{{beerStyle}}</td>
+                  <td>{{upc}}</td>
+                  <td>{{quantityOnHand}}</td>
+                  <td>{{price}}</td>
+                  <td>{{createdDate}}</td>
+                  <td>{{updateDate}}</td>
+              </tr>
+          {{/each}}
+      </table>
+      `;
+
+      function constructVisualizerPayload() {
+          return {response: pm.response.json()}
+      }
+
+      pm.visualizer.set(template, constructVisualizerPayload());
+    language: 'text/javascript'

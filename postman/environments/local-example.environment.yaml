@@ -1,0 +1,30 @@
+name: 'local (example)'
+values:
+  - key: 'basicPassword1'
+    value: ''
+    enabled: true
+    type: 'secret'
+  - key: 'basicPassword2'
+    value: ''
+    enabled: true
+    type: 'secret'
+  - key: 'basicUsername1'
+    value: ''
+    enabled: true
+    type: 'secret'
+  - key: 'basicUsername2'
+    value: ''
+    enabled: true
+    type: 'secret'
+  - key: 'clientSecret'
+    value: ''
+    enabled: true
+    type: 'secret'
+  - key: 'messagingClientId'
+    value: ''
+    enabled: true
+    type: 'secret'
+  - key: 'oidcClientId'
+    value: ''
+    enabled: true
+    type: 'secret'

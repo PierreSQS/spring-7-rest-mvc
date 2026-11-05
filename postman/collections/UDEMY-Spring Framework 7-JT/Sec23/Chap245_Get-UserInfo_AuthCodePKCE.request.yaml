@@ -1,0 +1,33 @@
+$kind: 'http-request'
+name: 'Chap245_Get-UserInfo_AuthCodePKCE'
+order: 5000
+method: 'GET'
+url: 'http://localhost:9000/userinfo'
+description: |-
+  ``` markdown
+  **Prerequisites**- Course: John Thompson, *Spring Framework 7* (Udemy), Section 23, Lecture 245.- IntelliJ project: `spring-7-auth-server` (`C:\Pierrot\05_Git_Repositories\Udemy\JohnThomson\spring-7-auth-server`).- GitHub: `PierreSQS/spring-7-auth-server-jt`, branch `8-package-refactor-sb411` (Spring Boot 4.1.1).- Authorization server running on port **9000** (`./mvnw spring-boot:run` or IntelliJ).- Login: user {{basicUsername1}} + your password. Client: `oidc-client` / {{clientSecret}} (see `SecurityConfig.java`).- More details: `docs/oauth2-workflow.md` (sections 4 to 6).**Goal**: check that an access token issued on behalf of a user can call `/userinfo` (OpenID Connect).**Flow**: Authorization Code + PKCE (PKCE is required by default since Spring Security 7.1).**Steps**1. Authorization → **Get New Access Token**: log in as {{basicUsername1}} + consent (scope `profile`).2. **Use Token**, then **Send**.**Expected result**: `200` with `{"sub":"user"}`.**Note**: the server generates a new RSA key at every startup → redo step 1 after a restart.
+
+   ```
+auth:
+  type: 'oauth2'
+  credentials:
+    - key: 'clientId'
+      value: '{{oidcClientId}}'
+    - key: 'accessTokenUrl'
+      value: 'http://localhost:9000/oauth2/token'
+    - key: 'authUrl'
+      value: 'http://localhost:9000/oauth2/authorize'
+    - key: 'tokenName'
+      value: 'Sec23-Chap245-AuthCodePKCE'
+    - key: 'addTokenTo'
+      value: 'header'
+    - key: 'clientSecret'
+      value: '{{clientSecret}}'
+    - key: 'scope'
+      value: 'openid profile'
+    - key: 'redirect_uri'
+      value: 'http://127.0.0.1:8080/login/oauth2/code/oidc-client'
+    - key: 'grant_type'
+      value: 'authorization_code_with_pkce'
+    - key: 'useBrowser'
+      value: false

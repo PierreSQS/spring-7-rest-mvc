@@ -1,0 +1,52 @@
+$kind: 'http-request'
+name: 'Chap408-listBeers-rest-mvc-WithJwtToken'
+order: 2000
+method: 'GET'
+url: 'localhost:8080/api/v1/beer'
+auth:
+  type: 'oauth2'
+  credentials:
+    - key: 'clientId'
+      value: '{{messagingClientId}}'
+    - key: 'accessTokenUrl'
+      value: 'http://localhost:9000/oauth2/token'
+    - key: 'tokenName'
+      value: 'cliencredential Sec47'
+    - key: 'addTokenTo'
+      value: 'header'
+    - key: 'clientSecret'
+      value: '{{clientSecret}}'
+    - key: 'scope'
+      value: 'message.read message.write'
+    - key: 'client_authentication'
+      value: 'header'
+    - key: 'grant_type'
+      value: 'client_credentials'
+scripts:
+  - type: 'afterResponse'
+    code: |-
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Response has 'content' and 'page' elements", function () {
+          const jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.all.keys("content", "page");
+      });
+
+      pm.test("'content' is an array with length equal to page.size", function () {
+          const jsonData = pm.response.json();
+          pm.expect(jsonData.content).to.be.an("array");
+          pm.expect(jsonData.content.length).to.eql(jsonData.page.size);
+      });
+
+      pm.test("page.size is equal to 25", function () {
+          const jsonData = pm.response.json();
+          pm.expect(jsonData.page.size).to.eql(25);
+      });
+
+      pm.test("page.totalElements is equal to 2413", function () {
+          const jsonData = pm.response.json();
+          pm.expect(jsonData.page.totalElements).to.eql(2413);
+      });
+    language: 'text/javascript'

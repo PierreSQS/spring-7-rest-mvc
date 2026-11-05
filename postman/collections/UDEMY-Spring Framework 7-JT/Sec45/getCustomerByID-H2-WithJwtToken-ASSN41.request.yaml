@@ -1,0 +1,38 @@
+$kind: 'http-request'
+name: 'getCustomerByID-H2-WithJwtToken-ASSN41'
+order: 6000
+method: 'GET'
+url: 'localhost:8080/api/v1/customer/0dde41c2-0092-4b2b-9b34-4d3ead93b188'
+auth:
+  type: 'oauth2'
+  credentials:
+    - key: 'clientId'
+      value: '{{messagingClientId}}'
+    - key: 'accessTokenUrl'
+      value: 'http://localhost:9000/oauth2/token'
+    - key: 'tokenName'
+      value: 'cliencredential Sec47'
+    - key: 'addTokenTo'
+      value: 'header'
+    - key: 'clientSecret'
+      value: '{{clientSecret}}'
+    - key: 'scope'
+      value: 'message.read message.write'
+    - key: 'client_authentication'
+      value: 'header'
+    - key: 'grant_type'
+      value: 'client_credentials'
+scripts:
+  - type: 'afterResponse'
+    code: |-
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+
+      pm.test("customerID exists", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData.id).to.exist;
+      });
+
+    language: 'text/javascript'

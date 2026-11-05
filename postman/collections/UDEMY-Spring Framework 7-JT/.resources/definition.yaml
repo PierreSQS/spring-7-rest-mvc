@@ -1,0 +1,9 @@
+$kind: 'collection'
+name: 'UDEMY-Spring Framework 7-JT'
+variables:
+  - key: 'beerID'
+    value: ''
+  - key: 'cc_access_token'
+    value: ''
+  - key: 'cc_token_expires_at'
+    value: ''
