@@ -4,35 +4,47 @@ order: 1000
 method: 'GET'
 url: 'localhost:8081/api/v1/beer'
 auth:
-  type: 'oauth2'
+  type: 'bearer'
   credentials:
-    - key: 'clientId'
-      value: '{{oidcClientId}}'
-    - key: 'headerPrefix'
-      value: 'Bearer'
-    - key: 'accessTokenUrl'
-      value: 'http://localhost:9000/oauth2/token'
-    - key: 'authUrl'
-      value: 'http://localhost:8080/oauth2/authorize'
-    - key: 'tokenName'
-      value: 'Sec24-Chap248'
-    - key: 'addTokenTo'
-      value: 'header'
-    - key: 'clientSecret'
-      value: '{{clientSecret}}'
-    - key: 'scope'
-      value: 'message.read message.write'
-    - key: 'state'
-      value: ''
-    - key: 'client_authentication'
-      value: 'header'
-    - key: 'redirect_uri'
-      value: ''
-    - key: 'grant_type'
-      value: 'client_credentials'
-    - key: 'useBrowser'
-      value: true
+    - key: 'token'
+      value: '{{cc_access_token}}'
 scripts:
+  - type: 'beforeRequest'
+    code: |-
+      // Postman CLI does not fetch OAuth 2.0 tokens itself (05-11-2026, #39): get one with client credentials,
+      // keep it in {{cc_access_token}} until it expires, the bearer auth of this request sends it.
+      const TOKEN_URL     = 'http://localhost:9000/oauth2/token';
+      const CLIENT_ID     = pm.variables.get('oidcClientId');
+      const CLIENT_SECRET = pm.variables.get('clientSecret');
+
+      const token     = pm.collectionVariables.get('cc_access_token');
+      const expiresAt = parseInt(pm.collectionVariables.get('cc_token_expires_at') || '0', 10);
+
+      if (!(token && Date.now() < expiresAt - 30_000)) {
+          const credentials = Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString('base64');
+          pm.sendRequest({
+              url: TOKEN_URL,
+              method: 'POST',
+              header: {
+                  'Content-Type':  'application/x-www-form-urlencoded',
+                  'Authorization': `Basic ${credentials}`
+              },
+              body: {
+                  mode: 'urlencoded',
+                  urlencoded: [
+                      { key: 'grant_type', value: 'client_credentials' },
+                      { key: 'scope',      value: 'message.read message.write' }
+                  ]
+              }
+          }, (err, res) => {
+              if (err) { console.error('[Pre-request] token request failed:', err); return; }
+              const body = res.json();
+              if (!body || !body.access_token) { console.error('[Pre-request] no access_token, status', res.code); return; }
+              pm.collectionVariables.set('cc_access_token', body.access_token);
+              pm.collectionVariables.set('cc_token_expires_at', String(Date.now() + body.expires_in * 1000));
+          });
+      }
+    language: 'text/javascript'
   - type: 'afterResponse'
     code: |-
       // ── Helpers ───────────────────────────────────────────────────────────────────
