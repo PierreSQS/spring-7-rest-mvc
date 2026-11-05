@@ -52,7 +52,7 @@ No linter or formatter is configured. Calling the running API needs a JWT from a
 
 **Before a commit, Pierrot runs the full suite in IntelliJ**; Claude may run single tests or classes.
 
-**CI:** `.github/workflows/build.yml` runs `./mvnw -B verify` on every push, except pushes that change only `docs/**` or `*.md`. A green run on the pushed commit is the proof an issue is fixed. The manual trigger (`workflow_dispatch`) is commented out: GitHub only accepts it when the workflow is on the default branch, and `master` has none. To rerun, use "Re-run all jobs" on a run.
+**CI:** `.github/workflows/build.yml` runs `./mvnw -B verify` on every push, except pushes that change only `docs/**`, `*.md` or `postman/**` (the Postman collection is not part of the Maven build, #39). A green run on the pushed commit is the proof an issue is fixed. The manual trigger (`workflow_dispatch`) is commented out: GitHub only accepts it when the workflow is on the default branch, and `master` has none. To rerun, use "Re-run all jobs" on a run.
 
 **Build info:** `spring-boot-maven-plugin` runs its `build-info` goal (`META-INF/build-info.properties`); nothing reads it yet.
 

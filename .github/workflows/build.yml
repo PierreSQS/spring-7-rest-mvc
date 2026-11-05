@@ -1,4 +1,4 @@
-# Build and test on every push (except pushes that change only documentation).
+# Build and test on every push (except pushes that change only documentation or the Postman collection).
 # A green check on a commit = the whole test suite passed on GitHub.
 # Used to decide that an issue is fixed (pushed + green + "Done when" met).
 
@@ -9,6 +9,7 @@ on:
     paths-ignore:      # ...except a push that changes ONLY these files
       - 'docs/**'      # the docs folder
       - '**/*.md'      # any Markdown file (README, ...)
+      - 'postman/**'   # Postman collection and environments: not part of the Maven build
   # workflow_dispatch: # manual trigger ("Run workflow" button, `gh workflow run`), kept commented out:
   #                    # GitHub only accepts it when this file is on the default branch, and master has
   #                    # none (kept identical to JT). To rerun by hand: open a run in the Actions tab,
