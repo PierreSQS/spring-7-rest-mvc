@@ -89,7 +89,7 @@ et montre chaque commande avant de la lancer.
 
 **Couper l'accès :** `postman logout` supprime la clé gardée par le CLI.
 
-**Encore à vérifier :** dans quel fichier de mon profil le CLI range la clé (à montrer après le login).
+**Où le CLI range la clé :** vérifié après le login, voir la section 3 (`C:\Users\messina\.postman\postmanrc`).
 
 ---
 
@@ -180,8 +180,8 @@ ni dans un commit. **Couper l'accès :** `postman logout`.
 
 | Endroit | Combien | Quoi |
 |---|---|---|
-| auth **OAuth 2.0** des requêtes | 37 requêtes | `clientId` (2 valeurs), `clientSecret` (**1 seule valeur**, la même partout), en clair |
-| auth **Basic** | 5 requêtes (Sec19, Sec21, Sec22) | `username`, `password` (3 mots de passe), en clair |
+| auth **OAuth 2.0** des requêtes | 37 requêtes | `clientId` (2 valeurs : `oidc-client` et `messaging-client`), `clientSecret` (**1 seule valeur**, la même partout, voir section 5), en clair |
+| auth **Basic** | 5 requêtes (Sec19, Sec21, Sec22) | `username` (2 valeurs), `password` (3 valeurs, dont une identique à un `username`), en clair |
 | **scripts** *beforeRequest* | 2 requêtes (Sec40, `Chap374-Patch-...`) | `const CLIENT_ID = '...'`, `const CLIENT_SECRET = '...'` écrits **dans le code** |
 
 **Le piège :** un secret écrit dans un **script** ne déclenche pas le triangle jaune de Postman. Il n'a été trouvé
@@ -233,8 +233,17 @@ pas de `postman workspace pull`, qui ramènerait **toutes** mes collections.
 |---|---|---|
 | `{{oidcClientId}}` | le client ID des requêtes « oidc-client » | `SecurityConfig.java` de `spring-7-auth-server`, `.clientId(...)` |
 | `{{clientSecret}}` | l'unique client secret (37 requêtes + 2 scripts de Sec40) | même fichier, `.clientSecret(...)`, **sans** le préfixe `{noop}` |
-| `{{messagingClientId}}` | le client des requêtes « messaging-client » | **vide** : ce client n'existe plus dans mon serveur (seulement dans d'anciennes branches de JT) |
-| `{{basicUsername1/2}}`, `{{basicPassword1..3}}` | les logins HTTP Basic (Sec19-22) | **vides** : l'API n'accepte plus HTTP Basic (`SpringSecConfig.java` : seulement `oauth2ResourceServer`) |
+| `{{messagingClientId}}` | le client des requêtes « messaging-client » (Sec22, Sec23, Sec36, Sec43-Sec50) | `messaging-client` (`SecurityConfig.java:99` de l'**ancien** serveur `spring-6-auth-server-jt`), ou vide : ces requêtes ne marchent pas avec `spring-7-auth-server`, qui ne connaît que `oidc-client` |
+| `{{basicUsername1/2}}`, `{{basicPassword1/2}}` | les logins HTTP Basic (Sec19-22) | **vides** : l'API n'accepte plus HTTP Basic (`SpringSecConfig.java` : seulement `oauth2ResourceServer`) |
+
+**Pourquoi un seul `{{clientSecret}}` pour deux clients :** en passant à `spring-7-auth-server` (Spring Boot 4), j'ai gardé
+le secret de JT pour ne pas avoir à changer mes requêtes. Il est identique dans `spring-6-auth-server-jt`
+(`messaging-client`) et dans `spring-7-auth-server` (`oidc-client`) : vérifié le 05-11-2026 sur les 25 branches de
+`spring-6-auth-server-jt` qui ont ce fichier (valeurs comparées, jamais affichées). Le séparer en deux variables : une option du ticket de restructuration.
+
+**Pourquoi 3 mots de passe et seulement `{{basicPassword1/2}}` :** dans deux requêtes de Sec22 (`Chap227-...HttpBasic`),
+le mot de passe était identique au nom d'utilisateur ; le script de conversion l'a remplacé par `{{basicUsername2}}`
+(vérifié le 06-11-2026 dans le JSON d'origine, valeurs non affichées).
 
 Dans les scripts de Sec40 : `const CLIENT_SECRET = '...'` est devenu `const CLIENT_SECRET = pm.variables.get('clientSecret')`.
 
