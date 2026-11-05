@@ -141,3 +141,172 @@ Claude a relancé `postman whoami` dans son propre shell : même résultat. La c
 
 **Ce que ça prouve :** le CLI peut maintenant interroger mon compte. La clé n'est ni dans le dépôt, ni dans un log,
 ni dans un commit. **Couper l'accès :** `postman logout`.
+
+---
+
+## 4. Trouver et récupérer la collection (05-11-2026)
+
+**Le but :** trouver l'id de mon workspace, puis celui de ma collection, puis récupérer la collection entière pour l'analyser.
+
+**Les commandes**, dans l'ordre (chacune utilise l'id trouvé par la précédente) :
+
+| # | Qui | Commande Postman CLI | Ce qu'elle a affiché |
+|---|---|---|---|
+| 1 | moi | `postman workspace list --filter "My Workspace"` | une ligne : `<workspaceId>`, type `personal`, nom `My Workspace` |
+| 2 | Claude | `postman collection list --workspace <workspaceId> --filter "Spring Framework 7"` | une ligne : `<collectionId>`, type `HTTP`, nom `UDEMY-Spring Framework 7-JT` |
+| 3 | Claude | `postman collection get <collectionId> --json > <scratchpad>/collection-jt.json` | rien à l'écran : la sortie va dans un fichier (121 Ko de JSON) |
+
+- Un **id** n'est pas un secret : il dit *où* se trouve un élément, pas *qui a le droit* d'y entrer (il faut ma clé pour ça).
+  Les ids réels ne sont pas recopiés ici.
+- L'id de la collection commence par le numéro de mon compte Postman (`<n°>-<id de la collection>`).
+- Le fichier va dans le **scratchpad** de la session Claude Code (un dossier temporaire de mon profil,
+  `C:\Users\messina\AppData\Local\Temp\claude\...\scratchpad`), **hors du dépôt Git** : il contient les secrets en clair.
+- Pourquoi un fichier plutôt que l'écran : la collection fait des centaines de lignes ; l'afficher coûterait cher en tokens.
+  Claude n'en lit que les parties utiles, avec `jq`.
+- Le CLI propose une mise à jour (1.86.0) : pas pendant l'exploration, le document est écrit avec la 1.75.0.
+
+### Ce que contient la collection
+
+22 dossiers (`Sec6` à `Sec56`), 65 requêtes, qui appellent **plusieurs applications du cours** :
+
+| Adresse appelée | Application | Dans ce dépôt ? |
+|---|---|---|
+| `/api/v1/beer`, `/api/v1/customer` (ports 8080, 8081) | **rest-mvc** (ce projet) | oui |
+| `/api/v2/beer` | reactive (WebFlux) | non, autre dépôt |
+| `/api/v3/beer` | reactive-mongo, gateway | non, autre dépôt |
+| `/actuator/...`, `localhost:30080` | Actuator, Kubernetes (Sec43, Sec56) | à voir requête par requête |
+
+### Où sont les secrets (valeurs non affichées)
+
+| Endroit | Combien | Quoi |
+|---|---|---|
+| auth **OAuth 2.0** des requêtes | 37 requêtes | `clientId` (2 valeurs), `clientSecret` (**1 seule valeur**, la même partout), en clair |
+| auth **Basic** | 5 requêtes (Sec19, Sec21, Sec22) | `username`, `password` (3 mots de passe), en clair |
+| **scripts** *beforeRequest* | 2 requêtes (Sec40, `Chap374-Patch-...`) | `const CLIENT_ID = '...'`, `const CLIENT_SECRET = '...'` écrits **dans le code** |
+
+**Le piège :** un secret écrit dans un **script** ne déclenche pas le triangle jaune de Postman. Il n'a été trouvé
+qu'en cherchant les mots `secret`, `password`, `client_id`... dans le code des scripts.
+
+### La décision : seulement `/api/v1` (option A)
+
+Ne ramener dans le dépôt **que les requêtes vers cette API** (`/api/v1/...`), triées **requête par requête** :
+certains dossiers (Sec44, Sec46, Sec50) mélangent `/api/v1` et `/api/v2` ou `/api/v3`.
+Une requête vers `/api/v2` ou `/api/v3` ne peut pas être testée avec le code de ce dépôt.
+
+Restructurer et améliorer la collection (j'ai organisé mes requêtes comme j'ai pu) : un ticket à part, après #39.
+
+---
+
+## 5. Ranger la collection dans le dépôt, sans secrets (05-11-2026)
+
+**Le but :** transformer le gros fichier JSON récupéré en fichiers lisibles dans Git, sans aucun secret.
+
+**Le format dans le dépôt** (format « v3 » de Postman) : un dossier par collection, **un petit fichier YAML par requête**.
+Une modification d'une requête ne touche qu'un fichier, comme une classe Java.
+
+```
+postman/
+├── collections/UDEMY-Spring Framework 7-JT/
+│   ├── .resources/definition.yaml                  <- réglages communs (variables de la collection)
+│   ├── Sec38/.resources/definition.yaml            <- un par dossier
+│   ├── Sec38/Chap357-Get Beers-JWT-CC.request.yaml <- une requête
+│   └── ...
+└── environments/
+    ├── local-example.environment.yaml              <- modèle, valeurs vides : dans Git
+    └── local.environment.yaml                      <- mes vraies valeurs : IGNORÉ par Git
+```
+
+**Les décisions :**
+
+| Question | Décision |
+|---|---|
+| copie fidèle ou restructurée ? | **fidèle** : mes dossiers et mes noms tels quels. Restructurer = un ticket à part, pour voir chaque amélioration séparément |
+| quelles requêtes ? | **50 sur 65** : celles de cette API (`/api/v1`), plus les 2 requêtes OAuth2 de Sec23 (`/userinfo`, `Get-Token`). Pas Actuator (absent du `pom.xml`), pas `/api/v2`, `/api/v3`, Kubernetes |
+| où mettre les vraies valeurs ? | **un fichier local ignoré par Git** (option B), comme `.env` / `.env.example` pour Docker. Écartés : le coffre-fort partagé de Postman (lié à une *team*, mon essai Enterprise se termine), les valeurs en paramètre de commande (restent dans l'historique du shell) |
+
+**Comment** (fait par Claude) : un script Python dans le scratchpad lit le JSON et écrit les fichiers YAML ;
+pas de `postman workspace pull`, qui ramènerait **toutes** mes collections.
+
+**Les secrets deviennent des variables :**
+
+| Variable | Remplace | Valeur à mettre dans `local.environment.yaml` |
+|---|---|---|
+| `{{oidcClientId}}` | le client ID des requêtes « oidc-client » | `SecurityConfig.java` de `spring-7-auth-server`, `.clientId(...)` |
+| `{{clientSecret}}` | l'unique client secret (37 requêtes + 2 scripts de Sec40) | même fichier, `.clientSecret(...)`, **sans** le préfixe `{noop}` |
+| `{{messagingClientId}}` | le client des requêtes « messaging-client » | **vide** : ce client n'existe plus dans mon serveur (seulement dans d'anciennes branches de JT) |
+| `{{basicUsername1/2}}`, `{{basicPassword1..3}}` | les logins HTTP Basic (Sec19-22) | **vides** : l'API n'accepte plus HTTP Basic (`SpringSecConfig.java` : seulement `oauth2ResourceServer`) |
+
+Dans les scripts de Sec40 : `const CLIENT_SECRET = '...'` est devenu `const CLIENT_SECRET = pm.variables.get('clientSecret')`.
+
+**Les deux seules entorses à la copie fidèle :** dans les descriptions de `Sec23/Chap245_Get-Token_ClientCredentials`
+et `Sec23/Chap245_Get-UserInfo_AuthCodePKCE`, j'avais écrit le secret et le login en clair : remplacés par `{{clientSecret}}`
+et `{{basicUsername1}}`. Les client IDs restent dans les noms de requêtes : un client ID est un **identifiant**, pas un secret.
+
+**Les vérifications avant le commit :**
+
+| Vérification | Commande | Résultat |
+|---|---|---|
+| format de la collection | `postman collection lint "postman/collections/UDEMY-Spring Framework 7-JT"` | 50 requêtes, 0 erreur |
+| format des environnements | `postman environment lint postman/environments --fail-severity warning` | 0 erreur (le nom doit finir par `.environment.yaml`) |
+| le fichier des valeurs est ignoré | `git check-ignore -v postman/environments/local.environment.yaml` | ignoré par la ligne 39 du `.gitignore` |
+| aucune valeur secrète dans les fichiers commités | script de recherche (valeurs jamais affichées) | 0 |
+
+**Les pièges rencontrés :**
+- mes valeurs secrètes sont des **mots courants** : la recherche a sonné 16 fois, dont 15 fausses alertes
+  (le mot dans `type: 'secret'`, dans le nom du champ `password`, dans une phrase) et **1 vraie fuite** (le secret dans une description) ;
+- un secret dans un **script** ou une **description** ne déclenche pas le triangle jaune de Postman ;
+- les deux noms de fichiers d'environnement se ressemblent : j'ai d'abord rempli **le modèle** au lieu du fichier local.
+  Le contrôle « remplie / vide » de chaque fichier l'a montré avant tout commit.
+
+**Le commit :** `fdd183b3` sur la branche `127-springdoc-security-cfg-jt-sb412-postman` (72 fichiers : 70 de la collection,
+le modèle d'environnement, `.gitignore`).
+
+**La CI et le dossier `postman/` :** le commit `fdd183b3` a lancé la CI pour rien (elle construit le code Java, que les
+fichiers Postman ne changent pas). Corrigé dans `c2c7e487` : `postman/**` ajouté aux `paths-ignore` de
+`.github/workflows/build.yml` (et `CLAUDE.md`, `docs/procedures-tickets-et-ci.md` mis à jour dans le même commit).
+Un push qui change **aussi** du Java lance toujours la CI. Si un jour la CI doit **lancer** les requêtes Postman, revoir cette ligne.
+
+---
+
+## 6. Lancer une requête depuis le Postman CLI (05-11-2026)
+
+**Le but :** prouver que la collection du dépôt, sans secrets, marche contre ma vraie API et mon vrai serveur d'autorisation.
+
+**Avant :** démarrer le serveur d'autorisation (`spring-7-auth-server`, port 9000), Docker Desktop, puis l'API
+(`./mvnw spring-boot:run`, profil `localmysql`, port 8081, MySQL sur 3308 démarré par Compose).
+Contrôle rapide : l'API répond `401` **sans** jeton (la sécurité marche).
+
+**La commande Postman CLI :**
+
+```
+postman collection run "postman/collections/UDEMY-Spring Framework 7-JT" \
+  -e postman/environments/local.environment.yaml \
+  -i "Sec38/Chap357-Get Beers-JWT-CC"
+```
+
+| Paramètre | Rôle |
+|---|---|
+| le chemin | la collection **locale** (celle du dépôt), pas celle de mon compte |
+| `-e` | le fichier où le CLI lit `{{oidcClientId}}` et `{{clientSecret}}` |
+| `-i "dossier/requête"` | ne lancer qu'**une** requête |
+
+**1er essai : `401 Unauthorized`.** Mon propre test l'a expliqué dès le n°1 : *Authorization header must be present*.
+**Le Postman CLI ne va pas chercher tout seul un jeton OAuth 2.0** : dans l'application, c'est le bouton
+*Get New Access Token* qui le fait ; le CLI ne l'a pas.
+
+**La correction (Chap357 seulement, 3e entorse à la copie fidèle, commit `e6346099`) :** l'auth de la requête passe de
+`oauth2` à `bearer {{cc_access_token}}`, et un script `beforeRequest` demande le jeton au serveur d'autorisation
+(*client credentials*), le garde dans `{{cc_access_token}}` jusqu'à son expiration. Code repris de mes scripts de Sec40.
+Faire la même chose **une fois pour toute la collection** (script dans `definition.yaml`, auth héritée par les 34 requêtes
+OAuth2) : dans le ticket de restructuration.
+
+**2e essai : `200 OK`, 6 tests sur 6 passent** (jeton présent et bien formé, statut 200, schéma des bières, quantités et prix).
+
+**Ce que ça prouve :** la collection du dépôt, sans aucun secret, marche contre ma vraie API et mon vrai serveur
+d'autorisation, depuis la ligne de commande. **Ce que ça ne prouve pas :** les 49 autres requêtes (non lancées).
+
+**Encore à expliquer (non vérifié) :** le CLI affiche `POST http://localhost:9000/oauth2/token [errored] Could not read response data`
+alors que le jeton a bien été obtenu (sans lui, `401`). Probablement un défaut d'affichage du CLI pour les requêtes lancées
+depuis un script.
+
+**Commits sur la branche `-postman` :** `fdd183b3` (la collection), `c2c7e487` (la CI ignore `postman/**`), `e6346099` (Chap357).
