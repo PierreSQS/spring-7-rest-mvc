@@ -293,6 +293,10 @@ postman collection run "postman/collections/UDEMY-Spring Framework 7-JT" \
   -i "Sec38/Chap357-Get Beers-JWT-CC"
 ```
 
+**Attention :** cette commande lit les fichiers du dépôt Git, dans le dossier
+`postman/collections/UDEMY-Spring Framework 7-JT/`.
+Elle ne lit aucune collection de mon compte Postman.
+
 | Paramètre | Rôle |
 |---|---|
 | le chemin | la collection **locale** (celle du dépôt), pas celle de mon compte |
@@ -314,8 +318,8 @@ OAuth2) : dans le ticket de restructuration.
 **Ce que ça prouve :** la collection du dépôt, sans aucun secret, marche contre ma vraie API et mon vrai serveur
 d'autorisation, depuis la ligne de commande. **Ce que ça ne prouve pas :** les 49 autres requêtes (non lancées).
 
-**Encore à expliquer (non vérifié) :** le CLI affiche `POST http://localhost:9000/oauth2/token [errored] Could not read response data`
-alors que le jeton a bien été obtenu (sans lui, `401`). Probablement un défaut d'affichage du CLI pour les requêtes lancées
-depuis un script.
+**Le `[errored]` rouge n'est pas une erreur de l'auth server :** le CLI affiche `POST http://localhost:9000/oauth2/token [errored] Could not read response data`,
+mais le log de `spring-7-auth-server` montre `Generated access token` pour cette requête (vérifié le 06-11-2026 à 10:05:04.598).
+C'est un défaut d'affichage du Postman CLI.
 
 **Commits sur la branche `-postman` :** `fdd183b3` (la collection), `c2c7e487` (la CI ignore `postman/**`), `e6346099` (Chap357).
