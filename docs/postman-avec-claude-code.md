@@ -27,7 +27,7 @@ Le **Postman CLI** (`postman`) est un produit **séparé** de l'application Post
 
 | Vérification | Commande | Résultat chez moi (05-11-2026) |
 |---|---|---|
-| le shell connaît-il `postman` ? | `postman --version` (dans mon Git Bash) | `1.75.0` |
+| le shell connaît-il `postman` ? | `postman --version` (dans mon Git Bash) | `1.75.0` ; **`1.86.0`** depuis le 06-11-2026 (`postman update`) |
 | où est-il ? | `command -v postman` | `C:\Users\messina\AppData\Local\Microsoft\WindowsApps\postman` (un seul fichier, 193 Mo) |
 | pourquoi il est trouvé | - | ce dossier est dans le **PATH de mon utilisateur** Windows : Git Bash, PowerShell et DOS le connaissent tous |
 | depuis quand ? | `stat` sur le fichier | arrivé sur mon disque le **18-10-2026** (date de création) ; installation ou mise à jour, le fichier ne le dit pas. Sa date de modification (16-10-2026) est celle de la version fabriquée par Postman |
@@ -164,6 +164,7 @@ ni dans un commit. **Couper l'accès :** `postman logout`.
 - Pourquoi un fichier plutôt que l'écran : la collection fait des centaines de lignes ; l'afficher coûterait cher en tokens.
   Claude n'en lit que les parties utiles, avec `jq`.
 - Le CLI propose une mise à jour (1.86.0) : pas pendant l'exploration, le document est écrit avec la 1.75.0.
+  Mise à jour faite le 06-11-2026 avec `postman update` (1.75.0 -> 1.86.0) ; la connexion à mon compte Postman est restée.
 
 ### Ce que contient la collection
 
@@ -320,7 +321,12 @@ d'autorisation, depuis la ligne de commande. **Ce que ça ne prouve pas :** les 
 
 **Le `[errored]` rouge n'est pas une erreur de l'auth server :** le CLI affiche `POST http://localhost:9000/oauth2/token [errored] Could not read response data`,
 mais le log de `spring-7-auth-server` montre `Generated access token` pour cette requête (vérifié le 06-11-2026 à 10:05:04.598).
-C'est un défaut d'affichage du Postman CLI.
+C'est un défaut d'affichage du Postman CLI. Le même message reste avec la version 1.86.0 (vérifié le 06-11-2026).
+
+**Expérience (06-11-2026, copie hors du dépôt Git) :** un simple `GET http://localhost:9000/.well-known/openid-configuration`
+ajouté au script pre-request est **lui aussi** affiché `[errored] Could not read response data`, alors que le script le reçoit
+sans erreur (`status 200`, `issuer http://localhost:9000`, affichés par `console.log`). **Conclusion :** le Postman CLI affiche
+`[errored]` pour **toute** requête lancée depuis un script (`pm.sendRequest`), même réussie.
 
 **Commits sur la branche `-postman` :** `fdd183b3` (la collection), `c2c7e487` (la CI ignore `postman/**`), `e6346099` (Chap357).
 
