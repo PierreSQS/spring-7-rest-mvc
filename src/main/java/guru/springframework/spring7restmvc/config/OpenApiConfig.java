@@ -11,6 +11,9 @@ import org.springframework.boot.info.BuildProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+
 /**
  * Created by Pierrot on 02-11-2026
  * Modified by Pierrot on 06-11-2026
@@ -23,6 +26,7 @@ import org.springframework.context.annotation.Configuration;
  * OpenAPI keeps it distinct from the implementation version. The build version goes into the extension
  * {@code info.x-build-version} ({@link BuildProperties}, #28), when Maven wrote {@code META-INF/build-info.properties};
  * without that file the application still starts, without the extension.
+ * Swagger UI ignores x- extensions, so the build version and time also go into {@code info.description} (#42).
  */
 @Configuration
 @SecurityScheme(name = "bearerAuth", type = SecuritySchemeType.HTTP, scheme = "bearer", bearerFormat = "JWT",
@@ -32,9 +36,15 @@ import org.springframework.context.annotation.Configuration;
         security = @SecurityRequirement(name = "bearerAuth"))
 public class OpenApiConfig {
 
+    private static final DateTimeFormatter BUILD_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm 'UTC'")
+            .withZone(ZoneOffset.UTC);
+
     @Bean
     public OpenApiCustomizer openApiCustomizer(ObjectProvider<BuildProperties> buildProperties) {
-        return openApi -> buildProperties.ifAvailable(build -> openApi.getInfo()
-                .addExtension("x-build-version", build.getVersion()));
+        return openApi -> buildProperties.ifAvailable(build -> {
+            openApi.getInfo().addExtension("x-build-version", build.getVersion());
+            // Swagger UI does not display x- extensions, but it shows the description under the title (#42)
+            openApi.getInfo().description("Build " + build.getVersion() + ", built " + BUILD_TIME.format(build.getTime()));
+        });
     }
 }

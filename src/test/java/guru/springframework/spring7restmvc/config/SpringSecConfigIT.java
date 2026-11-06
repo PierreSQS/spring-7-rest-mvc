@@ -41,7 +41,9 @@ class SpringSecConfigIT {
         mockMvc.perform(get("/v3/api-docs"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.info.version").value("v1"))
-                .andExpect(jsonPath("$.info['x-build-version']").value(buildProperties.getVersion()));
+                .andExpect(jsonPath("$.info['x-build-version']").value(buildProperties.getVersion()))
+                // Swagger UI ignores x- extensions: the build version is also in the description, shown under the title (#42)
+                .andExpect(jsonPath("$.info.description").value(containsString("Build " + buildProperties.getVersion())));
     }
 
     @Test

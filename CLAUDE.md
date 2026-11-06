@@ -54,7 +54,7 @@ No linter or formatter is configured. Calling the running API needs a JWT from a
 
 **CI:** `.github/workflows/build.yml` runs `./mvnw -B verify` on every push, except pushes that change only `docs/**` or `*.md`. A green run on the pushed commit is the proof an issue is fixed. The manual trigger (`workflow_dispatch`) is commented out: GitHub only accepts it when the workflow is on the default branch, and `master` has none. To rerun, use "Re-run all jobs" on a run.
 
-**Build info:** `spring-boot-maven-plugin` runs its `build-info` goal (`META-INF/build-info.properties`); `OpenApiConfig` reads it through `BuildProperties` (optional: `ObjectProvider`) and shows the build version as `info.x-build-version` of `/v3/api-docs` (#28).
+**Build info:** `spring-boot-maven-plugin` runs its `build-info` goal (`META-INF/build-info.properties`); `OpenApiConfig` reads it through `BuildProperties` (optional: `ObjectProvider`) and shows the build version as `info.x-build-version` of `/v3/api-docs` (#28) and, because Swagger UI ignores `x-` extensions, in `info.description` under the title (#42).
 
 ---
 
@@ -73,7 +73,7 @@ Do not fix JT's code on the side: name the problem, propose an issue, let him de
 
 | Package | Responsibility | Rules to preserve |
 |---|---|---|
-| `config` | `SpringSecConfig`: the security filter chain; `OpenApiConfig`: OpenAPI documentation (Bearer JWT scheme, #27; build version, #28) | See section 4. `OpenApiConfig` only documents: it opens or protects nothing. `info.version` = `v1`, the version of the API contract, hand-written on purpose; the build version goes only into `info.x-build-version`. |
+| `config` | `SpringSecConfig`: the security filter chain; `OpenApiConfig`: OpenAPI documentation (Bearer JWT scheme, #27; build version, #28) | See section 4. `OpenApiConfig` only documents: it opens or protects nothing. `info.version` = `v1`, the version of the API contract, hand-written on purpose; the build version goes into `info.x-build-version` and `info.description` (shown by Swagger UI, #42). |
 | `controller` | REST endpoints, `CustomErrorController`, `NotFoundException` | Reuse the path constants (`BEER_PATH` = `/api/v1/beer`, `BEER_PATH_ID`, `CUSTOMER_PATH`, `CUSTOMER_PATH_ID`); tests reference them. `@Validated` on POST and PUT, **not** on PATCH: a PATCH body may be partial. Writes return `ResponseEntity<Void>`. |
 | `model` | `BeerDTO`, `CustomerDTO`, `BeerStyle`, `BeerCSVRecord` | Keep the Bean Validation annotations (`BeerDTO`: `beerName`, `upc` `@NotBlank`; `beerStyle`, `price` `@NotNull`. `CustomerDTO`: `name` `@NotBlank`, `email` optional, `@Size(1..255)` when present) and the Jackson annotations (section 6). |
 | `entities` | `Beer`, `Customer`, `Category`, `BeerOrder`, `BeerOrderLine`, `BeerOrderShipment` | `@UuidGenerator` + `@JdbcTypeCode(SqlTypes.CHAR)` for UUIDs stored as `varchar(36)`. `BeerStyle` as `SMALLINT`. A field initializer used with `@Builder` needs `@Builder.Default`. |
