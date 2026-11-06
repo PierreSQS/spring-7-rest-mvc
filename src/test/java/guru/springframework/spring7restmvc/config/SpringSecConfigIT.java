@@ -3,6 +3,7 @@ package guru.springframework.spring7restmvc.config;
 import guru.springframework.spring7restmvc.controller.BeerController;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.info.BuildProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.web.servlet.MockMvc;
@@ -15,6 +16,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * Created by Pierrot on 02-11-2026
+ * Modified by Pierrot on 06-11-2026
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -31,6 +33,15 @@ class SpringSecConfigIT {
                 .andExpect(jsonPath("$.openapi").value("3.1.0"))
                 .andExpect(jsonPath("$.info.title").value("Beer and Customer API"))
                 .andExpect(jsonPath("$.info.version").value("v1"));
+    }
+
+    @Test
+    void testApiDocsShowBuildVersion(@Autowired BuildProperties buildProperties) throws Exception {
+        // GET /v3/api-docs -> info.version stays the API version "v1", the build version is in info.x-build-version (#28)
+        mockMvc.perform(get("/v3/api-docs"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.info.version").value("v1"))
+                .andExpect(jsonPath("$.info['x-build-version']").value(buildProperties.getVersion()));
     }
 
     @Test
