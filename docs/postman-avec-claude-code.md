@@ -323,3 +323,54 @@ mais le log de `spring-7-auth-server` montre `Generated access token` pour cette
 C'est un défaut d'affichage du Postman CLI.
 
 **Commits sur la branche `-postman` :** `fdd183b3` (la collection), `c2c7e487` (la CI ignore `postman/**`), `e6346099` (Chap357).
+
+---
+
+## 7. Voir la collection du dépôt Git dans l'application Postman (05/06-11-2026, #40)
+
+**Le but :** ouvrir dans l'application Postman la collection du dépôt Git (dossier `postman/collections/UDEMY-Spring Framework 7-JT/`),
+sans toucher à ma collection `UDEMY-Spring Framework 7-JT` de My Workspace.
+
+### Les étapes
+
+1. **Claude** copie le dossier `postman/collections/UDEMY-Spring Framework 7-JT/` du dépôt Git dans un dossier temporaire ;
+   dans cette copie, il renomme la collection en `UDEMY-Spring Framework 7-JT-Claude` (fichier `.resources/definition.yaml`, ligne 2).
+2. **Claude**, dans ce dossier temporaire, crée un workspace séparé et y envoie la copie :
+   ```
+   postman workspace create --visibility personal --name "Spring 7 REST MVC - Claude" --path .
+   postman workspace diff --push-strategy default        -> 1 to change, 0 to delete
+   postman workspace push --push-strategy default --yes  -> Created: 1
+   ```
+3. **Moi**, dans l'application Postman, workspace `Spring 7 REST MVC - Claude` : « … » sur `UDEMY-Spring Framework 7-JT-Claude`
+   -> **Create a fork** -> Fork label `Claude fork`, Workspace **My Workspace**, Auto-pull **décoché** -> **Fork Collection**.
+4. **Moi**, dans l'application Postman : menu **No Environment** (en haut à droite) -> **Create new environment** ->
+   nom `Spring7 Rest MVC`, deux variables :
+   - `oidcClientId` = `oidc-client` ;
+   - `clientSecret` = le secret (ligne 103 de `SecurityConfig.java` dans `spring-7-auth-server`). **Ne pas cliquer sur le cadenas « Secure ».**
+
+   L'enregistrement est automatique.
+5. **Moi** : démarrer `spring-7-auth-server` (port 9000), puis `spring-7-rest-mvc` avec le profil `localmysql` (port 8081).
+   Dans My Workspace : `UDEMY-Spring Framework 7-JT-Claude` > Sec38 > Chap357-Get Beers-JWT-CC, environnement actif
+   `Spring7 Rest MVC`, **Send**.
+
+**Résultat :** `200 OK`, onglet **Test Results** : **6/6 PASSED**.
+
+### Pour comprendre
+
+- **Pourquoi un workspace séparé, et pas directement My Workspace :** le Postman CLI n'envoie une collection que dans un
+  workspace relié à un dossier, et `postman workspace diff` montre par défaut le mode `force-sync`, qui afficherait toutes mes
+  autres collections de My Workspace comme « à supprimer ». Un workspace séparé laisse My Workspace intact.
+- **Pourquoi Fork, et pas Move :** Move aurait vidé le workspace `Spring 7 REST MVC - Claude` ; Fork copie. Auto-pull décoché :
+  la copie ne change jamais toute seule.
+- **Le cadenas « Secure »** range la valeur dans le Postman Vault. Pas utilisé pour l'instant : non vérifié avec les scripts et
+  avec le plan gratuit. Idée pour plus tard.
+- **Deux environnements séparés :** `Spring7 Rest MVC` vit dans mon compte Postman (utilisé par l'application Postman) ;
+  `postman/environments/local.environment.yaml` est un fichier du dépôt Git (lu par le Postman CLI avec `-e`).
+  Mêmes noms de variables, deux copies séparées.
+- **La collection existe à 3 endroits :** voir le tableau du commentaire de clôture de #39.
+- **Ce que montrent les logs** de `spring-7-auth-server` et de `spring-7-rest-mvc` :
+  1. le script pre-request envoie `POST /oauth2/token` -> `Generated access token` (`Principal=oidc-client`) ;
+  2. l'application Spring Boot `spring-7-rest-mvc` va chercher `/.well-known/openid-configuration` et `/oauth2/jwks` au premier jeton ;
+  3. `Authenticated token`, puis `200`.
+- **Pièges de ma version de Postman :** pas de « + » dans la section ENVIRONMENTS, pas de bouton Save (enregistrement automatique) :
+  un environnement se crée depuis le menu **No Environment**.
