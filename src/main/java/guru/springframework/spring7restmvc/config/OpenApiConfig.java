@@ -5,10 +5,14 @@ import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
+import org.springdoc.core.customizers.OpenApiCustomizer;
+import org.springframework.boot.info.BuildProperties;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
  * Created by Pierrot on 02-11-2026
+ * Modified by Pierrot on 06-11-2026
  * <p>
  * Tells the OpenAPI documentation that every operation needs a Bearer JWT,
  * so Swagger UI shows an "Authorize" button and sends the token (#27).
@@ -19,7 +23,12 @@ import org.springframework.context.annotation.Configuration;
 @SecurityScheme(name = "bearerAuth", type = SecuritySchemeType.HTTP, scheme = "bearer", bearerFormat = "JWT",
         description = "Get a token from the authorization server http://localhost:9000/oauth2/token (client credentials), then paste it here.")
 @OpenAPIDefinition(
-        info = @Info(title = "Beer and Customer API", version = "v1"),
+        info = @Info(title = "Beer and Customer API"),
         security = @SecurityRequirement(name = "bearerAuth"))
 public class OpenApiConfig {
+
+    @Bean
+    public OpenApiCustomizer openApiCustomizer(BuildProperties buildProperties) {
+        return openApi -> openApi.getInfo().version(buildProperties.getVersion());
+    }
 }
