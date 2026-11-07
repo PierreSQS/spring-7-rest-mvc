@@ -5,7 +5,8 @@ Les exemples renvoient à la branche `127-springdoc-security-cfg-jt-sb412`, comm
 
 ## Le contexte
 
-springdoc lit les annotations Java et produit **un document JSON** : `http://localhost:8080/v3/api-docs`.
+springdoc lit les annotations Java et produit **un document JSON** : `/v3/api-docs`
+(`http://localhost:8080` avec le profil par défaut H2, `http://localhost:8081` avec le profil `localmysql`).
 **Swagger UI ne voit pas le code Java** : il dessine sa page (titre, endpoints, bouton « Authorize », cadenas)
 uniquement à partir de ce JSON. Pour comprendre ce qu'affiche Swagger UI, ou pourquoi il n'affiche pas
 quelque chose, il faut donc savoir **quelle annotation produit quelle partie du JSON**.
@@ -33,6 +34,15 @@ Détails :
 2. **Par un test :** `jsonPath` lit le même JSON - `$` = la racine, `.clé` = une clé, `[0]` = le premier élément d'une liste.
    Exemple dans le projet (`40d75bbd`) : `src/test/java/guru/springframework/spring7restmvc/config/SpringSecConfigIT.java:31-33` (`info`)
    et `:41-44` (le schéma : 3 valeurs vérifiées avec `.value(...)`, la consigne : présence seulement, avec `.exists()`).
+
+## Tout ne vient pas des annotations (#28, #42)
+
+Une partie du JSON peut aussi être écrite **par du code**, dans un bean `OpenApiCustomizer` : springdoc lui passe
+le document déjà construit, et le bean le modifie. C'est ce qui ajoute la version du build dans
+`info.x-build-version` (#28) et dans `info.description`, que Swagger UI affiche sous le titre (#42).
+Donc, quand une valeur du JSON ne correspond à aucune annotation, la chercher dans ce bean.
+Exemple dans le projet : `src/main/java/guru/springframework/spring7restmvc/config/OpenApiConfig.java`
+(branche `127-springdoc-security-cfg-jt-sb412`, commit `8c364575`).
 
 ## Le piège (#31)
 

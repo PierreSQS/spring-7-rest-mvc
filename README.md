@@ -31,9 +31,9 @@ Links to a document of `notes` open its latest version. Links to a document of a
 
 | Document | Why |
 |---|---|
-| [`docs/regles-a-retenir.md`](docs/regles-a-retenir.md) | Every rule learned in the project (R1-R27), with example and proof. |
-| [`docs/procedures-tickets-et-ci.md`](https://github.com/PierreSQS/spring-7-rest-mvc/blob/a79dc24018e91efece595ab2e84857186ea71700/docs/procedures-tickets-et-ci.md) (branch 127) | How issues and the CI work, from an issue to its closing. |
-| [`CLAUDE.md`](https://github.com/PierreSQS/spring-7-rest-mvc/blob/a79dc24018e91efece595ab2e84857186ea71700/CLAUDE.md) (branch 127) | What the code of the current lesson branch does, and the rules Claude follows on it. |
+| [`docs/regles-a-retenir.md`](docs/regles-a-retenir.md) | Every rule learned in the project (R1-R28), with example and proof. |
+| [`docs/procedures-tickets-et-ci.md`](https://github.com/PierreSQS/spring-7-rest-mvc/blob/3e69640c740599b152599428462a75cb1484296d/docs/procedures-tickets-et-ci.md) (branch 127) | How issues and the CI work, from an issue to its closing. |
+| [`CLAUDE.md`](https://github.com/PierreSQS/spring-7-rest-mvc/blob/3e69640c740599b152599428462a75cb1484296d/CLAUDE.md) (branch 127) | What the code of the current lesson branch does, and the rules Claude follows on it. |
 | [Open issues](https://github.com/PierreSQS/spring-7-rest-mvc/issues) | What is left to do. |
 
 ---
@@ -42,24 +42,24 @@ Links to a document of `notes` open its latest version. Links to a document of a
 
 | Document | What it is for | When to read it |
 |---|---|---|
-| [`docs/regles-a-retenir.md`](docs/regles-a-retenir.md) | The rules R1-R27 (MapStruct, PUT/PATCH, Hibernate, lambdas, database, Spring Security...), each with the rule, an example and the proof (test or commit). Moved here from branch 125, `125-build-info-jt-sb411` (#38); frozen copies on branches 116, 121 and 125. French. | Before writing similar code; when a rule number (R19, R22...) is quoted in an issue or a commit. |
+| [`docs/regles-a-retenir.md`](docs/regles-a-retenir.md) | The rules R1-R28 (MapStruct, PUT/PATCH, Hibernate, lambdas, database, Spring Security...), each with the rule, an example and the proof (test or commit). Moved here from branch 125, `125-build-info-jt-sb411` (#38); frozen copies on branches 116, 121 and 125. French. | Before writing similar code; when a rule number (R19, R22...) is quoted in an issue or a commit. |
 | [`docs/openapi-annotations-et-json.md`](docs/openapi-annotations-et-json.md) | Which annotation of `OpenApiConfig` produces which part of `/v3/api-docs`, and what Swagger UI does with it (Section 40, #27, #31). French. | When Swagger UI shows, or does not show, something unexpected. |
 | [`docs/travailler-avec-claude-code.md`](docs/travailler-avec-claude-code.md) | Working with Claude Code: why a long conversation costs more, `/clear`, `/resume`, `/rename`... French. | When a conversation gets long or expensive, or before starting a new one. |
 | [`docs/postman-avec-claude-code.md`](docs/postman-avec-claude-code.md) | Exploring Postman with Claude Code, step by step: how Claude reaches my Postman collection (CLI, plugin, access key, commands), then each step with goal, command, result and what it proves (#39), then the collection of the Git repository in the Postman app (#40, section 7). French. | Before working with Postman from the CLI, or to redo the steps alone. |
 
 ---
 
-## On the current lesson branch: branch 127, `127-springdoc-security-cfg-jt-sb412` (`a79dc240`)
+## On the current lesson branch: branch 127, `127-springdoc-security-cfg-jt-sb412` (`3e69640c`)
 
 Training branch, Section 40 (OpenAPI). These documents describe the code of their branch, so they stay there.
 Every lesson branch has its own version of `CLAUDE.md`, describing its own code.
 
 | Document | What it is for | When to read it |
 |---|---|---|
-| [`CLAUDE.md`](https://github.com/PierreSQS/spring-7-rest-mvc/blob/a79dc24018e91efece595ab2e84857186ea71700/CLAUDE.md) | Guide of the branch: stack, build and test commands, architecture, security, gotchas of Boot 4.1 / Spring 7 / Jackson 3. | To know how the branch is built, tested and organised. |
-| [`.claude/rules/database.md`](https://github.com/PierreSQS/spring-7-rest-mvc/blob/a79dc24018e91efece595ab2e84857186ea71700/.claude/rules/database.md) | H2, Compose MySQL and `MySqlIT`: profiles, Compose lifecycle, migration rule (#17). | Before touching `compose.yaml`, `src/main/resources` or a Flyway migration. |
-| [`.claude/rules/testing.md`](https://github.com/PierreSQS/spring-7-rest-mvc/blob/a79dc24018e91efece595ab2e84857186ea71700/.claude/rules/testing.md) | Test classes and their setup, seeded data, flush/clear, `MySqlIT` (#17). | Before writing or changing a test. |
-| [`docs/procedures-tickets-et-ci.md`](https://github.com/PierreSQS/spring-7-rest-mvc/blob/a79dc24018e91efece595ab2e84857186ea71700/docs/procedures-tickets-et-ci.md) | Issues (content, labels, closing) and the CI pipeline; traps already met (broken `mvnw`, run stuck in *Queued*). French. | When an issue is created or closed, or when the CI behaves strangely. |
+| [`CLAUDE.md`](https://github.com/PierreSQS/spring-7-rest-mvc/blob/3e69640c740599b152599428462a75cb1484296d/CLAUDE.md) | Guide of the branch: stack, build and test commands, architecture, security, gotchas of Boot 4.1 / Spring 7 / Jackson 3. | To know how the branch is built, tested and organised. |
+| [`.claude/rules/database.md`](https://github.com/PierreSQS/spring-7-rest-mvc/blob/3e69640c740599b152599428462a75cb1484296d/.claude/rules/database.md) | H2, Compose MySQL and `MySqlIT`: profiles, Compose lifecycle, migration rule (#17). | Before touching `compose.yaml`, `src/main/resources` or a Flyway migration. |
+| [`.claude/rules/testing.md`](https://github.com/PierreSQS/spring-7-rest-mvc/blob/3e69640c740599b152599428462a75cb1484296d/.claude/rules/testing.md) | Test classes and their setup, seeded data, flush/clear, `MySqlIT` (#17). | Before writing or changing a test. |
+| [`docs/procedures-tickets-et-ci.md`](https://github.com/PierreSQS/spring-7-rest-mvc/blob/3e69640c740599b152599428462a75cb1484296d/docs/procedures-tickets-et-ci.md) | Issues (content, labels, closing) and the CI pipeline; traps already met (broken `mvnw`, run stuck in *Queued*). French. | When an issue is created or closed, or when the CI behaves strangely. |
 
 ---
 
@@ -94,7 +94,7 @@ The last of my own branches ("mes branches"). The documents keep their original 
 | [`docs/entity-states-and-optimistic-locking.md`](https://github.com/PierreSQS/spring-7-rest-mvc/blob/69f0a32bf8d3106c74140b1bc49e9c5c8dc4a7c9/docs/entity-states-and-optimistic-locking.md) | Loaded, built and detached objects, and why `setVersion(...)` protects nothing (Section 18, Chap186). German. | Before the real optimistic locking work (409 Conflict). |
 | [`docs/service-layer-boundaries.md`](https://github.com/PierreSQS/spring-7-rest-mvc/blob/69f0a32bf8d3106c74140b1bc49e9c5c8dc4a7c9/docs/service-layer-boundaries.md) | Three rules of the service layer: what leaves (DTOs, not entities), what enters (validated where the request arrives), how it writes (one transaction). English. | When adding a service method. |
 | [`docs/uuid-id-generation.md`](https://github.com/PierreSQS/spring-7-rest-mvc/blob/69f0a32bf8d3106c74140b1bc49e9c5c8dc4a7c9/docs/uuid-id-generation.md) | Who generates the entity IDs: the application (`@UuidGenerator`), never the database. English. | When an ID is missing or `null`. |
-| [`docs/testcontainers-test-profile.md`](https://github.com/PierreSQS/spring-7-rest-mvc/blob/69f0a32bf8d3106c74140b1bc49e9c5c8dc4a7c9/docs/testcontainers-test-profile.md) | The test-only `testcontainers` profile: what a profile is, who switches it on, why `MySqlIT` needs it. English. | When working on `MySqlIT`. |
+| [`docs/testcontainers-test-profile.md`](https://github.com/PierreSQS/spring-7-rest-mvc/blob/69f0a32bf8d3106c74140b1bc49e9c5c8dc4a7c9/docs/testcontainers-test-profile.md) | The test-only `testcontainers` profile: what a profile is, who switches it on, why `MySqlIT` needs it. English. | When working on `MySqlIT` **of branch 109**: there it is a `@DataJpaTest` extending `MySqlContainerBase` with a `testcontainers` profile, while on branch 127 it is a `@SpringBootTest` with `@ActiveProfiles("localmysql")` and its own `@Container`. |
 | [`docs/mockito-agent-and-class-sharing.md`](https://github.com/PierreSQS/spring-7-rest-mvc/blob/69f0a32bf8d3106c74140b1bc49e9c5c8dc4a7c9/docs/mockito-agent-and-class-sharing.md) | Why the tests start the JVM with `-javaagent` (Mockito) and `-Xshare:off`. English. | When the Surefire/Failsafe `argLine` is touched. |
 | [`docs/reading-classpath-files-from-a-jar.md`](https://github.com/PierreSQS/spring-7-rest-mvc/blob/69f0a32bf8d3106c74140b1bc49e9c5c8dc4a7c9/docs/reading-classpath-files-from-a-jar.md) | Why a classpath file works in the IDE but not from a jar: read it as a stream, never as a `File` (Section 14, `beers.csv`). English. | When reading a resource file. |
 
