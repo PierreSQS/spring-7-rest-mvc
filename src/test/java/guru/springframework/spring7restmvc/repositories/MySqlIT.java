@@ -16,7 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Created by jt, Spring Framework Guru.
- * Modified by Pierrot on 26-10-2026
+ * Modified by Pierrot on 07-11-2026
  */
 @Testcontainers
 @SpringBootTest
@@ -25,7 +25,7 @@ public class MySqlIT {
 
     @Container
     @ServiceConnection
-    static MySQLContainer mySQLContainer = new MySQLContainer("mysql:9.2");
+    static MySQLContainer mySQLContainer = new MySQLContainer("mysql:9.5");
 
     @Autowired
     BeerRepository beerRepository;

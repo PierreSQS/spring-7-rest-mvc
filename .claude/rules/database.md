@@ -14,7 +14,7 @@ Loaded with `CLAUDE.md` when Claude reads or edits one of the files above. Moved
 |---|---|---|---|
 | Default application and H2 tests | In-memory H2; Compose disabled (`spring.docker.compose.enabled=false`, valid for every profile that does not override it) | Hibernate generates the schema; Flyway off | `application.properties` |
 | `localmysql` with Compose | `mysql:9.5`, host port **3308**, container `mysql-spring7-rest-sec22-assn25`, database `jt_spring7_rest_sec22_assn25_db` | Flyway on (`V1` to `V7`); `ddl-auto=validate` | `application-localmysql.properties` (port **8081**, Compose on) and `compose.yaml` |
-| `MySqlIT` (tests only) | Its own Testcontainers container `mysql:9.2` (JT's image, not the Compose one; issue #24), connection from `@ServiceConnection`; `localmysql` profile | Flyway on; `ddl-auto=validate` | `repositories/MySqlIT.java` |
+| `MySqlIT` (tests only) | Its own Testcontainers container, same image as Compose: `mysql:9.5` (#24; JT's was `mysql:9.2`), connection from `@ServiceConnection`; `localmysql` profile | Flyway on; `ddl-auto=validate` | `repositories/MySqlIT.java` |
 
 `localmysql` declares **no** `spring.datasource.url`, user or password: Compose (or `@ServiceConnection`) supplies them. It keeps `spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver` on purpose: without it, devtools takes MySQL for an in-memory H2 and sends it `SHUTDOWN` on stop (#16). It also names the Hikari pool `RestDB-Pool` (max 5).
 
