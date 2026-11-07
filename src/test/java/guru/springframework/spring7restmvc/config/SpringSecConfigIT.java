@@ -2,12 +2,14 @@ package guru.springframework.spring7restmvc.config;
 
 import guru.springframework.spring7restmvc.controller.BeerController;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.info.BuildProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.assertj.core.api.Assumptions.assumeThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -16,7 +18,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * Created by Pierrot on 02-11-2026
- * Modified by Pierrot on 06-11-2026
+ * Modified by Pierrot on 07-11-2026
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -36,7 +38,12 @@ class SpringSecConfigIT {
     }
 
     @Test
-    void testApiDocsShowBuildVersion(@Autowired BuildProperties buildProperties) throws Exception {
+    void testApiDocsShowBuildVersion(@Autowired ObjectProvider<BuildProperties> buildPropertiesProvider) throws Exception {
+        // Maven writes META-INF/build-info.properties; an IntelliJ rebuild alone does not, and then there is no bean:
+        // skip instead of failing, the CI (./mvnw verify) always has the file and runs the assertions
+        BuildProperties buildProperties = buildPropertiesProvider.getIfAvailable();
+        assumeThat(buildProperties).as("no BuildProperties bean: run the build with Maven").isNotNull();
+
         // GET /v3/api-docs -> info.version stays the API version "v1", the build version is in info.x-build-version (#28)
         mockMvc.perform(get("/v3/api-docs"))
                 .andExpect(status().isOk())
