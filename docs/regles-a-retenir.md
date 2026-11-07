@@ -10,9 +10,9 @@ Créé le 17-10-2026.
 
 ## Table des matières
 
-27 règles, numérotées R1 à R27 dans l'ordre où elles ont été apprises - donc pas dans
+28 règles, numérotées R1 à R28 dans l'ordre où elles ont été apprises - donc pas dans
 l'ordre des sections : R19 est rangée avec les fichiers, R20-R21 avec les lambdas, R22-R23 avec Hibernate,
-R24 avec PUT et PATCH, R25-R26 avec la base de données, R27 avec Spring Security.
+R24 avec PUT et PATCH, R25-R26 avec la base de données, R27 avec Spring Security, R28 avec les tests.
 
 
 **1. MapStruct et DTO**
@@ -40,6 +40,7 @@ R24 avec PUT et PATCH, R25-R26 avec la base de données, R27 avec Spring Securit
 - [R9 — Un test `@Transactional` n'écrit jamais en base : quand ajouter `flush()`, quand retirer `@Transactional`](#r9--un-test-transactional-nécrit-jamais-en-base--quand-ajouter-flush-quand-retirer-transactional)
 - [R10 — Un test doit prouver quelque chose : le faire échouer une fois](#r10--un-test-doit-prouver-quelque-chose--le-faire-échouer-une-fois)
 - [R11 — `@WebMvcTest` ne charge que la couche web](#r11--webmvctest-ne-charge-que-la-couche-web)
+- [R28 — Un test qui dépend d'un fichier fabriqué par le build : l'ignorer, pas le laisser rouge](#r28--un-test-qui-dépend-dun-fichier-fabriqué-par-le-build--lignorer-pas-le-laisser-rouge)
 
 **5. Spring Security**
 
@@ -465,6 +466,51 @@ Exemples : `BeerTest.testRemoveCategoryUnlinksBothSides` (rouge sur la ligne de 
 **Preuve :** commit `d3f1c182` (Chap250) : `BeerControllerIT` ne démarre pas, `BeerControllerTest` envoie
 `Authorization: Basic` = `${spring.security.user.name}:${spring.security.user.password}` (en-tête décodé) ;
 listes du slice vérifiées dans les jars Spring Boot 4.1.1.
+
+---
+
+### R28 — Un test qui dépend d'un fichier fabriqué par le build : l'ignorer, pas le laisser rouge
+
+**Le contexte.** Certains fichiers du dossier `target/classes` ne sont pas copiés depuis
+`src/main/resources` : ils sont **fabriqués pendant le build**. Exemple dans ce projet,
+`META-INF/build-info.properties`, écrit par Maven (`spring-boot-maven-plugin`, goal `build-info`,
+phase `generate-resources`). Spring Boot le lit au démarrage et en fait un bean **`BuildProperties`**
+(l'objet qui donne le nom, la version et l'heure du build).
+
+**Le piège.** Un **Rebuild** d'IntelliJ compile avec le compilateur d'IntelliJ, pas avec Maven : il vide
+`target/classes`, recopie `src/main/resources`, mais **ne relance aucun goal Maven**. Le fichier disparaît,
+le bean `BuildProperties` n'existe plus, et tout code qui l'exige casse — alors que la CI, elle, est verte,
+puisqu'elle passe par `./mvnw`.
+
+**La règle, en deux temps.**
+
+| Où | Quoi faire | Pourquoi |
+|---|---|---|
+| Code de production | recevoir `ObjectProvider<BuildProperties>`, pas `BuildProperties` | Spring fournit **toujours** l'`ObjectProvider<BuildProperties>`, même quand le bean `BuildProperties` n'existe pas : l'`ObjectProvider` n'est qu'un chercheur (où chercher, quoi chercher). C'est `getIfAvailable()` qui cherche vraiment, et qui renvoie le bean `BuildProperties` ou `null` ; l'application démarre dans les deux cas |
+| Test | même paramètre, puis une **hypothèse** AssertJ au lieu d'une assertion | une hypothèse fausse **ignore** le test ; une assertion fausse le met **en rouge** |
+
+```java
+void testApiDocsShowBuildVersion(@Autowired ObjectProvider<BuildProperties> buildPropertiesProvider) {
+    BuildProperties buildProperties = buildPropertiesProvider.getIfAvailable();   // le bean, ou null
+    assumeThat(buildProperties).as("no BuildProperties bean: run the build with Maven").isNotNull();
+    // ... les vérifications, exécutées seulement si le bean existe
+}
+```
+
+`assumeThat` vient d'AssertJ (`org.assertj.core.api.Assumptions`), pas de JUnit.
+
+**Assertion ou hypothèse ?** Une **assertion** dit « ceci doit être vrai, sinon le code est faux ».
+Une **hypothèse** dit « sans ceci, je ne peux rien vérifier ». Un fichier absent parce qu'on a compilé
+autrement n'est pas un défaut du code : c'est une hypothèse. Le test devient donc *ignoré*, avec sa raison
+écrite dans le rapport, et il s'exécute pour de vrai en CI, où Maven écrit toujours le fichier.
+
+**Attention :** l'hypothèse doit pouvoir **s'exécuter**. Avec `@Autowired BuildProperties` en paramètre,
+le test échoue **avant** d'entrer dans la méthode, parce que JUnit ne peut pas remplir ce paramètre.
+C'est pour cela que le paramètre doit être l'`ObjectProvider<BuildProperties>`, que Spring fournit toujours.
+
+**Exemple dans le projet :** `src/test/java/guru/springframework/spring7restmvc/config/SpringSecConfigIT.java:39`
+et, côté production, `src/main/java/guru/springframework/spring7restmvc/config/OpenApiConfig.java:42`
+(branche `127-springdoc-security-cfg-jt-sb412`, commit `95797f1f`).
 
 ---
 
