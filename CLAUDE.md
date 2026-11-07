@@ -26,7 +26,7 @@ A beer and customer REST API built alongside John Thompson's **Spring Framework 
 | `docs/procedures-tickets-et-ci.md` | How issues and the CI are handled on this branch (in French). |
 | `docs/openapi-annotations-et-json.md` | Which OpenAPI annotation of `OpenApiConfig` produces which part of `/v3/api-docs`, and what Swagger UI does with it (in French). On branch **`notes`** (not here). |
 | `docs/regles-a-retenir.md` | The project's rules (R1, R2, ...), in French. On branch **`notes`** (not here), moved from 125 (#38). |
-| Lesson reviews | One snapshot per section, `docs/secNN[-chapNNN]-<topic>-improvements.md`, on branch **`notes`** (not here). Each names the lesson branch + commit it describes and is never updated afterwards (issue #20). |
+| Lesson reviews | One snapshot per section, `docs/secNN[-chapNNN]-<topic>-improvements.md`. The five that exist (Sections 13 to 16) are on branch **`109-lock-demo-optimistic-sb411`**; none exists for Section 17 and later. New ones go to branch **`notes`** (issue #20). Each names the lesson branch + commit it describes and is never updated afterwards. |
 
 **When a change contradicts something this guide states, correct it in the same commit.**
 Older lesson branches carry older copies of this file; they describe their own code and are not back-ported.
