@@ -151,8 +151,6 @@ assertThatThrownBy(() -> beerService.deleteById(id))
 Inside MockMvc, `jsonPath(..., is(...))` (Hamcrest) is MockMvc's own matcher API and stays:
 **MockMvc is the standard of this project** - decided after the `MockMvcTester` evaluation of
 issue #25 (section 6).
-The remaining `assertThrows` in `BeerControllerIT` / `CustomerControllerIT` belong to the
-direct controller calls of issue #11 and disappear with it.
 
 ---
 
