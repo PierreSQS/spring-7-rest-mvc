@@ -9,30 +9,30 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Modified by Pierrot on 31-10-2026
+ * Modified by Pierrot on 08-11-2026
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -51,39 +51,48 @@ class CustomerControllerIT {
     CustomerRepository customerRepository;
 
     @Autowired
-    CustomerController customerController;
-
-    @Autowired
     CustomerMapper customerMapper;
 
     @Transactional
     @Test
-    void deleteByIdFound() {
+    void deleteByIdFound() throws Exception {
         Customer customer = customerRepository.findAll().getFirst();
 
-        ResponseEntity<Void> responseEntity = customerController.deleteCustomerById(customer.getId());
-        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(204));
+        mockMvc.perform(delete(CustomerController.CUSTOMER_PATH_ID, customer.getId())
+                        .with(BeerControllerTest.jwtRequestPostProcessor))
+                .andExpect(status().isNoContent());
+
+        // write the delete, then forget Hibernate's memory, so findById reads the real table (R6)
+        entityManager.flush();
+        entityManager.clear();
 
         assertThat(customerRepository.findById(customer.getId())).isEmpty();
     }
 
     @Test
-    void testDeleteNotFound() {
-        UUID customerId = UUID.randomUUID();
-        assertThrows(NotFoundException.class, () -> customerController.deleteCustomerById(customerId));
+    void testDeleteNotFound() throws Exception {
+        mockMvc.perform(delete(CustomerController.CUSTOMER_PATH_ID, UUID.randomUUID())
+                        .with(BeerControllerTest.jwtRequestPostProcessor))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    void testUpdateNotFound() {
-        UUID customerId = UUID.randomUUID();
-        CustomerDTO customerDTO = CustomerDTO.builder().build();
-        assertThrows(NotFoundException.class, () ->
-                customerController.updateCustomerByID(customerId, customerDTO));
+    void testUpdateNotFound() throws Exception {
+        // the PUT is @Validated: a DTO without a name would answer 400, and the test would prove nothing
+        CustomerDTO customerDTO = CustomerDTO.builder()
+                .name("Unknown Customer")
+                .build();
+
+        mockMvc.perform(put(CustomerController.CUSTOMER_PATH_ID, UUID.randomUUID())
+                        .with(BeerControllerTest.jwtRequestPostProcessor)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonMapper.writeValueAsString(customerDTO)))
+                .andExpect(status().isNotFound());
     }
 
     @Transactional
     @Test
-    void updateExistingBeer() {
+    void updateExistingCustomer() throws Exception {
         Customer customer = customerRepository.findAll().getFirst();
         CustomerDTO customerDTO = customerMapper.customerToCustomerDto(customer);
         customerDTO.setId(null);
@@ -91,8 +100,14 @@ class CustomerControllerIT {
         final String customerName = "UPDATED";
         customerDTO.setName(customerName);
 
-        ResponseEntity<Void> responseEntity = customerController.updateCustomerByID(customer.getId(), customerDTO);
-        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(204));
+        mockMvc.perform(put(CustomerController.CUSTOMER_PATH_ID, customer.getId())
+                        .with(BeerControllerTest.jwtRequestPostProcessor)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonMapper.writeValueAsString(customerDTO)))
+                .andExpect(status().isNoContent());
+
+        entityManager.flush();
+        entityManager.clear();
 
         Customer updatedCustomer = customerRepository.findById(customer.getId()).orElseThrow();
         assertThat(updatedCustomer.getName()).isEqualTo(customerName);
@@ -100,50 +115,66 @@ class CustomerControllerIT {
 
     @Transactional
     @Test
-    void saveNewBeerTest() {
+    void saveNewCustomerTest() throws Exception {
         CustomerDTO customerDTO = CustomerDTO.builder()
                 .name("TEST")
                 .build();
 
-        ResponseEntity<Void> responseEntity = customerController.handlePost(customerDTO);
+        MvcResult result = mockMvc.perform(post(CustomerController.CUSTOMER_PATH)
+                        .with(BeerControllerTest.jwtRequestPostProcessor)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonMapper.writeValueAsString(customerDTO)))
+                .andExpect(status().isCreated())
+                .andExpect(header().exists("Location"))
+                .andReturn();
 
-        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(201));
-        assertThat(responseEntity.getHeaders().getLocation()).isNotNull();
+        entityManager.flush();
+        entityManager.clear();
 
-        String[] locationUUID = responseEntity.getHeaders().getLocation().getPath().split("/");
-        UUID savedUUID = UUID.fromString(locationUUID[4]);
+        String[] locationParts = Objects.requireNonNull(result.getResponse()
+                .getHeader("Location")).split("/");
+        UUID savedUUID = UUID.fromString(locationParts[locationParts.length - 1]);
 
-        Customer customer = customerRepository.findById(savedUUID).orElseThrow();
-        assertThat(customer).isNotNull();
+        assertThat(customerRepository.findById(savedUUID)).isPresent();
     }
 
     @Transactional
     @Test
-    void testListAllEmptyList() {
+    void testListAllEmptyList() throws Exception {
         customerRepository.deleteAll();
-        List<CustomerDTO> dtos = customerController.listAllCustomers();
 
-        assertThat(dtos).isEmpty();
+        mockMvc.perform(get(CustomerController.CUSTOMER_PATH)
+                        .with(BeerControllerTest.jwtRequestPostProcessor))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
     }
 
     @Test
-    void testListAll() {
-        List<CustomerDTO> dtos = customerController.listAllCustomers();
-
-        assertThat(dtos).hasSize(3);
+    void testListAll() throws Exception {
+        // the customer list is a plain JSON array, not a Page
+        mockMvc.perform(get(CustomerController.CUSTOMER_PATH)
+                        .with(BeerControllerTest.jwtRequestPostProcessor))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(3));
     }
 
     @Test
-    void testGetByIdNotFound() {
-        UUID customerID = UUID.randomUUID();
-        assertThrows(NotFoundException.class, () -> customerController.getCustomerById(customerID));
+    void testGetByIdNotFound() throws Exception {
+        mockMvc.perform(get(CustomerController.CUSTOMER_PATH_ID, UUID.randomUUID())
+                        .with(BeerControllerTest.jwtRequestPostProcessor))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    void testGetById() {
+    void testGetById() throws Exception {
         Customer customer = customerRepository.findAll().getFirst();
-        CustomerDTO customerDTO = customerController.getCustomerById(customer.getId());
-        assertThat(customerDTO).isNotNull();
+
+        mockMvc.perform(get(CustomerController.CUSTOMER_PATH_ID, customer.getId())
+                        .with(BeerControllerTest.jwtRequestPostProcessor)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(customer.getId().toString()))
+                .andExpect(jsonPath("$.name").value(customer.getName()));
     }
 
     @Transactional   // rolled back at the end: the bootstrap customer keeps its name for the other tests
@@ -246,7 +277,6 @@ class CustomerControllerIT {
                 .name("New Customer")
                 .email("   ")
                 .build();
-
         // 2. POST it as JSON, expect 400 Bad Request, 3. the response body is not empty
         mockMvc.perform(post(CustomerController.CUSTOMER_PATH)
                         .with(BeerControllerTest.jwtRequestPostProcessor)
