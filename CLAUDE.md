@@ -149,8 +149,8 @@ assertThatThrownBy(() -> beerService.deleteById(id))
 ```
 
 Inside MockMvc, `jsonPath(..., is(...))` (Hamcrest) is MockMvc's own matcher API and stays:
-MockMvc is the standard of this project. Issue #25 evaluates `MockMvcTester` on one example;
-Pierrot then decides to stay with MockMvc or to replace it.
+**MockMvc is the standard of this project** - decided after the `MockMvcTester` evaluation of
+issue #25 (section 6).
 The remaining `assertThrows` in `BeerControllerIT` / `CustomerControllerIT` belong to the
 direct controller calls of issue #11 and disappear with it.
 
@@ -174,3 +174,4 @@ Traps of this stack (Boot 4.1 / Spring 7 / Hibernate 7.4 / Jackson 3 / Java 25).
 | devtools and H2 | On stop, devtools finds the in-memory H2 already closed (issue #18); the `localmysql` driver line exists for the opposite trap (#16, `.claude/rules/database.md`). |
 | `build-info.properties` | Written by Maven (`build-info` goal, phase `generate-resources`), so every `./mvnw` phase run has it. **An IntelliJ rebuild compiles without Maven and wipes it**: no `BuildProperties` bean. Production code takes that bean through `ObjectProvider` (the application still starts), and `SpringSecConfigIT.testApiDocsShowBuildVersion` is then skipped by an AssertJ `assumeThat`, never red. |
 | Container credentials | `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DATABASE` only apply to an **empty** volume (`.claude/rules/database.md`). |
+| `MockMvcTester` | Evaluated on `testListBeers` (#25): `BeerControllerTest` holds the two writings of the same test, `testListBeersWithMockMvc` and `testListBeersWithMockMvcTester`, on the same page of 2 beers. **Decision: `MockMvc` stays the standard**; the pair is kept as the reference of what the alternative looks like. New controller tests are written with `MockMvc` and its `jsonPath(..., is(...))`. |

@@ -2,6 +2,7 @@ package guru.springframework.spring7restmvc.controller;
 
 import guru.springframework.spring7restmvc.config.SpringSecConfig;
 import guru.springframework.spring7restmvc.model.BeerDTO;
+import guru.springframework.spring7restmvc.model.BeerStyle;
 import guru.springframework.spring7restmvc.services.BeerService;
 import guru.springframework.spring7restmvc.services.BeerServiceImpl;
 import lombok.extern.slf4j.Slf4j;
@@ -14,14 +15,19 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.MvcResult;
 import tools.jackson.databind.json.JsonMapper;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -37,13 +43,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Modified by Pierrot on 02-11-2026
+ * Modified by Pierrot on 08-11-2026
  */
 @Slf4j
 @WebMvcTest(BeerController.class)
@@ -53,6 +60,10 @@ class BeerControllerTest {
 
     @Autowired
     MockMvc mockMvc;
+
+    // #25: the MockMvcTester bean comes from MockMvcTesterConfiguration of spring-boot-webmvc-test
+    @Autowired
+    MockMvcTester mockMvcTester;
 
     @Autowired
     JsonMapper jsonMapper;
@@ -200,6 +211,70 @@ class BeerControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.content.length()", is(3)));
+    }
+
+    // ----- #25: evaluation of MockMvcTester. Reference only: MockMvc stays the standard of this project. -----
+    // The two tests below print request and response on purpose, as documentation of the two writings:
+    // .andDo(print()) with MockMvc, .debug() with MockMvcTester (same output, no static import needed).
+
+    @Test
+    void testListBeersWithMockMvc() throws Exception {
+        given(beerService.listBeers(any(), any(), any(), any(), any())).willReturn(twoBeersPage());
+
+        mockMvc.perform(get(BeerController.BEER_PATH)
+                        .with(jwtRequestPostProcessor)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.content.length()", is(2)))
+                .andExpect(jsonPath("$.content[0].beerName", is("Mango Bobs")))
+                .andExpect(jsonPath("$.content[1].beerName", is("Pinball Porter")))
+                .andDo(print());
+    }
+
+    @Test
+    void testListBeersWithMockMvcTester() {
+        given(beerService.listBeers(any(), any(), any(), any(), any())).willReturn(twoBeersPage());
+
+        assertThat(mockMvcTester.get().uri(BeerController.BEER_PATH)
+                .with(jwtRequestPostProcessor)
+                .accept(MediaType.APPLICATION_JSON))
+                // prints request and response, like .andDo(print()) with MockMvc
+                .debug()
+                .hasStatusOk()
+                .hasContentType(MediaType.APPLICATION_JSON)
+                .bodyJson()
+                .hasPathSatisfying("$.content.length()", value -> assertThat(value).isEqualTo(2))
+                .hasPathSatisfying("$.content[0].beerName", value -> assertThat(value).isEqualTo("Mango Bobs"))
+                .hasPathSatisfying("$.content[1].beerName", value -> assertThat(value).isEqualTo("Pinball Porter"));
+    }
+
+    /**
+     * The page of exactly 2 beers both versions of the test work on. Built here instead of reusing
+     * BeerServiceImpl's 3 beers, so the test can assert the body content and not only its length.
+     */
+    private Page<BeerDTO> twoBeersPage() {
+        BeerDTO mangoBobs = BeerDTO.builder()
+                .id(UUID.randomUUID())
+                .version(1)
+                .beerName("Mango Bobs")
+                .beerStyle(BeerStyle.ALE)
+                .upc("0631234200036")
+                .quantityOnHand(12)
+                .price(new BigDecimal("12.99"))
+                .build();
+
+        BeerDTO pinballPorter = BeerDTO.builder()
+                .id(UUID.randomUUID())
+                .version(1)
+                .beerName("Pinball Porter")
+                .beerStyle(BeerStyle.PORTER)
+                .upc("0083783375213")
+                .quantityOnHand(24)
+                .price(new BigDecimal("17.99"))
+                .build();
+
+        return new PageImpl<>(List.of(mangoBobs, pinballPorter));
     }
 
     @Test
