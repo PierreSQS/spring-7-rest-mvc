@@ -15,10 +15,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.data.domain.Page;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,24 +28,22 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Modified by Pierrot on 03-11-2026
+ * Modified by Pierrot on 08-11-2026
  */
 @Slf4j
 @SpringBootTest
 @AutoConfigureMockMvc
 class BeerControllerIT {
-    @Autowired
-    BeerController beerController;
-
     @Autowired
     BeerRepository beerRepository;
 
@@ -266,33 +261,49 @@ class BeerControllerIT {
     }
 
     @Test
-    void testDeleteByIDNotFound() {
-        UUID beerId = UUID.randomUUID();
-        assertThrows(NotFoundException.class, () -> beerController.deleteById(beerId));
+    void testDeleteByIDNotFound() throws Exception {
+        mockMvc.perform(delete(BeerController.BEER_PATH_ID, UUID.randomUUID())
+                        .with(BeerControllerTest.jwtRequestPostProcessor))
+                .andExpect(status().isNotFound());
     }
 
     @Transactional
     @Test
-    void deleteByIdFound() {
+    void deleteByIdFound() throws Exception {
         Beer beer = beerRepository.findAll().getFirst();
 
-        ResponseEntity<Void> responseEntity = beerController.deleteById(beer.getId());
-        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(204));
+        mockMvc.perform(delete(BeerController.BEER_PATH_ID, beer.getId())
+                        .with(BeerControllerTest.jwtRequestPostProcessor))
+                .andExpect(status().isNoContent());
+
+        // write the delete, then forget Hibernate's memory, so findById reads the real table (R6)
+        entityManager.flush();
+        entityManager.clear();
 
         assertThat(beerRepository.findById(beer.getId())).isEmpty();
     }
 
     @Test
-    void testUpdateNotFound() {
-        UUID beerId = UUID.randomUUID();
-        BeerDTO beerDTO = BeerDTO.builder().build();
-        assertThrows(NotFoundException.class, () ->
-                beerController.updateById(beerId, beerDTO));
+    void testUpdateNotFound() throws Exception {
+        // the PUT is @Validated: an empty DTO would answer 400, and the test would prove nothing
+        BeerDTO beerDTO = BeerDTO.builder()
+                .beerName("Unknown Beer")
+                .beerStyle(BeerStyle.PALE_ALE)
+                .upc("123456789012")
+                .price(new BigDecimal("9.99"))
+                .build();
+
+        mockMvc.perform(put(BeerController.BEER_PATH_ID, UUID.randomUUID())
+                        .with(BeerControllerTest.jwtRequestPostProcessor)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(jsonMapper.writeValueAsString(beerDTO)))
+                .andExpect(status().isNotFound());
     }
 
     @Transactional
     @Test
-    void updateExistingBeer() {
+    void updateExistingBeer() throws Exception {
         Beer beer = beerRepository.findAll().getFirst();
         BeerDTO beerDTO = beerMapper.beerToBeerDto(beer);
         beerDTO.setId(null);
@@ -300,61 +311,96 @@ class BeerControllerIT {
         final String beerName = "UPDATED";
         beerDTO.setBeerName(beerName);
 
-        ResponseEntity<Void> responseEntity = beerController.updateById(beer.getId(), beerDTO);
-        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(204));
+        mockMvc.perform(put(BeerController.BEER_PATH_ID, beer.getId())
+                        .with(BeerControllerTest.jwtRequestPostProcessor)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(jsonMapper.writeValueAsString(beerDTO)))
+                .andExpect(status().isNoContent());
+
+        entityManager.flush();
+        entityManager.clear();
 
         Beer updatedBeer = beerRepository.findById(beer.getId()).orElseThrow();
         assertThat(updatedBeer.getBeerName()).isEqualTo(beerName);
     }
 
+    // the POST request carries its own id and version: the API must ignore both (issue #15, R1)
     @Transactional
     @Test
-    void saveNewBeerTest() {
+    void saveNewBeerTest() throws Exception {
+        // 1. a valid DTO (the POST is @Validated), carrying a chosen id and version
         BeerDTO beerDTO = BeerDTO.builder()
+                .id(UUID.randomUUID())
+                .version(42)
                 .beerName("New Beer")
+                .beerStyle(BeerStyle.PALE_ALE)
+                .upc("123456789012")
+                .price(new BigDecimal("9.99"))
                 .build();
 
-        ResponseEntity<Void> responseEntity = beerController.handlePost(beerDTO);
+        // 2. POST it as JSON, expect 201 Created and a Location header
+        MvcResult result = mockMvc.perform(post(BeerController.BEER_PATH)
+                        .with(BeerControllerTest.jwtRequestPostProcessor)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(jsonMapper.writeValueAsString(beerDTO)))
+                .andExpect(status().isCreated())
+                .andExpect(header().exists("Location"))
+                .andReturn();
 
-        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(201));
-        assertThat(responseEntity.getHeaders().getLocation()).isNotNull();
+        entityManager.flush();
+        entityManager.clear();
 
-        String[] locationUUID = responseEntity.getHeaders().getLocation().getPath().split("/");
-        UUID savedUUID = UUID.fromString(locationUUID[4]);
+        // 3. read the id of the new beer from the Location header
+        String location = result.getResponse().getHeader("Location");
+        assertThat(location).isNotNull();
+        UUID savedUUID = UUID.fromString(location.split("/")[4]);
 
-        Beer beer = beerRepository.findById(savedUUID).orElseThrow();
-        assertThat(beer).isNotNull();
+        // 4. the new id is not the one sent, and the beer read back has the first version (0)
+        Beer savedBeer = beerRepository.findById(savedUUID).orElseThrow();
+        assertThat(savedBeer.getId()).isNotEqualTo(beerDTO.getId());
+        assertThat(savedBeer.getVersion()).isZero();
     }
 
     @Test
-    void testBeerIdNotFound() {
-        UUID beerId = UUID.randomUUID();
-        assertThrows(NotFoundException.class, () -> beerController.getBeerById(beerId));
+    void testBeerIdNotFound() throws Exception {
+        mockMvc.perform(get(BeerController.BEER_PATH_ID, UUID.randomUUID())
+                        .with(BeerControllerTest.jwtRequestPostProcessor))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    void testGetById() {
+    void testGetById() throws Exception {
         Beer beer = beerRepository.findAll().getFirst();
 
-        BeerDTO dto = beerController.getBeerById(beer.getId());
-
-        assertThat(dto).isNotNull();
+        mockMvc.perform(get(BeerController.BEER_PATH_ID, beer.getId())
+                        .with(BeerControllerTest.jwtRequestPostProcessor)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(beer.getId().toString())))
+                .andExpect(jsonPath("$.beerName", is(beer.getBeerName())));
     }
 
     @Test
-    void testListBeers() {
-        Page<BeerDTO> dtos = beerController.listBeers(null, null, false, 1, 2413);
-
-        assertThat(dtos.getContent()).hasSize(1000);
+    void testListBeers() throws Exception {
+        // the service caps pageSize at 1000, whatever the client asks
+        mockMvc.perform(get(BeerController.BEER_PATH)
+                        .with(BeerControllerTest.jwtRequestPostProcessor)
+                        .queryParam("pageSize", "2413"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()", is(1000)));
     }
 
     @Transactional
     @Test
-    void testEmptyList() {
+    void testEmptyList() throws Exception {
         beerRepository.deleteAll();
-        Page<BeerDTO> dtos = beerController.listBeers(null, null, false, 1, 25);
 
-        assertThat(dtos.getContent()).isEmpty();
+        mockMvc.perform(get(BeerController.BEER_PATH)
+                        .with(BeerControllerTest.jwtRequestPostProcessor))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()", is(0)));
     }
 }
 
