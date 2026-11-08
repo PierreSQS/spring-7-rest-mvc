@@ -17,11 +17,15 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
+import org.springframework.test.web.servlet.client.RestTestClient;
 import org.springframework.test.web.servlet.MvcResult;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -70,6 +74,10 @@ class BeerControllerTest {
 
     @MockitoBean
     BeerService beerService;
+
+    // #43: a real "Authorization: Bearer ..." header needs a decoder that accepts it
+    @MockitoBean
+    JwtDecoder jwtDecoder;
 
     BeerServiceImpl beerServiceImpl;
 
@@ -175,6 +183,29 @@ class BeerControllerTest {
                         .content(jsonMapper.writeValueAsString(beer)))
                 .andExpect(status().isCreated())
                 .andExpect(header().exists("Location"));
+    }
+
+    // ----- #43: first look at RestTestClient, next to the MockMvc version above. -----
+    @Test
+    void testCreateNewBeerWithRestTestClient() {
+        BeerDTO beer = beerServiceImpl.listBeers(null, null, false, 1, 25).getContent().getFirst();
+        beer.setVersion(null);
+        beer.setId(null);
+
+        given(beerService.saveNewBeer(any(BeerDTO.class))).willReturn(beerServiceImpl.listBeers(null, null, false, 1, 25).getContent().get(1));
+
+        given(jwtDecoder.decode("fake-token")).willReturn(
+                Jwt.withTokenValue("fake-token").header("alg", "none").claim("sub", "pierrot").build());
+
+        RestTestClient.bindTo(mockMvc).build()
+                .post().uri(BeerController.BEER_PATH)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer fake-token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .body(beer)
+                .exchange()
+                .expectStatus().isCreated()
+                .expectHeader().exists("Location");
     }
 
     @Test
