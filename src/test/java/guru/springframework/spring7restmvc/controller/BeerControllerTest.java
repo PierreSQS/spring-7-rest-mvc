@@ -4,7 +4,6 @@ import guru.springframework.spring7restmvc.config.SpringSecConfig;
 import guru.springframework.spring7restmvc.model.BeerDTO;
 import guru.springframework.spring7restmvc.model.BeerStyle;
 import guru.springframework.spring7restmvc.services.BeerService;
-import guru.springframework.spring7restmvc.services.BeerServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,6 +29,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,7 +54,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Modified by Pierrot on 08-11-2026
+ * Modified by Pierrot on 09-11-2026
  */
 @Slf4j
 @WebMvcTest(BeerController.class)
@@ -79,17 +79,51 @@ class BeerControllerTest {
     @MockitoBean
     JwtDecoder jwtDecoder;
 
-    BeerServiceImpl beerServiceImpl;
-
     @Captor
     ArgumentCaptor<UUID> uuidArgumentCaptor;
 
     @Captor
     ArgumentCaptor<BeerDTO> beerArgumentCaptor;
 
+    BeerDTO beerDTO1, beerDTO2, beerDTO3;
+
     @BeforeEach
     void setUp() {
-        beerServiceImpl = new BeerServiceImpl();
+        beerDTO1 = BeerDTO.builder()
+                .id(UUID.randomUUID())
+                .version(1)
+                .beerName("Galaxy Cat")
+                .beerStyle(BeerStyle.PALE_ALE)
+                .upc("12356")
+                .price(new BigDecimal("12.99"))
+                .quantityOnHand(122)
+                .createdDate(LocalDateTime.now())
+                .updateDate(LocalDateTime.now())
+                .build();
+
+        beerDTO2 = BeerDTO.builder()
+                .id(UUID.randomUUID())
+                .version(1)
+                .beerName("Crank")
+                .beerStyle(BeerStyle.PALE_ALE)
+                .upc("12356222")
+                .price(new BigDecimal("11.99"))
+                .quantityOnHand(392)
+                .createdDate(LocalDateTime.now())
+                .updateDate(LocalDateTime.now())
+                .build();
+
+        beerDTO3 = BeerDTO.builder()
+                .id(UUID.randomUUID())
+                .version(1)
+                .beerName("Sunshine City")
+                .beerStyle(BeerStyle.IPA)
+                .upc("12356")
+                .price(new BigDecimal("13.99"))
+                .quantityOnHand(144)
+                .createdDate(LocalDateTime.now())
+                .updateDate(LocalDateTime.now())
+                .build();
     }
 
     // SpringSecConfig only checks that the request is authenticated: no scope, subject or date is read.
@@ -98,15 +132,13 @@ class BeerControllerTest {
 
     @Test
     void testPatchBeer() throws Exception {
-        BeerDTO beer = beerServiceImpl.listBeers(null, null, false, 1, 25).getContent().getFirst();
-
         Map<String, Object> beerMap = new HashMap<>();
         beerMap.put("beerName", "New Name");
 
         given(beerService.patchBeerById(any(UUID.class), any(BeerDTO.class)))
-                .willReturn(Optional.of(beer));
+                .willReturn(Optional.of(beerDTO1));
 
-        mockMvc.perform(patch(BeerController.BEER_PATH_ID, beer.getId())
+        mockMvc.perform(patch(BeerController.BEER_PATH_ID, beerDTO1.getId())
                         .with(jwtRequestPostProcessor)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
@@ -115,38 +147,34 @@ class BeerControllerTest {
 
         verify(beerService).patchBeerById(uuidArgumentCaptor.capture(), beerArgumentCaptor.capture());
 
-        assertThat(uuidArgumentCaptor.getValue()).isEqualTo(beer.getId());
+        assertThat(uuidArgumentCaptor.getValue()).isEqualTo(beerDTO1.getId());
         assertThat(beerArgumentCaptor.getValue().getBeerName())
                 .isEqualTo(beerMap.get("beerName"));
     }
 
     @Test
     void testDeleteBeer() throws Exception {
-        BeerDTO beer = beerServiceImpl.listBeers(null, null, false, 1, 25).getContent().getFirst();
-
         given(beerService.deleteById(any())).willReturn(true);
 
-        mockMvc.perform(delete(BeerController.BEER_PATH_ID, beer.getId())
+        mockMvc.perform(delete(BeerController.BEER_PATH_ID, beerDTO1.getId())
                         .with(jwtRequestPostProcessor)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
 
         verify(beerService).deleteById(uuidArgumentCaptor.capture());
 
-        assertThat(uuidArgumentCaptor.getValue()).isEqualTo(beer.getId());
+        assertThat(uuidArgumentCaptor.getValue()).isEqualTo(beerDTO1.getId());
     }
 
     @Test
     void testUpdateBeer() throws Exception {
-        BeerDTO beer = beerServiceImpl.listBeers(null, null, false, 1, 25).getContent().getFirst();
+        given(beerService.updateBeerById(any(), any())).willReturn(Optional.of(beerDTO1));
 
-        given(beerService.updateBeerById(any(), any())).willReturn(Optional.of(beer));
-
-        mockMvc.perform(put(BeerController.BEER_PATH_ID, beer.getId())
+        mockMvc.perform(put(BeerController.BEER_PATH_ID, beerDTO1.getId())
                         .with(jwtRequestPostProcessor)
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(jsonMapper.writeValueAsString(beer)))
+                        .content(jsonMapper.writeValueAsString(beerDTO1)))
                 .andExpect(status().isNoContent());
 
         verify(beerService).updateBeerById(any(UUID.class), any(BeerDTO.class));
@@ -154,15 +182,14 @@ class BeerControllerTest {
 
     @Test
     void testUpdateBeerBlankName() throws Exception {
-        BeerDTO beer = beerServiceImpl.listBeers(null, null, false, 1, 25).getContent().getFirst();
-        beer.setBeerName("");
-        given(beerService.updateBeerById(any(), any())).willReturn(Optional.of(beer));
+        beerDTO1.setBeerName("");
+        given(beerService.updateBeerById(any(), any())).willReturn(Optional.of(beerDTO1));
 
-        mockMvc.perform(put(BeerController.BEER_PATH_ID, beer.getId())
+        mockMvc.perform(put(BeerController.BEER_PATH_ID, beerDTO1.getId())
                         .with(jwtRequestPostProcessor)
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(jsonMapper.writeValueAsString(beer)))
+                        .content(jsonMapper.writeValueAsString(beerDTO1)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.length()", is(1)));
 
@@ -170,17 +197,16 @@ class BeerControllerTest {
 
     @Test
     void testCreateNewBeer() throws Exception {
-        BeerDTO beer = beerServiceImpl.listBeers(null, null, false, 1, 25).getContent().getFirst();
-        beer.setVersion(null);
-        beer.setId(null);
+        beerDTO1.setVersion(null);
+        beerDTO1.setId(null);
 
-        given(beerService.saveNewBeer(any(BeerDTO.class))).willReturn(beerServiceImpl.listBeers(null, null, false, 1, 25).getContent().get(1));
+        given(beerService.saveNewBeer(any(BeerDTO.class))).willReturn(beerDTO2);
 
         mockMvc.perform(post(BeerController.BEER_PATH)
                         .with(jwtRequestPostProcessor)
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(jsonMapper.writeValueAsString(beer)))
+                        .content(jsonMapper.writeValueAsString(beerDTO1)))
                 .andExpect(status().isCreated())
                 .andExpect(header().exists("Location"));
     }
@@ -188,11 +214,10 @@ class BeerControllerTest {
     // ----- #43: first look at RestTestClient, next to the MockMvc version above. -----
     @Test
     void testCreateNewBeerWithRestTestClient() {
-        BeerDTO beer = beerServiceImpl.listBeers(null, null, false, 1, 25).getContent().getFirst();
-        beer.setVersion(null);
-        beer.setId(null);
+        beerDTO1.setVersion(null);
+        beerDTO1.setId(null);
 
-        given(beerService.saveNewBeer(any(BeerDTO.class))).willReturn(beerServiceImpl.listBeers(null, null, false, 1, 25).getContent().get(1));
+        given(beerService.saveNewBeer(any(BeerDTO.class))).willReturn(beerDTO2);
 
         given(jwtDecoder.decode("fake-token")).willReturn(
                 Jwt.withTokenValue("fake-token").header("alg", "none").claim("sub", "pierrot").build());
@@ -202,7 +227,7 @@ class BeerControllerTest {
                 .header(HttpHeaders.AUTHORIZATION, "Bearer fake-token")
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
-                .body(beer)
+                .body(beerDTO1)
                 .exchange()
                 .expectStatus().isCreated()
                 .expectHeader().exists("Location");
@@ -213,7 +238,7 @@ class BeerControllerTest {
 
         BeerDTO beerDTO = BeerDTO.builder().build();
 
-        given(beerService.saveNewBeer(any(BeerDTO.class))).willReturn(beerServiceImpl.listBeers(null, null, false, 1, 25).getContent().get(1));
+        given(beerService.saveNewBeer(any(BeerDTO.class))).willReturn(beerDTO1);
 
         MvcResult mvcResult = mockMvc.perform(post(BeerController.BEER_PATH)
                         .with(jwtRequestPostProcessor)
@@ -234,7 +259,7 @@ class BeerControllerTest {
     @Test
     void testListBeers() throws Exception {
         given(beerService.listBeers(any(), any(), any(), any(), any()))
-                .willReturn(beerServiceImpl.listBeers(null, null, false, null, null));
+                .willReturn(new PageImpl<>(List.of(beerDTO1, beerDTO2, beerDTO3)));
 
         mockMvc.perform(get(BeerController.BEER_PATH)
                         .with(jwtRequestPostProcessor)
@@ -281,8 +306,8 @@ class BeerControllerTest {
     }
 
     /**
-     * The page of exactly 2 beers both versions of the test work on. Built here instead of reusing
-     * BeerServiceImpl's 3 beers, so the test can assert the body content and not only its length.
+     * The page of exactly 2 beers both versions of the test work on. Built here, with 2 beers of
+     * its own, so the test can assert the body content and not only its length.
      */
     private Page<BeerDTO> twoBeersPage() {
         BeerDTO mangoBobs = BeerDTO.builder()
@@ -320,16 +345,14 @@ class BeerControllerTest {
 
     @Test
     void getBeerById() throws Exception {
-        BeerDTO testBeer = beerServiceImpl.listBeers(null, null, false, 1, 25).getContent().getFirst();
+        given(beerService.getBeerById(beerDTO1.getId())).willReturn(Optional.of(beerDTO1));
 
-        given(beerService.getBeerById(testBeer.getId())).willReturn(Optional.of(testBeer));
-
-        mockMvc.perform(get(BeerController.BEER_PATH_ID, testBeer.getId())
+        mockMvc.perform(get(BeerController.BEER_PATH_ID, beerDTO1.getId())
                         .with(jwtRequestPostProcessor)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id", is(testBeer.getId().toString())))
-                .andExpect(jsonPath("$.beerName", is(testBeer.getBeerName())));
+                .andExpect(jsonPath("$.id", is(beerDTO1.getId().toString())))
+                .andExpect(jsonPath("$.beerName", is(beerDTO1.getBeerName())));
     }
 }

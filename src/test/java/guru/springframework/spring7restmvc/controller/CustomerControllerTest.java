@@ -3,7 +3,6 @@ package guru.springframework.spring7restmvc.controller;
 import guru.springframework.spring7restmvc.config.SpringSecConfig;
 import guru.springframework.spring7restmvc.model.CustomerDTO;
 import guru.springframework.spring7restmvc.services.CustomerService;
-import guru.springframework.spring7restmvc.services.CustomerServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,7 +17,9 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.json.JsonMapper;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -39,7 +40,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Modified by Pierrot on 26-10-2026
+ * Modified by Pierrot on 09-11-2026
  */
 @WebMvcTest(CustomerController.class)
 @Import(SpringSecConfig.class)
@@ -55,11 +56,33 @@ class CustomerControllerTest {
     @Autowired
     JsonMapper jsonMapper;
 
-    CustomerServiceImpl customerServiceImpl;
+    CustomerDTO customerDTO1, customerDTO2, customerDTO3;
 
     @BeforeEach
     void setUp() {
-        customerServiceImpl = new CustomerServiceImpl();
+        customerDTO1 = CustomerDTO.builder()
+                .id(UUID.randomUUID())
+                .name("Customer 1")
+                .version(1)
+                .createdDate(LocalDateTime.now())
+                .updateDate(LocalDateTime.now())
+                .build();
+
+        customerDTO2 = CustomerDTO.builder()
+                .id(UUID.randomUUID())
+                .name("Customer 2")
+                .version(1)
+                .createdDate(LocalDateTime.now())
+                .updateDate(LocalDateTime.now())
+                .build();
+
+        customerDTO3 = CustomerDTO.builder()
+                .id(UUID.randomUUID())
+                .name("Customer 3")
+                .version(1)
+                .createdDate(LocalDateTime.now())
+                .updateDate(LocalDateTime.now())
+                .build();
     }
 
     @Captor
@@ -70,15 +93,13 @@ class CustomerControllerTest {
 
     @Test
     void testPatchCustomer() throws Exception {
-        CustomerDTO customer = customerServiceImpl.getAllCustomers().getFirst();
-
         Map<String, Object> customerMap = new HashMap<>();
         customerMap.put("name", "New Name");
 
         given(customerService.patchCustomerById(any(UUID.class), any(CustomerDTO.class)))
-                .willReturn(Optional.of(customer));
+                .willReturn(Optional.of(customerDTO1));
 
-        mockMvc.perform(patch( CustomerController.CUSTOMER_PATH_ID, customer.getId())
+        mockMvc.perform(patch( CustomerController.CUSTOMER_PATH_ID, customerDTO1.getId())
                         .with(BeerControllerTest.jwtRequestPostProcessor)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonMapper.writeValueAsString(customerMap)))
@@ -87,68 +108,64 @@ class CustomerControllerTest {
         verify(customerService).patchCustomerById(uuidArgumentCaptor.capture(),
                 customerArgumentCaptor.capture());
 
-        assertThat(uuidArgumentCaptor.getValue()).isEqualTo(customer.getId());
+        assertThat(uuidArgumentCaptor.getValue()).isEqualTo(customerDTO1.getId());
         assertThat(customerArgumentCaptor.getValue().getName())
                 .isEqualTo(customerMap.get("name"));
     }
 
     @Test
     void testDeleteCustomer() throws Exception {
-        CustomerDTO customer = customerServiceImpl.getAllCustomers().getFirst();
-
         given(customerService.deleteCustomerById(any())).willReturn(true);
 
-        mockMvc.perform(delete(CustomerController.CUSTOMER_PATH_ID, customer.getId())
+        mockMvc.perform(delete(CustomerController.CUSTOMER_PATH_ID, customerDTO1.getId())
                         .with(BeerControllerTest.jwtRequestPostProcessor)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
 
         verify(customerService).deleteCustomerById(uuidArgumentCaptor.capture());
 
-        assertThat(uuidArgumentCaptor.getValue()).isEqualTo(customer.getId());
+        assertThat(uuidArgumentCaptor.getValue()).isEqualTo(customerDTO1.getId());
     }
 
     @Test
     void testUpdateCustomer() throws Exception {
-        CustomerDTO customer = customerServiceImpl.getAllCustomers().getFirst();
-        customer.setEmail("test@example.com");
+        customerDTO1.setEmail("test@example.com");
 
         given(customerService.updateCustomerById(any(), any())).willReturn(Optional.of(CustomerDTO.builder()
                 .build()));
 
-        mockMvc.perform(put(CustomerController.CUSTOMER_PATH_ID, customer.getId())
+        mockMvc.perform(put(CustomerController.CUSTOMER_PATH_ID, customerDTO1.getId())
                         .with(BeerControllerTest.jwtRequestPostProcessor)
-                .content(jsonMapper.writeValueAsString(customer))
+                .content(jsonMapper.writeValueAsString(customerDTO1))
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
 
         verify(customerService).updateCustomerById(uuidArgumentCaptor.capture(), any(CustomerDTO.class));
 
-        assertThat(uuidArgumentCaptor.getValue()).isEqualTo(customer.getId());
+        assertThat(uuidArgumentCaptor.getValue()).isEqualTo(customerDTO1.getId());
     }
 
     @Test
     void testCreateCustomer() throws Exception {
-        CustomerDTO customer = customerServiceImpl.getAllCustomers().getFirst();
-        customer.setId(null);
-        customer.setVersion(null);
-        customer.setEmail("test@example.com");
+        customerDTO1.setId(null);
+        customerDTO1.setVersion(null);
+        customerDTO1.setEmail("test@example.com");
 
         given(customerService.saveNewCustomer(any(CustomerDTO.class)))
-                .willReturn(customerServiceImpl.getAllCustomers().get(1));
+                .willReturn(customerDTO2);
 
         mockMvc.perform(post(CustomerController.CUSTOMER_PATH).contentType(MediaType.APPLICATION_JSON)
                         .with(BeerControllerTest.jwtRequestPostProcessor)
                 .accept(MediaType.APPLICATION_JSON)
-                .content(jsonMapper.writeValueAsString(customer)))
+                .content(jsonMapper.writeValueAsString(customerDTO1)))
                 .andExpect(status().isCreated())
                 .andExpect(header().exists("Location"));
     }
 
     @Test
     void listAllCustomers() throws Exception {
-        given(customerService.getAllCustomers()).willReturn(customerServiceImpl.getAllCustomers());
+        given(customerService.getAllCustomers()).willReturn(List.of(customerDTO1, customerDTO2, customerDTO3));
 
         mockMvc.perform(get(CustomerController.CUSTOMER_PATH)
                         .with(BeerControllerTest.jwtRequestPostProcessor)
@@ -160,7 +177,6 @@ class CustomerControllerTest {
 
     @Test
     void getCustomerByIdNotFound() throws Exception {
-
         given(customerService.getCustomerById(any(UUID.class))).willReturn(Optional.empty());
 
         mockMvc.perform(get(CustomerController.CUSTOMER_PATH_ID, UUID.randomUUID())
@@ -170,16 +186,14 @@ class CustomerControllerTest {
 
     @Test
     void getCustomerById() throws Exception {
-        CustomerDTO customer = customerServiceImpl.getAllCustomers().getFirst();
+        given(customerService.getCustomerById(customerDTO1.getId())).willReturn(Optional.of(customerDTO1));
 
-        given(customerService.getCustomerById(customer.getId())).willReturn(Optional.of(customer));
-
-        mockMvc.perform(get(CustomerController.CUSTOMER_PATH_ID, customer.getId())
+        mockMvc.perform(get(CustomerController.CUSTOMER_PATH_ID, customerDTO1.getId())
                         .with(BeerControllerTest.jwtRequestPostProcessor)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.name", is(customer.getName())));
+                .andExpect(jsonPath("$.name", is(customerDTO1.getName())));
     }
 }
 
