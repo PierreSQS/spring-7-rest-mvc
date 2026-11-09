@@ -84,7 +84,7 @@ Do not fix JT's code on the side: name the problem, propose an issue, let him de
 
 **Paging and sorting** (`BeerServiceJPA.buildPageRequest`): the API counts pages from **1**, Spring Data from 0. Without parameters: page 1 with **25** beers; `pageSize` is capped at **1000**; a missing or `< 1` `pageNumber` gives page 1. Every page is sorted by `beerName` ascending.
 
-**Persistence:** keep `@Version` (`Integer`). `@CreationTimestamp` / `@UpdateTimestamp` fill `createdDate` / `updateDate`; never set them by hand. All collections are lazy (JPA default). `Beer.categories` owns the join table `beer_category`; `Category.beers` is its `mappedBy` mirror. Every table uses `created_date`, `update_date` and `version integer` (`V6`, `V7`). `spring.jpa.open-in-view` is not configured, so Boot's default (`true`) applies (issue #10).
+**Persistence:** keep `@Version` (`Integer`). `@CreationTimestamp` / `@UpdateTimestamp` fill `createdDate` / `updateDate`; never set them by hand. All collections are lazy (JPA default). `Beer.categories` owns the join table `beer_category`; `Category.beers` is its `mappedBy` mirror. Every table uses `created_date`, `update_date` and `version integer` (`V6`, `V7`). `spring.jpa.open-in-view=false` (issue #10): the session closes as soon as the repository call returns (the services carry no `@Transactional`), so a lazy collection read afterwards throws `LazyInitializationException`. Safe today because controllers only receive DTOs without collections; a DTO that gains a collection must load it inside a transaction.
 
 **Annotation processing:** Lombok, lombok-mapstruct-binding and mapstruct-processor are registered on `maven-compiler-plugin`. MapStruct's version (1.6.3) is pinned because Boot does not manage it.
 
