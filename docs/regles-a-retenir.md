@@ -10,9 +10,9 @@ Créé le 17-10-2026.
 
 ## Table des matières
 
-28 règles, numérotées R1 à R28 dans l'ordre où elles ont été apprises - donc pas dans
+29 règles, numérotées R1 à R29 dans l'ordre où elles ont été apprises - donc pas dans
 l'ordre des sections : R19 est rangée avec les fichiers, R20-R21 avec les lambdas, R22-R23 avec Hibernate,
-R24 avec PUT et PATCH, R25-R26 avec la base de données, R27 avec Spring Security, R28 avec les tests.
+R24 avec PUT et PATCH, R25-R26 avec la base de données, R27 avec Spring Security, R28-R29 avec les tests.
 
 
 **1. MapStruct et DTO**
@@ -41,6 +41,7 @@ R24 avec PUT et PATCH, R25-R26 avec la base de données, R27 avec Spring Securit
 - [R10 — Un test doit prouver quelque chose : le faire échouer une fois](#r10--un-test-doit-prouver-quelque-chose--le-faire-échouer-une-fois)
 - [R11 — `@WebMvcTest` ne charge que la couche web](#r11--webmvctest-ne-charge-que-la-couche-web)
 - [R28 — Un test qui dépend d'un fichier fabriqué par le build : l'ignorer, pas le laisser rouge](#r28--un-test-qui-dépend-dun-fichier-fabriqué-par-le-build--lignorer-pas-le-laisser-rouge)
+- [R29 — Dans un test, un DTO d'exemple joue deux rôles : ce qu'on envoie et ce qui revient](#r29--dans-un-test-un-dto-dexemple-joue-deux-rôles--ce-quon-envoie-et-ce-qui-revient)
 
 **5. Spring Security**
 
@@ -511,6 +512,48 @@ C'est pour cela que le paramètre doit être l'`ObjectProvider<BuildProperties>`
 **Exemple dans le projet :** `src/test/java/guru/springframework/spring7restmvc/config/SpringSecConfigIT.java:39`
 et, côté production, `src/main/java/guru/springframework/spring7restmvc/config/OpenApiConfig.java:42`
 (branche `127-springdoc-security-cfg-jt-sb412`, commit `95797f1f`).
+
+### R29 — Dans un test, un DTO d'exemple joue deux rôles : ce qu'on envoie et ce qui revient
+
+Contexte : dans un test de contrôleur (`@WebMvcTest`), le service est simulé (`@MockitoBean`). Le même
+objet d'exemple - par exemple `beerDTO1`, construit dans le `@BeforeEach` - peut servir à deux choses
+opposées :
+
+- **ce qui revient** : la réponse du faux service (`given(...).willReturn(Optional.of(beerDTO1))`), donc
+  *la ligne telle que la base la rend*. Là, `id`, `version`, `createdDate` et `updateDate` doivent être
+  remplis : c'est réaliste.
+- **ce qu'on envoie** : le corps d'un POST ou d'un PUT (`writeValueAsString(...)`). Là, ces quatre champs
+  n'ont rien à y faire : ils appartiennent à la base et à Hibernate (R7), aucun appelant ne les envoie, et
+  le mapper les ignore de toute façon (R1).
+
+Donc **un objet par rôle** : une petite méthode privée fabrique le corps envoyé, avec seulement les champs
+validés.
+
+```java
+private BeerDTO beerRequest(String beerName) {
+    return BeerDTO.builder()
+            .beerName(beerName)            // le paramètre : "" pour tester un nom vide
+            .beerStyle(BeerStyle.PALE_ALE)
+            .upc("123456789012")
+            .price(new BigDecimal("9.99"))
+            .build();                      // id, version, createdDate, updateDate restent null
+}
+```
+
+Deux pièges rencontrés en appliquant la règle :
+
+1. **Un corps volontairement vide reste vide.** `testCreateBeerNullBeerName` attend 4 erreurs de validation ;
+   seul un `BeerDTO.builder().build()` entièrement nul les produit. Le remplacer par la méthode ci-dessus
+   n'en laisse qu'une, et le test devient rouge.
+2. **Une assertion ne lit pas forcément ce qu'on envoie.**
+   `verify(beerService).updateBeerById(any(UUID.class), any(BeerDTO.class))` ne regarde pas l'intérieur de
+   l'objet : n'importe quel nom valide passe. Pour vérifier une valeur envoyée, il faut un `ArgumentCaptor`
+   (exemple : `testPatchBeer`).
+
+**Exemple dans le projet :** `src/test/java/guru/springframework/spring7restmvc/controller/BeerControllerTest.java:352`
+et `src/test/java/guru/springframework/spring7restmvc/controller/CustomerControllerTest.java:193`
+(branche `127-springdoc-security-cfg-jt-sb412`, commit `7f8b6132`, issue #53). La même convention est notée
+dans `.claude/rules/testing.md` de cette branche.
 
 ---
 
