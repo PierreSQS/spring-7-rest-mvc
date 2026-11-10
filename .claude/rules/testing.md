@@ -11,7 +11,7 @@ Loaded with `CLAUDE.md` when Claude reads or edits a file under `src/test/`. The
 
 | Test pattern | Setup | Runner | Docker |
 |---|---|---|---|
-| `*ControllerTest` | `@WebMvcTest(XController.class)` + `@Import(SpringSecConfig.class)`, `@MockitoBean` services, `@ExtendWith(MockitoExtension.class)` for the `@Captor` fields, `.with(jwtRequestPostProcessor)` | Surefire (`test`) | No |
+| `*ControllerTest` | `@WebMvcTest(XController.class)` + `@Import(SpringSecConfig.class)`, `@MockitoBean` services, `@ExtendWith(MockitoExtension.class)` for the `@Captor` fields, `.with(jwtRequestPostProcessor)`. **A `POST` or `PUT` body carries no `id`, `version`, `createdDate` or `updateDate`** (the database and Hibernate own them, issue #53): a private `beerRequest(name)` / `customerRequest(name)` builds it, while the `@BeforeEach` DTOs keep those fields and play the answer of the mocked service. | Surefire (`test`) | No |
 | `*RepositoryTest`, `BootstrapDataTest` | `@DataJpaTest` | Surefire | No |
 | `BeerCsvServiceImplTest` | plain unit test | Surefire | No |
 | `*ControllerIT` | `@SpringBootTest` + `@AutoConfigureMockMvc`, H2. **Every test goes through `MockMvc`** with `.with(BeerControllerTest.jwtRequestPostProcessor)` (the 18 direct controller calls were rewritten, issue #11): a missing entity expects `404`, not an exception, and a `PUT`/`POST` body must be valid or the answer is `400`. Data-changing tests are `@Transactional` and call `entityManager.flush()` + `clear()` before reading the row back (R6). | Failsafe (`verify`) | No |

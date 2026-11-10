@@ -54,7 +54,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Modified by Pierrot on 09-11-2026
+ * Modified by Pierrot on 10-11-2026
  */
 @Slf4j
 @WebMvcTest(BeerController.class)
@@ -174,7 +174,7 @@ class BeerControllerTest {
                         .with(jwtRequestPostProcessor)
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(jsonMapper.writeValueAsString(beerDTO1)))
+                        .content(jsonMapper.writeValueAsString(beerRequest("Update Name"))))
                 .andExpect(status().isNoContent());
 
         verify(beerService).updateBeerById(any(UUID.class), any(BeerDTO.class));
@@ -182,14 +182,13 @@ class BeerControllerTest {
 
     @Test
     void testUpdateBeerBlankName() throws Exception {
-        beerDTO1.setBeerName("");
         given(beerService.updateBeerById(any(), any())).willReturn(Optional.of(beerDTO1));
 
         mockMvc.perform(put(BeerController.BEER_PATH_ID, beerDTO1.getId())
                         .with(jwtRequestPostProcessor)
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(jsonMapper.writeValueAsString(beerDTO1)))
+                        .content(jsonMapper.writeValueAsString(beerRequest(""))))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.length()", is(1)));
 
@@ -197,16 +196,13 @@ class BeerControllerTest {
 
     @Test
     void testCreateNewBeer() throws Exception {
-        beerDTO1.setVersion(null);
-        beerDTO1.setId(null);
-
         given(beerService.saveNewBeer(any(BeerDTO.class))).willReturn(beerDTO2);
 
         mockMvc.perform(post(BeerController.BEER_PATH)
                         .with(jwtRequestPostProcessor)
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(jsonMapper.writeValueAsString(beerDTO1)))
+                        .content(jsonMapper.writeValueAsString(beerRequest("New Name"))))
                 .andExpect(status().isCreated())
                 .andExpect(header().exists("Location"));
     }
@@ -214,9 +210,6 @@ class BeerControllerTest {
     // ----- #43: first look at RestTestClient, next to the MockMvc version above. -----
     @Test
     void testCreateNewBeerWithRestTestClient() {
-        beerDTO1.setVersion(null);
-        beerDTO1.setId(null);
-
         given(beerService.saveNewBeer(any(BeerDTO.class))).willReturn(beerDTO2);
 
         given(jwtDecoder.decode("fake-token")).willReturn(
@@ -227,7 +220,7 @@ class BeerControllerTest {
                 .header(HttpHeaders.AUTHORIZATION, "Bearer fake-token")
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
-                .body(beerDTO1)
+                .body(beerRequest("New Name"))
                 .exchange()
                 .expectStatus().isCreated()
                 .expectHeader().exists("Location");
@@ -355,4 +348,18 @@ class BeerControllerTest {
                 .andExpect(jsonPath("$.id", is(beerDTO1.getId().toString())))
                 .andExpect(jsonPath("$.beerName", is(beerDTO1.getBeerName())));
     }
+
+    /**
+     * The body a real caller sends (#53): no id, no version, no dates - the database and
+     * Hibernate own those. The name is a parameter, so the blank-name test can send "".
+     */
+    private BeerDTO beerRequest(String beerName) {
+        return BeerDTO.builder()
+                .beerName(beerName)
+                .beerStyle(BeerStyle.PALE_ALE)
+                .upc("123456789012")
+                .price(new BigDecimal("9.99"))
+                .build();
+    }
+
 }

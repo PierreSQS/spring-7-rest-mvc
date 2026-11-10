@@ -40,7 +40,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Modified by Pierrot on 09-11-2026
+ * Modified by Pierrot on 10-11-2026
  */
 @WebMvcTest(CustomerController.class)
 @Import(SpringSecConfig.class)
@@ -129,14 +129,11 @@ class CustomerControllerTest {
 
     @Test
     void testUpdateCustomer() throws Exception {
-        customerDTO1.setEmail("test@example.com");
-
-        given(customerService.updateCustomerById(any(), any())).willReturn(Optional.of(CustomerDTO.builder()
-                .build()));
+        given(customerService.updateCustomerById(any(), any())).willReturn(Optional.of(customerDTO1));
 
         mockMvc.perform(put(CustomerController.CUSTOMER_PATH_ID, customerDTO1.getId())
                         .with(BeerControllerTest.jwtRequestPostProcessor)
-                .content(jsonMapper.writeValueAsString(customerDTO1))
+                .content(jsonMapper.writeValueAsString(customerRequest("Updated Customer")))
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
@@ -148,17 +145,13 @@ class CustomerControllerTest {
 
     @Test
     void testCreateCustomer() throws Exception {
-        customerDTO1.setId(null);
-        customerDTO1.setVersion(null);
-        customerDTO1.setEmail("test@example.com");
-
         given(customerService.saveNewCustomer(any(CustomerDTO.class)))
                 .willReturn(customerDTO2);
 
         mockMvc.perform(post(CustomerController.CUSTOMER_PATH).contentType(MediaType.APPLICATION_JSON)
                         .with(BeerControllerTest.jwtRequestPostProcessor)
                 .accept(MediaType.APPLICATION_JSON)
-                .content(jsonMapper.writeValueAsString(customerDTO1)))
+                .content(jsonMapper.writeValueAsString(customerRequest("New Customer"))))
                 .andExpect(status().isCreated())
                 .andExpect(header().exists("Location"));
     }
@@ -194,6 +187,17 @@ class CustomerControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.name", is(customerDTO1.getName())));
+    }
+
+    /**
+     * The body a real caller sends (#53): no id, no version, no dates - the database and
+     * Hibernate own those. The name is a parameter, like beerRequest in BeerControllerTest.
+     */
+    private CustomerDTO customerRequest(String name) {
+        return CustomerDTO.builder()
+                .name(name)
+                .email("test@example.com")
+                .build();
     }
 }
 
