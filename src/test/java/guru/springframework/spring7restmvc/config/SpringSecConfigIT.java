@@ -12,13 +12,14 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.assertj.core.api.Assumptions.assumeThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * Created by Pierrot on 02-11-2026
- * Modified by Pierrot on 07-11-2026
+ * Modified by Pierrot on 11-11-2026
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -35,6 +36,25 @@ class SpringSecConfigIT {
                 .andExpect(jsonPath("$.openapi").value("3.1.0"))
                 .andExpect(jsonPath("$.info.title").value("Beer and Customer API"))
                 .andExpect(jsonPath("$.info.version").value("v1"));
+    }
+
+    @Test
+    void testApiDocsYamlOpenWithoutToken() throws Exception {
+        // Chap376: the Maven build fetches the YAML document, so /v3/api-docs.yaml must be open too.
+        // It is a path of its own: "/v3/api-docs/**" does not cover it (the build answered 401).
+        mockMvc.perform(get("/v3/api-docs.yaml"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("openapi: 3.1.0")))
+                .andExpect(content().string(containsString("title: Beer and Customer API")));
+    }
+
+    @Test
+    void testSwaggerConfigOpenWithoutToken() throws Exception {
+        // Swagger UI fetches /v3/api-docs/swagger-config to configure itself. "/v3/api-docs/**" covers that
+        // sub-path, JT's "/v3/api-docs**" does not: ** stands for whole path segments, never for an
+        // extension glued to the last one (rule R30). Both writings are needed, that is why we have two.
+        mockMvc.perform(get("/v3/api-docs/swagger-config"))
+                .andExpect(status().isOk());
     }
 
     @Test

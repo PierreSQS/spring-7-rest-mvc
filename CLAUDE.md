@@ -45,7 +45,7 @@ Use **JDK 25** (`JAVA_HOME`) and the Maven wrapper, which pins **Maven 3.9.16**.
 | Full verification | `./mvnw clean verify` | Yes |
 | One integration test class, plus unit tests | `./mvnw verify -Dit.test=MySqlIT` | Yes |
 | Build without integration tests | `./mvnw verify -DskipITs` | No |
-| Run with Compose MySQL | `./mvnw spring-boot:run` (profile `localmysql` set in `pom.xml`) | Yes |
+| Run with Compose MySQL | `./mvnw spring-boot:run` (profile `localmysql`, in the `spring-boot-maven-plugin` configuration of `pom.xml`) | Yes |
 | Run with H2 | `./mvnw spring-boot:run -Dspring-boot.run.profiles=default` | No |
 
 No linter or formatter is configured. Calling the running API needs a JWT from an authorization server on `http://localhost:9000` (see section 4).
@@ -55,6 +55,8 @@ No linter or formatter is configured. Calling the running API needs a JWT from a
 **CI:** `.github/workflows/build.yml` runs `./mvnw -B verify` on every push, except pushes that change only `docs/**` or `*.md`. A green run on the pushed commit is the proof an issue is fixed. The manual trigger (`workflow_dispatch`) is commented out: GitHub only accepts it when the workflow is on the default branch, and `master` has none. To rerun, use "Re-run all jobs" on a run.
 
 **Build info:** `spring-boot-maven-plugin` runs its `build-info` goal (`META-INF/build-info.properties`); `OpenApiConfig` reads it through `BuildProperties` (optional: `ObjectProvider`) and shows the build version as `info.x-build-version` of `/v3/api-docs` (#28) and, because Swagger UI ignores `x-` extensions, in `info.description` under the title (#42).
+
+**OpenAPI document as a build artifact (Chap376):** `./mvnw verify` writes the contract to **`target/oa3.yml`**. The document only exists while the application runs, so `spring-boot-maven-plugin` starts it in `pre-integration-test` (`start`) and stops it in `post-integration-test` (`stop`), and `springdoc-openapi-maven-plugin` 1.6 fetches `/v3/api-docs.yaml` in between (`generate`, phase `integration-test`). The build starts the application with the **default profile (H2, no Docker)** on its own port **8099**, free of the 8080 (H2) and 8081 (`localmysql`) an application started by hand uses; the `start` goal adds `--spring.application.admin.enabled=true` itself, so no `jvmArguments` are needed. `failOnError` is `true`: a failed fetch fails the build instead of being only logged. **If the build fails, Maven skips `stop` and the application keeps running** - `./mvnw spring-boot:stop` ends it.
 
 ---
 
@@ -93,7 +95,7 @@ Do not fix JT's code on the side: name the problem, propose an issue, let him de
 | Outcome | Response |
 |---|---|
 | No or invalid Bearer token | `401` for `GET`; `403` for writes (CSRF only ignored with a Bearer token) |
-| springdoc URLs (`/v3/api-docs`, `/swagger-ui/index.html`) | `200` without a token |
+| springdoc URLs (`/v3/api-docs` and its sub-paths, `/v3/api-docs.yaml`, `/swagger-ui/index.html`) | `200` without a token. **Two patterns are needed and they are complementary:** `**` stands for whole path segments, so `/v3/api-docs/**` covers the base path and `/v3/api-docs/swagger-config` but not `/v3/api-docs.yaml`, while JT's `/v3/api-docs**` covers the `.yaml` but not the sub-path (Chap376, the Maven build got a `401`; rule R30) |
 | `GET` on the beer list | a serialized Spring Data `Page` |
 | `GET` on the customer list | a plain JSON array |
 | Successful POST | `201` with a `Location` header |
@@ -110,7 +112,7 @@ The API is an **OAuth2 resource server** (`spring-boot-starter-security-oauth2-r
 
 ```java
 http.authorizeHttpRequests(authorize -> authorize
-        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+        .requestMatchers("/v3/api-docs/**", "/v3/api-docs.yaml", "/swagger-ui/**", "/swagger-ui.html").permitAll()
         .anyRequest().authenticated())
     .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
 ```
