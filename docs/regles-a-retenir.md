@@ -10,9 +10,9 @@ Créé le 17-10-2026.
 
 ## Table des matières
 
-29 règles, numérotées R1 à R29 dans l'ordre où elles ont été apprises - donc pas dans
+30 règles, numérotées R1 à R30 dans l'ordre où elles ont été apprises - donc pas dans
 l'ordre des sections : R19 est rangée avec les fichiers, R20-R21 avec les lambdas, R22-R23 avec Hibernate,
-R24 avec PUT et PATCH, R25-R26 avec la base de données, R27 avec Spring Security, R28-R29 avec les tests.
+R24 avec PUT et PATCH, R25-R26 avec la base de données, R27 et R30 avec Spring Security, R28-R29 avec les tests.
 
 
 **1. MapStruct et DTO**
@@ -51,6 +51,7 @@ R24 avec PUT et PATCH, R25-R26 avec la base de données, R27 avec Spring Securit
 - [R15 — Désactiver CSRF seulement pour l'API, et seulement pour des clients non-navigateurs](#r15--désactiver-csrf-seulement-pour-lapi-et-seulement-pour-des-clients-non-navigateurs)
 - [R16 — Ne jamais mettre de mot de passe en clair dans Git](#r16--ne-jamais-mettre-de-mot-de-passe-en-clair-dans-git)
 - [R27 — Trouver les adresses d'un serveur d'autorisation : partir de l'`issuer-uri`](#r27--trouver-les-adresses-dun-serveur-dautorisation--partir-de-lissuer-uri)
+- [R30 — `**` remplace des segments de chemin, pas une extension](#r30----remplace-des-segments-de-chemin-pas-une-extension)
 
 **6. Entités**
 
@@ -634,6 +635,39 @@ le 03-11-2026).
 
 **Preuve :** la page `/.well-known/openid-configuration` ouverte dans le navigateur le 03-11-2026,
 et le jeton obtenu au port 9000 accepté par Swagger UI (#27, branche `127-springdoc-security-cfg-jt-sb412`).
+
+### R30 — `**` remplace des segments de chemin, pas une extension
+
+Contexte : dans `SpringSecConfig`, `requestMatchers("...")` reçoit des **motifs de chemin** (les `PathPattern`
+de Spring 7). On veut laisser ouvertes les trois URL de la documentation springdoc : le document JSON
+`/v3/api-docs`, ses **sous-chemins** - dont `/v3/api-docs/swagger-config`, que Swagger UI va chercher pour se
+configurer - et le document YAML `/v3/api-docs.yaml`, que le build Maven télécharge depuis le chapitre 376.
+
+Le piège : **`**` remplace des segments entiers**, un segment étant ce qui se trouve entre deux `/`. Il ne
+complète pas un segment déjà commencé, et il ne couvre pas une extension collée au dernier segment. Mesuré
+avec le `PathPatternParser` de Spring 7.0.10 :
+
+| Motif | `/v3/api-docs` | `/v3/api-docs.yaml` | `/v3/api-docs/swagger-config` |
+|---|---|---|---|
+| `/v3/api-docs/**` | oui | **non** | oui |
+| `/v3/api-docs**` | oui | oui | **non** |
+| `/v3/api-docs.yaml` | non | oui | non |
+
+Le `/` placé avant `**` exige un segment suivant : `.yaml`, collé au segment précédent, est donc exclu. À
+l'inverse, `**` collé au segment le complète - et plus rien ne peut suivre après un `/`.
+
+**Aucun motif seul ne suffit : les deux écritures sont complémentaires.** Dans le projet, on déclare les deux :
+
+```java
+.requestMatchers("/v3/api-docs/**", "/v3/api-docs.yaml", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+```
+
+Comment on l'a découvert : le build du chapitre 376 télécharge `/v3/api-docs.yaml` et a reçu un `401`. Le test
+écrit **avant** la correction l'a confirmé : `Status expected:<200> but was:<401>`.
+
+**Exemple dans le projet :** `src/main/java/guru/springframework/spring7restmvc/config/SpringSecConfig.java:21`,
+et les tests `SpringSecConfigIT.testApiDocsYamlOpenWithoutToken` et `SpringSecConfigIT.testSwaggerConfigOpenWithoutToken`
+(branche `128-springdoc-maven-plugin-jt-sb412`, commit `ece47c49`).
 
 ---
 

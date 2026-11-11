@@ -31,7 +31,7 @@ Links to a document of `notes` open its latest version. Links to a document of a
 
 | Document | Why |
 |---|---|
-| [`docs/regles-a-retenir.md`](docs/regles-a-retenir.md) | Every rule learned in the project (R1-R29), with example and proof. |
+| [`docs/regles-a-retenir.md`](docs/regles-a-retenir.md) | Every rule learned in the project (R1-R30), with example and proof. |
 | [`docs/procedures-tickets-et-ci.md`](https://github.com/PierreSQS/spring-7-rest-mvc/blob/3e69640c740599b152599428462a75cb1484296d/docs/procedures-tickets-et-ci.md) (branch 127) | How issues and the CI work, from an issue to its closing. |
 | [`CLAUDE.md`](https://github.com/PierreSQS/spring-7-rest-mvc/blob/3e69640c740599b152599428462a75cb1484296d/CLAUDE.md) (branch 127) | What the code of the current lesson branch does, and the rules Claude follows on it. |
 | [Open issues](https://github.com/PierreSQS/spring-7-rest-mvc/issues) | What is left to do. |
@@ -42,7 +42,7 @@ Links to a document of `notes` open its latest version. Links to a document of a
 
 | Document | What it is for | When to read it |
 |---|---|---|
-| [`docs/regles-a-retenir.md`](docs/regles-a-retenir.md) | The rules R1-R29 (MapStruct, PUT/PATCH, Hibernate, lambdas, database, Spring Security...), each with the rule, an example and the proof (test or commit). Moved here from branch 125, `125-build-info-jt-sb411` (#38); frozen copies on branches 116, 121 and 125. French. | Before writing similar code; when a rule number (R19, R22...) is quoted in an issue or a commit. |
+| [`docs/regles-a-retenir.md`](docs/regles-a-retenir.md) | The rules R1-R30 (MapStruct, PUT/PATCH, Hibernate, lambdas, database, Spring Security...), each with the rule, an example and the proof (test or commit). Moved here from branch 125, `125-build-info-jt-sb411` (#38); frozen copies on branches 116, 121 and 125. French. | Before writing similar code; when a rule number (R19, R22...) is quoted in an issue or a commit. |
 | [`docs/openapi-annotations-et-json.md`](docs/openapi-annotations-et-json.md) | Which annotation of `OpenApiConfig` produces which part of `/v3/api-docs`, and what Swagger UI does with it (Section 40, #27, #31). French. | When Swagger UI shows, or does not show, something unexpected. |
 | [`docs/travailler-avec-claude-code.md`](docs/travailler-avec-claude-code.md) | Working with Claude Code: why a long conversation costs more, `/clear`, `/resume`, `/rename`... French. | When a conversation gets long or expensive, or before starting a new one. |
 | [`docs/sauvegardes-de-branches.md`](docs/sauvegardes-de-branches.md) | My branch backups: when a branch is deleted, a backup ref `refs/backup/<name>` keeps its commit. How to list them (that list **is** the list of deleted branches), read one, restore a branch, and delete a branch safely. French. | When a deleted branch is needed again, or before deleting one. |
