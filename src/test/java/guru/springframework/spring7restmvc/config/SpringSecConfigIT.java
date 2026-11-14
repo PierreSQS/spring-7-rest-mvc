@@ -12,6 +12,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.assertj.core.api.Assumptions.assumeThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -19,7 +20,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * Created by Pierrot on 02-11-2026
- * Modified by Pierrot on 11-11-2026
+ * Modified by Pierrot on 14-11-2026
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -84,6 +85,17 @@ class SpringSecConfigIT {
                 .andExpect(jsonPath("$.components.securitySchemes.bearerAuth.description",
                         containsString("http://localhost:9000/oauth2/token")))
                 .andExpect(jsonPath("$.security[0].bearerAuth").exists());
+    }
+
+    @Test
+    void testApiDocsServerIsRelative() throws Exception {
+        // Without a declared server, springdoc writes the address it was called on: the build calls it on its own
+        // port 8099, so target/oa3.yml said http://localhost:8099 (#54). "/" = the server serving the document.
+        mockMvc.perform(get("/v3/api-docs"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.servers.length()").value(1))
+                .andExpect(jsonPath("$.servers[0].url").value("/"))
+                .andDo(print());
     }
 
     @Test
