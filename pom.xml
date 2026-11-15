@@ -20,6 +20,7 @@
         <springdoc-openapi-maven-plugin.version>1.6</springdoc-openapi-maven-plugin.version>
         <springdoc.version>3.2.0</springdoc.version>
         <jwt-uri>http://example.com:9090</jwt-uri>
+        <skipITs>false</skipITs>
     </properties>
     <dependencies>
         <dependency>
@@ -157,6 +158,7 @@
                             <arguments>
                                 <argument>--server.port=8099</argument>
                             </arguments>
+                            <skip>${skipITs}</skip>
                         </configuration>
                     </execution>
                     <execution>
@@ -164,6 +166,9 @@
                         <goals>
                             <goal>stop</goal>
                         </goals>
+                        <configuration>
+                            <skip>${skipITs}</skip>
+                        </configuration>
                     </execution>
                 </executions>
                 <configuration>
@@ -191,6 +196,7 @@
                     <apiDocsUrl>http://localhost:8099/v3/api-docs.yaml</apiDocsUrl>
                     <outputFileName>oa3.yml</outputFileName>
                     <failOnError>true</failOnError>
+                    <skip>${skipITs}</skip>
                 </configuration>
                 <executions>
                     <execution>

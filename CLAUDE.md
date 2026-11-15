@@ -15,8 +15,8 @@ A beer and customer REST API built alongside John Thompson's **Spring Framework 
 | Libraries | Spring Data JPA, MapStruct 1.6.3, Lombok, Flyway, OAuth2 resource server, springdoc-openapi 3.2.0 (JT: 2.0.2; issues #26, #13) |
 | Root package | `guru.springframework.spring7restmvc` |
 | Entry point | `Spring7RestMvcApplication` |
-| Branches | One per lesson, named after JT's branch plus a suffix: this one is `127-springdoc-security-cfg-jt-sb412` (Chap375), created from `126-springdoc-maven-jt-sb412` (Chap374, itself from JT's `126-springdoc-maven`). Branches are **never merged into `master`**: each documents an improved variant of JT's lecture (`-sbNNN` = Boot version). 126 was upgraded to Boot 4.1.2 and merged into this branch (issue #13). |
-| Commits | Prefix with section and chapter: `Sec40_Chap375: ...`; `-X` for own additions, `-NOK` when tests are knowingly left red. `#N` in a message refers to GitHub issue N. |
+| Branches | One per lesson, named after JT's branch plus a suffix: this one is `128-springdoc-maven-plugin-jt-sb412` (Chap376, the last chapter of Section 40), created from `127-springdoc-security-cfg-jt-sb412` (Chap375), itself from `126-springdoc-maven-jt-sb412` (Chap374, from JT's `126-springdoc-maven`). Branches are **never merged into `master`**: each documents an improved variant of JT's lecture (`-sbNNN` = Boot version). 126 was upgraded to Boot 4.1.2 and merged into 127 (issue #13). |
+| Commits | Prefix with section and chapter: `Sec40_Chap376: ...`; `-X` for own additions, `-NOK` when tests are knowingly left red. `#N` in a message refers to GitHub issue N. |
 | Open work | GitHub issues of `PierreSQS/spring-7-rest-mvc` (label `sec40`); every `gh` command takes `-R PierreSQS/spring-7-rest-mvc`. |
 
 ### Documentation
@@ -44,7 +44,8 @@ Use **JDK 25** (`JAVA_HOME`) and the Maven wrapper, which pins **Maven 3.9.16**.
 | One test method | `./mvnw test -Dtest=BeerControllerTest#testPatchBeer` | No |
 | Full verification | `./mvnw clean verify` | Yes |
 | One integration test class, plus unit tests | `./mvnw verify -Dit.test=MySqlIT` | Yes |
-| Build without integration tests | `./mvnw verify -DskipITs` | No |
+| Build without integration tests (unit tests + jar) | `./mvnw verify -DskipITs` (also skips the start/generate/stop of `target/oa3.yml`, #55) | No |
+| Unit tests + jar, same result | `./mvnw package` (stops before the integration phases) | No |
 | Run with Compose MySQL | `./mvnw spring-boot:run` (profile `localmysql`, in the `spring-boot-maven-plugin` configuration of `pom.xml`) | Yes |
 | Run with H2 | `./mvnw spring-boot:run -Dspring-boot.run.profiles=default` | No |
 
@@ -56,7 +57,7 @@ No linter or formatter is configured. Calling the running API needs a JWT from a
 
 **Build info:** `spring-boot-maven-plugin` runs its `build-info` goal (`META-INF/build-info.properties`); `OpenApiConfig` reads it through `BuildProperties` (optional: `ObjectProvider`) and shows the build version as `info.x-build-version` of `/v3/api-docs` (#28) and, because Swagger UI ignores `x-` extensions, in `info.description` under the title (#42).
 
-**OpenAPI document as a build artifact (Chap376):** `./mvnw verify` writes the contract to **`target/oa3.yml`**. The document only exists while the application runs, so `spring-boot-maven-plugin` starts it in `pre-integration-test` (`start`) and stops it in `post-integration-test` (`stop`), and `springdoc-openapi-maven-plugin` 1.6 fetches `/v3/api-docs.yaml` in between (`generate`, phase `integration-test`). The build starts the application with the **default profile (H2, no Docker)** on its own port **8099**, free of the 8080 (H2) and 8081 (`localmysql`) an application started by hand uses; the `start` goal adds `--spring.application.admin.enabled=true` itself, so no `jvmArguments` are needed. `failOnError` is `true`: a failed fetch fails the build instead of being only logged. **If the build fails, Maven skips `stop` and the application keeps running** - `./mvnw spring-boot:stop` ends it.
+**OpenAPI document as a build artifact (Chap376):** `./mvnw verify` writes the contract to **`target/oa3.yml`**. The document only exists while the application runs, so `spring-boot-maven-plugin` starts it in `pre-integration-test` (`start`) and stops it in `post-integration-test` (`stop`), and `springdoc-openapi-maven-plugin` 1.6 fetches `/v3/api-docs.yaml` in between (`generate`, phase `integration-test`). The build starts the application with the **default profile (H2, no Docker)** on its own port **8099**, free of the 8080 (H2) and 8081 (`localmysql`) an application started by hand uses; the `start` goal adds `--spring.application.admin.enabled=true` itself, so no `jvmArguments` are needed. `failOnError` is `true`: a failed fetch fails the build instead of being only logged. The three executions take `<skip>${skipITs}</skip>` (property `skipITs`, `false` in `<properties>`), so `-DskipITs` skips them with the integration tests (#55). **If the build fails, Maven skips `stop` and the application keeps running** - `./mvnw spring-boot:stop` ends it.
 
 ---
 
