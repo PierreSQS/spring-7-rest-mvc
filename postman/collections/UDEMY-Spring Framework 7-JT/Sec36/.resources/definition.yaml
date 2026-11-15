@@ -1,0 +1,4 @@
+$kind: 'collection'
+name: 'Sec36'
+order: 13000
+description: 'This Folder practices the **Postman OAUTH2**\-Settings in **Section36** of the JT-Course. The tests in this folder start at the course [Spring Framework 6 - Sec36_Chap340](https://www.udemy.com/course/spring-framework-6-beginner-to-guru/learn/lecture/36162148)'

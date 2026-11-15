@@ -1,0 +1,4 @@
+$kind: 'collection'
+name: 'Sec19'
+order: 7000
+description: 'Start the Server from the Project spring-6-rest-mvc from branch 100-rel-one-to-many-sb302'

@@ -1,0 +1,5 @@
+$kind: 'http-request'
+name: 'Chap193-List beers'
+order: 2000
+method: 'GET'
+url: 'localhost:8080/api/v1/beer'

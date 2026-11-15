@@ -1,0 +1,12 @@
+$kind: 'http-request'
+name: 'Chap217-Get API Beer'
+order: 1000
+method: 'GET'
+url: 'localhost:8080/api/v1/beer'
+auth:
+  type: 'basic'
+  credentials:
+    - key: 'username'
+      value: '{{basicUsername2}}'
+    - key: 'password'
+      value: '{{basicPassword2}}'

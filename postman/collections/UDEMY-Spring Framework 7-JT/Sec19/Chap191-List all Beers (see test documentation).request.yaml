@@ -1,0 +1,12 @@
+$kind: 'http-request'
+name: 'Chap191-List all Beers (see test documentation)'
+order: 1000
+method: 'GET'
+url: 'localhost:8080/api/v1/beer'
+auth:
+  type: 'basic'
+  credentials:
+    - key: 'username'
+      value: '{{basicUsername1}}'
+    - key: 'password'
+      value: '{{basicPassword2}}'

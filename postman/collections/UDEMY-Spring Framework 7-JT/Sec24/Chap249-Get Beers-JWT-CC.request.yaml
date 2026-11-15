@@ -1,0 +1,83 @@
+$kind: 'http-request'
+name: 'Chap249-Get Beers-JWT-CC'
+order: 1000
+method: 'GET'
+url: 'localhost:8080/api/v1/beer'
+auth:
+  type: 'oauth2'
+  credentials:
+    - key: 'clientId'
+      value: '{{oidcClientId}}'
+    - key: 'headerPrefix'
+      value: 'Bearer'
+    - key: 'accessTokenUrl'
+      value: 'http://localhost:9000/oauth2/token'
+    - key: 'authUrl'
+      value: 'http://localhost:8080/oauth2/authorize'
+    - key: 'tokenName'
+      value: 'Sec24-Chap248'
+    - key: 'addTokenTo'
+      value: 'header'
+    - key: 'clientSecret'
+      value: '{{clientSecret}}'
+    - key: 'scope'
+      value: 'message.read message.write'
+    - key: 'state'
+      value: ''
+    - key: 'client_authentication'
+      value: 'header'
+    - key: 'redirect_uri'
+      value: ''
+    - key: 'grant_type'
+      value: 'client_credentials'
+    - key: 'useBrowser'
+      value: true
+scripts:
+  - type: 'afterResponse'
+    code: |-
+      pm.test("Response status code is 200", function () {
+          pm.expect(pm.response.code).to.equal(200);
+      });
+
+      // pm.test("Response has required fields and content is an array", function () {
+      //     const responseData = pm.response.json();
+
+      //     pm.expect(responseData).to.be.an('object');
+      //     pm.expect(responseData).to.have.all.keys('content', 'page');
+      //     pm.expect(responseData.content).to.be.an('array');
+      //     pm.expect(responseData.page).to.be.an('object');
+      // });
+
+      pm.test("Validate the schema of the beer object in the content array", function () {
+          const responseData = pm.response.json();
+
+          pm.expect(responseData).to.be.an('object');
+          pm.expect(responseData.content).to.be.an('array');
+
+          responseData.content.forEach(function(beer) {
+              pm.expect(beer).to.be.an('object');
+              pm.expect(beer).to.have.all.keys('id', 'version', 'beerName', 'beerStyle', 'upc', 'quantityOnHand', 'price', 'createdDate', 'updateDate');
+              
+              pm.expect(beer.id).to.be.a('string');
+              pm.expect(beer.version).to.be.a('number');
+              pm.expect(beer.beerName).to.be.a('string');
+              pm.expect(beer.beerStyle).to.be.a('string');
+              pm.expect(beer.upc).to.be.a('string');
+              pm.expect(beer.quantityOnHand).to.be.a('number');
+              pm.expect(beer.price).to.be.a('number');
+              pm.expect(beer.createdDate).to.be.a('string');
+              pm.expect(beer.updateDate).to.be.a('string');
+          });
+      });
+
+      pm.test("Quantity on hand and price must be non-negative integers", function () {
+          const responseData = pm.response.json();
+          
+          pm.expect(responseData).to.have.property('content').that.is.an('array');
+          
+          responseData.content.forEach(function(item) {
+              pm.expect(item.quantityOnHand).to.be.a('number').and.to.be.at.least(0, "Quantity on hand must be a non-negative integer");
+              pm.expect(item.price).to.be.a('number').and.to.be.at.least(0, "Price must be a non-negative integer");
+          });
+      });
+    language: 'text/javascript'

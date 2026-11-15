@@ -1,0 +1,18 @@
+$kind: 'http-request'
+name: 'Get Customer By ID Not Found'
+order: 3000
+method: 'GET'
+url: 'localhost:8080/api/v1/customer/9e288dca-e14d-4407-83fb-b5505f23af71'
+scripts:
+  - type: 'afterResponse'
+    code: |-
+      pm.test("Check that HttpStatus is 404", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData.status).to.eql(404);
+      });
+
+      pm.test("Check that Error Message is \"Value Not Found\"", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData.message).to.eql("Value Not Found");
+      });
+    language: 'text/javascript'

@@ -1,0 +1,38 @@
+$kind: 'http-request'
+name: 'getBeerByID-H2-WithJwtToken-Chap404'
+order: 4000
+method: 'GET'
+url: 'localhost:8080/api/v1/beer/f706b1b7-084a-418e-ae6c-f569a25797e1'
+auth:
+  type: 'oauth2'
+  credentials:
+    - key: 'clientId'
+      value: '{{messagingClientId}}'
+    - key: 'accessTokenUrl'
+      value: 'http://localhost:9000/oauth2/token'
+    - key: 'tokenName'
+      value: 'cliencredential Sec47'
+    - key: 'addTokenTo'
+      value: 'header'
+    - key: 'clientSecret'
+      value: '{{clientSecret}}'
+    - key: 'scope'
+      value: 'message.read message.write'
+    - key: 'client_authentication'
+      value: 'header'
+    - key: 'grant_type'
+      value: 'client_credentials'
+scripts:
+  - type: 'afterResponse'
+    code: |-
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+
+      pm.test("ID exists", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData.id).to.exist;
+      });
+
+    language: 'text/javascript'

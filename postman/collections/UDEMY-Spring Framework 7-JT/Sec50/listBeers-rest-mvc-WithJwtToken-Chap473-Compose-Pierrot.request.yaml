@@ -1,0 +1,54 @@
+$kind: 'http-request'
+name: 'listBeers-rest-mvc-WithJwtToken-Chap473-Compose-Pierrot'
+order: 2000
+method: 'GET'
+url: 'localhost:8080/api/v1/beer'
+auth:
+  type: 'oauth2'
+  credentials:
+    - key: 'clientId'
+      value: '{{messagingClientId}}'
+    - key: 'accessTokenUrl'
+      value: 'http://localhost:8080/oauth2/token'
+    - key: 'tokenName'
+      value: 'cliencredential JT Compose'
+    - key: 'addTokenTo'
+      value: 'header'
+    - key: 'refreshTokenUrl'
+      value: ''
+    - key: 'clientSecret'
+      value: '{{clientSecret}}'
+    - key: 'scope'
+      value: 'message.read message.write'
+    - key: 'client_authentication'
+      value: 'header'
+    - key: 'grant_type'
+      value: 'client_credentials'
+scripts:
+  - type: 'afterResponse'
+    code: |-
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("TotalElements is 2413", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData.page.totalElements).to.eql(2413);
+      });
+
+      pm.test("TotalPages is 97", function () {
+          pm.expect(pm.response.json().page.totalPages).to.eql(97);
+      });
+
+      pm.test("Page size is 25 and page number is 0", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData.page.size).to.eql(25);
+          pm.expect(jsonData.page.number).to.eql(0);
+      });
+      pm.test("Last element of content has beer name 1836 and beer style is ALE", function () {
+          var content = pm.response.json().content;
+          var lastElement = content[content.length - 1];
+          pm.expect(lastElement.beerName).to.eql("1836");
+          pm.expect(lastElement.beerStyle).to.eql("ALE");
+      });
+    language: 'text/javascript'

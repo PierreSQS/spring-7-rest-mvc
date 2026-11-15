@@ -1,0 +1,6 @@
+$kind: 'http-request'
+name: 'Chap181-list all Beers (see documentation)'
+order: 1000
+method: 'GET'
+url: 'localhost:8080/api/v1/beer'
+description: 'Start the Server from the Project sdjpa-spring-data-rest from branch set-entity-xx'

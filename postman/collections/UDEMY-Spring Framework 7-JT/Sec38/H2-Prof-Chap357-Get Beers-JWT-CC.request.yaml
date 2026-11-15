@@ -1,0 +1,156 @@
+$kind: 'http-request'
+name: 'H2-Prof-Chap357-Get Beers-JWT-CC'
+order: 2000
+method: 'GET'
+url: 'localhost:8080/api/v1/beer'
+auth:
+  type: 'oauth2'
+  credentials:
+    - key: 'clientId'
+      value: '{{oidcClientId}}'
+    - key: 'headerPrefix'
+      value: 'Bearer'
+    - key: 'accessTokenUrl'
+      value: 'http://localhost:9000/oauth2/token'
+    - key: 'authUrl'
+      value: 'http://localhost:8080/oauth2/authorize'
+    - key: 'tokenName'
+      value: 'Sec24-Chap248'
+    - key: 'addTokenTo'
+      value: 'header'
+    - key: 'clientSecret'
+      value: '{{clientSecret}}'
+    - key: 'scope'
+      value: 'message.read message.write'
+    - key: 'state'
+      value: ''
+    - key: 'client_authentication'
+      value: 'header'
+    - key: 'redirect_uri'
+      value: ''
+    - key: 'grant_type'
+      value: 'client_credentials'
+    - key: 'useBrowser'
+      value: true
+scripts:
+  - type: 'afterResponse'
+    code: |-
+      // ── Helpers ───────────────────────────────────────────────────────────────────
+
+      function decodeBase64Url(segment) {
+          try {
+              const padded = segment.replace(/-/g, '+').replace(/_/g, '/')
+                  + '==='.slice((segment.length + 3) % 4);
+              return JSON.parse(atob(padded));
+          } catch (e) {
+              return null;
+          }
+      }
+
+      function getBearerToken() {
+          const authHeader = pm.request.headers.get('Authorization') || '';
+          const match = authHeader.match(/^Bearer\s+(.+)$/i);
+          return match ? match[1].trim() : null;
+      }
+
+      // ── TEST 1: Bearer token is present, well-formed, and all three segments are non-empty ──
+      pm.test('[JWT] Bearer token is present and well-formed in Authorization header', function () {
+          const authHeader = pm.request.headers.get('Authorization');
+          pm.expect(authHeader, 'Authorization header must be present')
+              .to.be.a('string').and.not.empty;
+          pm.expect(authHeader, 'Authorization header must start with "Bearer "')
+              .to.match(/^Bearer\s+/i);
+
+          const token = getBearerToken();
+          pm.expect(token, 'Bearer token must not be empty').to.be.a('string').and.not.empty;
+
+          const parts = token.split('.');
+          pm.expect(parts.length, 'JWT must have exactly 3 segments (header.payload.signature)')
+              .to.equal(3);
+          pm.expect(parts[0], 'JWT header segment must not be empty').to.not.be.empty;
+          pm.expect(parts[1], 'JWT payload segment must not be empty').to.not.be.empty;
+          pm.expect(parts[2], 'JWT signature segment must not be empty').to.not.be.empty;
+      });
+
+      // ── TEST 2: JWT structure — alg, RS256, kid, sub/client_id, exp (not expired) ──
+      pm.test('[JWT] JWT header declares alg (RS256) and kid; payload contains sub/client_id and a valid exp', function () {
+          const token = getBearerToken();
+          pm.expect(token, 'Bearer token must be present').to.be.a('string').and.not.empty;
+
+          const parts = token.split('.');
+          pm.expect(parts.length, 'JWT must have 3 segments').to.equal(3);
+
+          const header  = decodeBase64Url(parts[0]);
+          const payload = decodeBase64Url(parts[1]);
+
+          pm.expect(header,  'JWT header must be decodable JSON').to.not.be.null;
+          pm.expect(payload, 'JWT payload must be decodable JSON').to.not.be.null;
+
+          // Header claims
+          pm.expect(header, 'JWT header must declare the signing algorithm (alg)')
+              .to.have.property('alg');
+          pm.expect(header.alg, 'JWT signing algorithm must be RS256')
+              .to.eql('RS256');
+          pm.expect(header, 'JWT header must declare a key ID (kid)')
+              .to.have.property('kid');
+
+          // Payload claims
+          const hasSubject = payload.sub || payload.client_id;
+          pm.expect(hasSubject, 'JWT payload must contain "sub" or "client_id"').to.exist;
+
+          pm.expect(payload, 'JWT payload must contain an expiry claim (exp)')
+              .to.have.property('exp');
+          pm.expect(payload.exp, 'JWT token must not be expired')
+              .to.be.above(Math.floor(Date.now() / 1000));
+      });
+
+      // ── TEST 3: Response time ─────────────────────────────────────────────────────
+      pm.test('[JWT] Response time is under 3000 ms', function () {
+          pm.expect(pm.response.responseTime, 'Response took too long')
+              .to.be.below(3000);
+      });
+
+      // ── TEST 4: HTTP 200 OK ───────────────────────────────────────────────────────
+      pm.test('Response status code is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      // ── TEST 5: Beer response schema ──────────────────────────────────────────────
+      pm.test('Validate the schema of the beer object in the content array', function () {
+          const jsonData = pm.response.json();
+          pm.expect(jsonData, 'Response must have a "content" property').to.have.property('content');
+          pm.expect(jsonData.content, '"content" must be an array').to.be.an('array');
+          if (jsonData.content.length > 0) {
+              const beer = jsonData.content[0];
+              pm.expect(beer).to.have.all.keys(
+                  'id', 'version', 'createdDate', 'updateDate',
+                  'beerName', 'beerStyle', 'upc', 'price', 'quantityOnHand'
+              );
+          }
+      });
+
+      // ── TEST 6: Beer data — quantityOnHand is a non-negative integer; price is a non-negative number ──
+      pm.test('quantityOnHand is a non-negative integer; price is a non-negative number', function () {
+          const jsonData = pm.response.json();
+          pm.expect(jsonData.content, '"content" must be an array').to.be.an('array');
+          jsonData.content.forEach(function (beer, index) {
+              pm.expect(beer.quantityOnHand,
+                  'beer[' + index + '].quantityOnHand must be a non-negative integer')
+                  .to.be.a('number')
+                  .and.to.satisfy(function (n) { return Number.isInteger(n) && n >= 0; },
+                      'expected a non-negative integer');
+              pm.expect(beer.price,
+                  'beer[' + index + '].price must be a non-negative number')
+                  .to.be.a('number')
+                  .and.to.be.at.least(0);
+          });
+      });
+
+      // ── Extract first beer ID and store as collection variable ─────────────────
+      const jsonData = pm.response.json();
+      if (jsonData && jsonData.content && jsonData.content.length > 0) {
+          const firstBeerId = jsonData.content[0].id;
+          pm.collectionVariables.set("beerID", firstBeerId);
+          console.log("First beer ID saved to collection variable 'beerID':", firstBeerId);
+      }
+    language: 'text/javascript'

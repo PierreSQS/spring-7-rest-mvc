@@ -1,0 +1,11 @@
+$kind: 'http-request'
+name: 'Assn17-Create New Customer'
+order: 5000
+method: 'POST'
+url: 'localhost:8080/api/v1/customer'
+body:
+  type: 'json'
+  content: |-
+    {
+        "name":"Pierrot Customer"
+    }

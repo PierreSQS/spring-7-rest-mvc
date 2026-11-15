@@ -97,7 +97,7 @@ Le résultat s'affiche sur le commit : ✅ (tout est vert) ou ❌ (au moins un t
 | Bloc du fichier | Ce qu'il fait |
 |---|---|
 | `on: push` / `workflow_dispatch` | démarre à chaque push, ou à la main avec le bouton « Run workflow » de l'onglet *Actions* |
-| `paths-ignore` | **sauf** si le push ne change **que** de la documentation (`docs/**`, `**/*.md`) : pas de run. Dès qu'un autre fichier change (code, `pom.xml`, `.properties`, `mvnw`…), le run a lieu |
+| `paths-ignore` | **sauf** si le push ne change **que** de la documentation (`docs/**`, `**/*.md`) ou la collection Postman (`postman/**`, #39) : pas de run. Dès qu'un autre fichier change (code, `pom.xml`, `.properties`, `mvnw`…), le run a lieu |
 | `runs-on: ubuntu-latest` | une machine Linux de GitHub, avec Docker (nécessaire pour `MySqlIT` et Testcontainers) |
 | `actions/checkout@v7` | télécharge le commit poussé |
 | `actions/setup-java@v6` | installe Java 25 (Temurin) et garde les jars Maven en **cache** entre deux runs |

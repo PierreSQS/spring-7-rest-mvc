@@ -1,0 +1,42 @@
+$kind: 'http-request'
+name: 'createBeer-H2-WithJwtToken Copy'
+order: 2000
+method: 'POST'
+url: 'localhost:8080/api/v1/beer'
+body:
+  type: 'json'
+  content: |-
+    {
+      "beerName": "33 export",
+      "beerStyle": "PILSNER",
+      "upc": "123123",
+      "price": 125.65,
+      "quantityOnHand": 5
+    }
+
+auth:
+  type: 'oauth2'
+  credentials:
+    - key: 'clientId'
+      value: '{{messagingClientId}}'
+    - key: 'accessTokenUrl'
+      value: 'http://localhost:9000/oauth2/token'
+    - key: 'tokenName'
+      value: 'cliencredential Sec47'
+    - key: 'addTokenTo'
+      value: 'header'
+    - key: 'clientSecret'
+      value: '{{clientSecret}}'
+    - key: 'scope'
+      value: 'message.read message.write'
+    - key: 'client_authentication'
+      value: 'header'
+    - key: 'grant_type'
+      value: 'client_credentials'
+scripts:
+  - type: 'afterResponse'
+    code: |-
+      pm.test("Status code is 201", function () {
+          pm.response.to.have.status(201);
+      });
+    language: 'text/javascript'

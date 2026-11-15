@@ -1,0 +1,78 @@
+$kind: 'http-request'
+name: 'GetBeers-WithPageNumberAndPageSize'
+order: 1000
+method: 'GET'
+url: 'localhost:8080/api/v1/beer?pageNumber=3&pageSize=50'
+description: |-
+  Overview
+  Retrieve a paginated list of beers.
+
+  Method: GET
+  Path: /api/v1/beer
+  Host: localhost:8080
+
+  Query parameters
+  - pageNumber (integer): The page index to fetch. Commonly 0-based (0,1,2,...) but may be 1-based depending on server configuration.
+  - pageSize (integer): Number of items to return per page.
+
+  Example request
+  GET localhost:8080/api/v1/beer?pageNumber=3&pageSize=50
+
+  Successful response (200 OK)
+  Body structure:
+  {
+    "content": [
+      {
+        "id": "string (UUID)",
+        "version": number,
+        "beerName": "string",
+        "beerStyle": "IPA | ALE | PILSNER | ...",
+        "upc": "string",
+        "quantityOnHand": number,
+        "price": number,
+        "createdDate": "ISO-8601 timestamp | null",
+        "updateDate": "ISO-8601 timestamp | null"
+      }
+    ],
+    "page": {
+      "size": number,          // page size returned
+      "number": number,        // current page index
+      "totalElements": number, // total items across all pages
+      "totalPages": number     // total number of pages
+    }
+  }
+
+  Notes
+  - If pageNumber or pageSize are omitted, server-side defaults apply.
+  - Large pageSize values may be limited by the server.
+queryParams:
+  - key: 'pageNumber'
+    value: '3'
+  - key: 'pageSize'
+    value: '50'
+body:
+  type: 'text'
+  content: ''
+scripts:
+  - type: 'afterResponse'
+    code: |-
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+      var responseJSON = pm.response.json();
+
+      // Test to check the length of the content array
+      pm.test("The length of the content array must be 50", function () {
+          pm.expect(responseJSON.content.length).to.be.eql(50, "Content array should not be empty");
+      });
+
+      // Optional: Check that page size and number match the query
+      pm.test("Page size and number match query parameters", function () {
+          var page = pm.response.json().page;
+          var req = pm.request.url.query;
+          var pageSize = req.find(q => q.key === "pageSize");
+          var pageNumber = req.find(q => q.key === "pageNumber");
+          if (pageSize) pm.expect(page.size).to.eql(Number(pageSize.value));
+          if (pageNumber) pm.expect(page.number).to.eql(Number(pageNumber.value-1));
+      });
+    language: 'text/javascript'

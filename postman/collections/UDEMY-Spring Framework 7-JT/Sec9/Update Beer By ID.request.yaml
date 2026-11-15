@@ -1,0 +1,17 @@
+$kind: 'http-request'
+name: 'Update Beer By ID'
+order: 2000
+method: 'PUT'
+url: 'localhost:8080/api/v1/beer/61ade043-02dd-4c26-a114-92ea23ed3791'
+body:
+  type: 'json'
+  content: |-
+    {
+    	"id": "4db50311-a74c-480f-8ef8-360b3aad66de",
+    	"version": 0,
+    	"beerName": "Krombacher",
+    	"beerStyle": "PILSNER",
+    	"upc": "A-0010-Z",
+    	"quantityOnHand": 30,
+    	"price": 4.25
+    }
