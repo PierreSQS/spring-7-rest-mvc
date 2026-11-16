@@ -20,7 +20,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * Created by Pierrot on 02-11-2026
- * Modified by Pierrot on 14-11-2026
+ * Modified by Pierrot on 16-11-2026
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -88,13 +88,14 @@ class SpringSecConfigIT {
     }
 
     @Test
-    void testApiDocsServerIsRelative() throws Exception {
+    void testApiDocsDeclareLocalServers() throws Exception {
         // Without a declared server, springdoc writes the address it was called on: the build calls it on its own
-        // port 8099, so target/oa3.yml said http://localhost:8099 (#54). "/" = the server serving the document.
+        // port 8099, so target/oa3.yml said http://localhost:8099 (#54). Two servers give Swagger UI a drop-down (#56).
         mockMvc.perform(get("/v3/api-docs"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.servers.length()").value(1))
-                .andExpect(jsonPath("$.servers[0].url").value("/"))
+                .andExpect(jsonPath("$.servers.length()").value(2))
+                .andExpect(jsonPath("$.servers[0].url").value("http://localhost:8080"))
+                .andExpect(jsonPath("$.servers[1].url").value("http://localhost:8081"))
                 .andDo(print());
     }
 
