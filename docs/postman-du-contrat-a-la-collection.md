@@ -151,6 +151,22 @@ n'a qu'**un** `baseUrl` ; il n'y a pas de liste déroulante pour choisir le serv
 **Piège dans Swagger UI :** la liste propose d'abord le **premier** serveur (8080), même quand la page est ouverte sur
 8081. Avant « Try it out », choisir le serveur de l'application qui tourne, sinon la requête part vers 8080.
 
+**Seul le serveur de la page marche** (essayé le 16-11-2026, `GET /api/v1/beer` avec un jeton) :
+
+| Page Swagger UI ouverte sur | Serveur choisi dans la liste | Résultat |
+|---|---|---|
+| `http://localhost:8081/swagger-ui/index.html` | 8081 | `200` |
+| `http://localhost:8080/swagger-ui/index.html` | 8080 | `200` |
+| `http://localhost:8081/swagger-ui/index.html` | 8080 | `TypeError: NetworkError when attempting to fetch resource.` |
+
+**Pourquoi la dernière ligne échoue :** pour le navigateur, un autre port est un autre site (une autre *origine*).
+Avant d'envoyer la requête, il demande la permission au serveur 8080 (requête `OPTIONS`, dite *preflight* CORS) ;
+l'API ne configure pas CORS et répond `401`, donc le navigateur bloque. L'API elle-même marche : la même requête
+envoyée par `curl` répond `200`. Pour appeler un autre port depuis Swagger UI, il faudrait configurer CORS dans l'API.
+
+**Où lire la vraie réponse :** sous « Server response ». La partie « Responses » plus bas (`200 OK`, Example Value)
+est la **documentation** du contrat et s'affiche toujours, même quand l'appel a échoué.
+
 **Piste pour plus tard :** une *variable de serveur* OpenAPI (`url: '{baseUrl}'`, valeurs permises 8080 et 8081),
 idée de l'IA de Postman : issue #57.
 
