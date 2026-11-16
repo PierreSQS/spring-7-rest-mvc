@@ -17,7 +17,7 @@ import java.time.format.DateTimeFormatter;
 
 /**
  * Created by Pierrot on 02-11-2026
- * Modified by Pierrot on 14-11-2026
+ * Modified by Pierrot on 16-11-2026
  * <p>
  * Tells the OpenAPI documentation that every operation needs a Bearer JWT,
  * so Swagger UI shows an "Authorize" button and sends the token (#27).
@@ -28,8 +28,9 @@ import java.time.format.DateTimeFormatter;
  * {@code info.x-build-version} ({@link BuildProperties}, #28), when Maven wrote {@code META-INF/build-info.properties};
  * without that file the application still starts, without the extension.
  * Swagger UI ignores x- extensions, so the build version and time also go into {@code info.description} (#42).
- * {@code servers} is "/" (#54): without it, springdoc writes the address it was called on, and the Maven build
- * calls it on its own port 8099, so target/oa3.yml gave an address where nothing runs.
+ * {@code servers} lists the two local ports, 8080 (H2) and 8081 (localmysql), for the drop-down of Swagger UI (#56).
+ * Without it, springdoc writes the address it was called on, and the Maven build calls it on its own port 8099,
+ * so target/oa3.yml gave an address where nothing runs (#54).
  */
 @Configuration
 @SecurityScheme(name = "bearerAuth", type = SecuritySchemeType.HTTP, scheme = "bearer", bearerFormat = "JWT",
@@ -37,7 +38,10 @@ import java.time.format.DateTimeFormatter;
 @OpenAPIDefinition(
         info = @Info(title = "Beer and Customer API", version = "v1"),
         security = @SecurityRequirement(name = "bearerAuth"),
-        servers = @Server(url = "/"))
+        servers = {
+                @Server(url = "http://localhost:8080", description = "H2 (profile default)"),
+                @Server(url = "http://localhost:8081", description = "MySQL (profile localmysql)")
+        })
 public class OpenApiConfig {
 
     private static final DateTimeFormatter BUILD_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm 'UTC'")
