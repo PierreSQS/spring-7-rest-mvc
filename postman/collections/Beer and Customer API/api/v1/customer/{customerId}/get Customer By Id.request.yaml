@@ -1,0 +1,12 @@
+$kind: 'http-request'
+order: 1000
+url: '{{baseUrl}}/api/v1/customer/:customerId'
+method: 'GET'
+headers:
+  - key: 'Accept'
+    value: '*/*'
+pathVariables:
+  - key: 'customerId'
+    value: '0d5a5f1d-4152-14e0-79cf-fd838f4a3ed9'
+    $type: '{"type":"object","properties":{"value":{"type":"string","format":"uuid"}},"required":["value"]}'
+examples: './.resources/get Customer By Id.resources/examples'

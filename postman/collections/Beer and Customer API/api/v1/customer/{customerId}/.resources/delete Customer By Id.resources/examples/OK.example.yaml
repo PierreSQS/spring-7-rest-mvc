@@ -1,0 +1,20 @@
+name: 'OK'
+$kind: 'http-example'
+request:
+  url: '{{baseUrl}}/api/v1/customer/:customerId'
+  method: 'DELETE'
+  headers:
+    - key: 'Authorization'
+      value: 'Bearer <token>'
+      description: 'Added as a part of security scheme: bearer'
+  pathVariables:
+    - key: 'customerId'
+      value: '0d5a5f1d-4152-14e0-79cf-fd838f4a3ed9'
+response:
+  statusCode: 200
+  statusText: 'OK'
+  headers: []
+  body:
+    type: 'text'
+    content: ''
+order: 1000

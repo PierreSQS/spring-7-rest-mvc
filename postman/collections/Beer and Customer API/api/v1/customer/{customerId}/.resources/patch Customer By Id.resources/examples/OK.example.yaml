@@ -1,0 +1,33 @@
+name: 'OK'
+$kind: 'http-example'
+request:
+  url: '{{baseUrl}}/api/v1/customer/:customerId'
+  method: 'PATCH'
+  headers:
+    - key: 'Content-Type'
+      value: 'application/json'
+    - key: 'Authorization'
+      value: 'Bearer <token>'
+      description: 'Added as a part of security scheme: bearer'
+  pathVariables:
+    - key: 'customerId'
+      value: '0d5a5f1d-4152-14e0-79cf-fd838f4a3ed9'
+  body:
+    type: 'json'
+    content: |-
+      {
+        "name": "string",
+        "createdDate": "1958-12-23T17:07:37.092Z",
+        "updateDate": "2003-12-09T11:25:00.435Z",
+        "id": "a557d17c-4e0f-8ff4-0d8a-3b68f09492d0",
+        "email": "string",
+        "version": 6497
+      }
+response:
+  statusCode: 200
+  statusText: 'OK'
+  headers: []
+  body:
+    type: 'text'
+    content: ''
+order: 1000

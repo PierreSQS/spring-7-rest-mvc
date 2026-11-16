@@ -1,0 +1,57 @@
+$kind: 'http-request'
+order: 4000
+url: '{{baseUrl}}/api/v1/customer/:customerId'
+method: 'PATCH'
+headers:
+  - key: 'Content-Type'
+    value: 'application/json'
+pathVariables:
+  - key: 'customerId'
+    value: '0d5a5f1d-4152-14e0-79cf-fd838f4a3ed9'
+    $type: '{"type":"object","properties":{"value":{"type":"string","format":"uuid"}},"required":["value"]}'
+body:
+  type: 'json'
+  content: |-
+    {
+      "name": "string",
+      "createdDate": "1958-12-23T17:07:37.092Z",
+      "updateDate": "2003-12-09T11:25:00.435Z",
+      "id": "a557d17c-4e0f-8ff4-0d8a-3b68f09492d0",
+      "email": "string",
+      "version": 6497
+    }
+  $type: |-
+    {
+      "type": "object",
+      "properties": {
+        "createdDate": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updateDate": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "email": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "version": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "required": [
+        "name"
+      ]
+    }
+examples: './.resources/patch Customer By Id.resources/examples'

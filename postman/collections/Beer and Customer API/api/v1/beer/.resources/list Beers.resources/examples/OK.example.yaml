@@ -1,0 +1,230 @@
+name: 'OK'
+$kind: 'http-example'
+request:
+  url: '{{baseUrl}}/api/v1/beer?beerName=string&beerStyle=SAISON&showInventory=true&pageNumber=306&pageSize=306'
+  method: 'GET'
+  headers:
+    - key: 'Accept'
+      value: '*/*'
+    - key: 'Authorization'
+      value: 'Bearer <token>'
+      description: 'Added as a part of security scheme: bearer'
+  queryParams:
+    - key: 'beerName'
+      value: 'string'
+    - key: 'beerStyle'
+      value: 'SAISON'
+    - key: 'showInventory'
+      value: 'true'
+    - key: 'pageNumber'
+      value: '306'
+    - key: 'pageSize'
+      value: '306'
+response:
+  statusCode: 200
+  statusText: 'OK'
+  headers:
+    - key: 'Content-Type'
+      value: '*/*'
+  body:
+    type: 'text'
+    content: |-
+      {
+        "totalPages": 2326,
+        "totalElements": 5221,
+        "size": 9574,
+        "content": [
+          {
+            "beerName": "string",
+            "beerStyle": "GOSE",
+            "price": 3912.444320831876,
+            "upc": "string",
+            "createdDate": "1967-10-18T05:06:04.486Z",
+            "updateDate": "1959-07-29T00:43:39.704Z",
+            "id": "67c0da5a-12bc-0bd7-8a02-8d15e355f88c",
+            "version": 78,
+            "quantityOnHand": 3602
+          },
+          {
+            "beerName": "st",
+            "beerStyle": "IPA",
+            "price": 3633.5216669726447,
+            "upc": "string",
+            "createdDate": "2009-04-07T17:36:47.884Z",
+            "updateDate": "1957-04-12T11:09:44.184Z",
+            "id": "45e95029-01b7-f768-70e0-fa22a9c8fb9a",
+            "version": 8389,
+            "quantityOnHand": 3810
+          }
+        ],
+        "number": 1883,
+        "sort": {
+          "empty": true,
+          "sorted": false,
+          "unsorted": false
+        },
+        "pageable": {
+          "offset": 5946,
+          "paged": true,
+          "pageNumber": 8196,
+          "pageSize": 2211,
+          "sort": {
+            "empty": true,
+            "sorted": true,
+            "unsorted": true
+          },
+          "unpaged": false
+        },
+        "numberOfElements": 8746,
+        "first": true,
+        "last": true,
+        "empty": true
+      }
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "createdDate": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "updateDate": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "version": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "beerName": {
+                  "type": "string",
+                  "minLength": 0,
+                  "maxLength": 50
+                },
+                "beerStyle": {
+                  "type": "string",
+                  "enum": [
+                    "LAGER",
+                    "PILSNER",
+                    "STOUT",
+                    "GOSE",
+                    "PORTER",
+                    "ALE",
+                    "WHEAT",
+                    "IPA",
+                    "PALE_ALE",
+                    "SAISON"
+                  ]
+                },
+                "upc": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "quantityOnHand": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "price": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "beerName",
+                "beerStyle",
+                "price",
+                "upc"
+              ]
+            }
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sort": {
+            "type": "object",
+            "properties": {
+              "empty": {
+                "type": "boolean"
+              },
+              "sorted": {
+                "type": "boolean"
+              },
+              "unsorted": {
+                "type": "boolean"
+              }
+            }
+          },
+          "pageable": {
+            "type": "object",
+            "properties": {
+              "offset": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "paged": {
+                "type": "boolean"
+              },
+              "pageNumber": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "pageSize": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "sort": {
+                "type": "object",
+                "properties": {
+                  "empty": {
+                    "type": "boolean"
+                  },
+                  "sorted": {
+                    "type": "boolean"
+                  },
+                  "unsorted": {
+                    "type": "boolean"
+                  }
+                }
+              },
+              "unpaged": {
+                "type": "boolean"
+              }
+            }
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
+          "empty": {
+            "type": "boolean"
+          }
+        }
+      }
+order: 1000

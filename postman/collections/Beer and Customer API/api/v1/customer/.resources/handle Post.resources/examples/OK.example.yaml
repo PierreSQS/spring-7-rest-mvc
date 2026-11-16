@@ -1,0 +1,30 @@
+name: 'OK'
+$kind: 'http-example'
+request:
+  url: '{{baseUrl}}/api/v1/customer'
+  method: 'POST'
+  headers:
+    - key: 'Content-Type'
+      value: 'application/json'
+    - key: 'Authorization'
+      value: 'Bearer <token>'
+      description: 'Added as a part of security scheme: bearer'
+  body:
+    type: 'json'
+    content: |-
+      {
+        "name": "string",
+        "createdDate": "1958-12-23T17:07:37.092Z",
+        "updateDate": "2003-12-09T11:25:00.435Z",
+        "id": "a557d17c-4e0f-8ff4-0d8a-3b68f09492d0",
+        "email": "string",
+        "version": 6497
+      }
+response:
+  statusCode: 200
+  statusText: 'OK'
+  headers: []
+  body:
+    type: 'text'
+    content: ''
+order: 1000

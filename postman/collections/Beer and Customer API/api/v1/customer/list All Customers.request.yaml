@@ -1,0 +1,8 @@
+$kind: 'http-request'
+order: 2000
+url: '{{baseUrl}}/api/v1/customer'
+method: 'GET'
+headers:
+  - key: 'Accept'
+    value: '*/*'
+examples: './.resources/list All Customers.resources/examples'

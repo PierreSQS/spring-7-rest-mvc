@@ -1,0 +1,9 @@
+$kind: 'http-request'
+order: 3000
+url: '{{baseUrl}}/api/v1/beer/:beerId'
+method: 'DELETE'
+pathVariables:
+  - key: 'beerId'
+    value: '0d5a5f1d-4152-14e0-79cf-fd838f4a3ed9'
+    $type: '{"type":"object","properties":{"value":{"type":"string","format":"uuid"}},"required":["value"]}'
+examples: './.resources/delete By Id.resources/examples'

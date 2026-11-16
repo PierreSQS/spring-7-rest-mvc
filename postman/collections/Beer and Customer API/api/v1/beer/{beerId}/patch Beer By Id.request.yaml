@@ -1,0 +1,85 @@
+$kind: 'http-request'
+order: 4000
+url: '{{baseUrl}}/api/v1/beer/:beerId'
+method: 'PATCH'
+headers:
+  - key: 'Content-Type'
+    value: 'application/json'
+pathVariables:
+  - key: 'beerId'
+    value: '0d5a5f1d-4152-14e0-79cf-fd838f4a3ed9'
+    $type: '{"type":"object","properties":{"value":{"type":"string","format":"uuid"}},"required":["value"]}'
+body:
+  type: 'json'
+  content: |-
+    {
+      "beerName": "string",
+      "beerStyle": "STOUT",
+      "price": 8214.739933875384,
+      "upc": "string",
+      "createdDate": "1952-05-11T09:01:38.016Z",
+      "updateDate": "1959-02-01T07:57:15.062Z",
+      "id": "0fc54318-0c9b-dab8-200b-44cfe97904dc",
+      "version": 3018,
+      "quantityOnHand": 4620
+    }
+  $type: |-
+    {
+      "type": "object",
+      "properties": {
+        "createdDate": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updateDate": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "version": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "beerName": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 50
+        },
+        "beerStyle": {
+          "type": "string",
+          "enum": [
+            "LAGER",
+            "PILSNER",
+            "STOUT",
+            "GOSE",
+            "PORTER",
+            "ALE",
+            "WHEAT",
+            "IPA",
+            "PALE_ALE",
+            "SAISON"
+          ]
+        },
+        "upc": {
+          "type": "string",
+          "minLength": 1
+        },
+        "quantityOnHand": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "price": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "beerName",
+        "beerStyle",
+        "price",
+        "upc"
+      ]
+    }
+examples: './.resources/patch Beer By Id.resources/examples'

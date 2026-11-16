@@ -1,0 +1,76 @@
+name: 'OK'
+$kind: 'http-example'
+request:
+  url: '{{baseUrl}}/api/v1/customer'
+  method: 'GET'
+  headers:
+    - key: 'Accept'
+      value: '*/*'
+    - key: 'Authorization'
+      value: 'Bearer <token>'
+      description: 'Added as a part of security scheme: bearer'
+response:
+  statusCode: 200
+  statusText: 'OK'
+  headers:
+    - key: 'Content-Type'
+      value: '*/*'
+  body:
+    type: 'text'
+    content: |-
+      [
+        {
+          "name": "string",
+          "createdDate": "2017-07-01T07:26:18.828Z",
+          "updateDate": "2011-09-22T03:46:13.633Z",
+          "id": "78b0ebe2-7923-71f1-969d-1ed22de00f9c",
+          "email": "string",
+          "version": 173
+        },
+        {
+          "name": "string",
+          "createdDate": "2019-04-28T04:54:13.129Z",
+          "updateDate": "2019-10-16T14:54:11.803Z",
+          "id": "e19eba18-2bd3-0267-7ad6-4e7967fafd4b",
+          "email": "string",
+          "version": 8660
+        }
+      ]
+    $type: |-
+      {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "createdDate": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "updateDate": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "email": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255
+            },
+            "version": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "required": [
+            "name"
+          ]
+        }
+      }
+order: 1000
