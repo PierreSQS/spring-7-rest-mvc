@@ -49,6 +49,18 @@ Chaque ticket a toujours les mêmes parties, en anglais :
 | **Rules** | la règle de `docs/regles-a-retenir.md` (branche `notes`) qui s'applique | R19 |
 | **Done when** | à quoi on reconnaît que c'est fini | « `beers.csv` has no `â€` sequence left » |
 
+**Points to settle** (seulement quand il y a des décisions à prendre avant de commencer, exemple : ticket #62) :
+chaque point commence par ⬜ (ouvert). Une fois décidé, ⬜ devient ✅ et la décision est ajoutée au bout de la ligne :
+
+```
+4. ✅ The API profile: H2 or MySQL. Decided: H2, no Docker on the runner.
+```
+
+Pourquoi des marqueurs et pas des cases `- [ ]` :
+- **GitHub** compte toutes les cases `- [ ]` du texte d'un ticket et affiche la progression dans la liste des tickets
+  (« 3 of 5 tasks ») : les cases restent réservées au **Done when** ;
+- ⬜ et ✅ ne sont que des caractères, GitHub ne les compte pas : c'est **notre convention**, pas une règle de Git ou de GitHub.
+
 **Ce qu'un ticket `training` ne contient jamais : la solution.** Il dit *quoi* et *où*, pas *comment* :
 c'est à moi de trouver. Claude donne au plus un indice, si je le demande.
 
