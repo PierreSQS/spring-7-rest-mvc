@@ -1,0 +1,7 @@
+# Use this workspace to collaborate
+workspace:
+  id: a9f7c171-6972-4cff-88fd-a86ab04a4119
+
+localResources:
+  specs:
+    - ../target/oa3.yml
