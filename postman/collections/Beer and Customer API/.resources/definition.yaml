@@ -1,52 +1,47 @@
-$kind: 'collection'
-name: 'Beer and Customer API'
-description: 'Build 0.0.1-SNAPSHOT, built 2026-11-16 02:33 UTC'
+$kind: collection
+description: Build 0.0.1-SNAPSHOT, built 2026-11-16 02:33 UTC
 variables:
-  - key: 'baseUrl'
-    value: 'http://localhost:8080'
-  - key: 'bearerToken'
-    value: ''
-  - key: 'bearerTokenExpiresAt'
-    value: ''
+  baseUrl: http://localhost:8080
+  bearerToken: ""
+  bearerTokenExpiresAt: ""
 auth:
-  type: 'bearer'
+  type: bearer
   credentials:
-    - key: 'token'
-      value: '{{bearerToken}}'
+    token: "{{bearerToken}}"
 scripts:
-  - type: 'http:beforeRequest'
+  - type: http:beforeRequest
     code: |-
-        // Gets a token from the authorization server (client credentials) and keeps it in {{bearerToken}},
-        // the variable the collection's Bearer auth already uses (#56). A new token only when the old one expires.
-        const TOKEN_URL     = 'http://localhost:9000/oauth2/token';
-        const CLIENT_ID     = pm.variables.get('oidcClientId');
-        const CLIENT_SECRET = pm.variables.get('clientSecret');
-      
-        const token     = pm.collectionVariables.get('bearerToken');
-        const expiresAt = parseInt(pm.collectionVariables.get('bearerTokenExpiresAt') || '0', 10);
-      
-        if (!(token && Date.now() < expiresAt - 30_000)) {
-            const credentials = Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString('base64');
-            pm.sendRequest({
-                url: TOKEN_URL,
-                method: 'POST',
-                header: {
-                    'Content-Type':  'application/x-www-form-urlencoded',
-                    'Authorization': `Basic ${credentials}`
-                },
-                body: {
-                    mode: 'urlencoded',
-                    urlencoded: [
-                        { key: 'grant_type', value: 'client_credentials' },
-                        { key: 'scope',      value: 'message.read message.write' }
-                    ]
-                }
-            }, (err, res) => {
-                if (err) { console.error('[Pre-request] token request failed:', err); return; }
-                const body = res.json();
-                if (!body || !body.access_token) { console.error('[Pre-request] no access_token, status', res.code); return; }
-                pm.collectionVariables.set('bearerToken', body.access_token);
-                pm.collectionVariables.set('bearerTokenExpiresAt', String(Date.now() + body.expires_in * 1000));
-            });
-        }
-    language: 'text/javascript'
+      // Gets a token from the authorization server (client credentials) and keeps it in {{bearerToken}},
+      // the variable the collection's Bearer auth already uses (#56). A new token only when the old one expires.
+      const TOKEN_URL     = 'http://localhost:9000/oauth2/token';
+      const CLIENT_ID     = pm.variables.get('oidcClientId');
+      const CLIENT_SECRET = pm.variables.get('clientSecret');
+
+      const token     = pm.collectionVariables.get('bearerToken');
+      const expiresAt = parseInt(pm.collectionVariables.get('bearerTokenExpiresAt') || '0', 10);
+
+      if (!(token && Date.now() < expiresAt - 30_000)) {
+          const credentials = Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString('base64');
+          pm.sendRequest({
+              url: TOKEN_URL,
+              method: 'POST',
+              header: {
+                  'Content-Type':  'application/x-www-form-urlencoded',
+                  'Authorization': `Basic ${credentials}`
+              },
+              body: {
+                  mode: 'urlencoded',
+                  urlencoded: [
+                      { key: 'grant_type', value: 'client_credentials' },
+                      { key: 'scope',      value: 'message.read message.write' }
+                  ]
+              }
+          }, (err, res) => {
+              if (err) { console.error('[Pre-request] token request failed:', err); return; }
+              const body = res.json();
+              if (!body || !body.access_token) { console.error('[Pre-request] no access_token, status', res.code); return; }
+              pm.collectionVariables.set('bearerToken', body.access_token);
+              pm.collectionVariables.set('bearerTokenExpiresAt', String(Date.now() + body.expires_in * 1000));
+          });
+      }
+    language: text/javascript
