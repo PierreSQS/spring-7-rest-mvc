@@ -1,5 +1,5 @@
 $kind: 'http-request'
-order: 2000
+order: 2500
 url: '{{baseUrl}}/api/v1/beer?pageNumber=3&pageSize=25'
 method: 'GET'
 headers:
