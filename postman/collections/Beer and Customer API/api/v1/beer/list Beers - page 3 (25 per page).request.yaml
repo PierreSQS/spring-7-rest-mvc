@@ -1,0 +1,91 @@
+$kind: 'http-request'
+order: 2000
+url: '{{baseUrl}}/api/v1/beer?pageNumber=3&pageSize=25'
+method: 'GET'
+headers:
+  - key: 'Accept'
+    value: '*/*'
+queryParams:
+  - key: 'pageNumber'
+    value: '3'
+    $type: '{"type":"object","properties":{"value":{"type":"integer","format":"int32"}}}'
+  - key: 'pageSize'
+    value: '25'
+    $type: '{"type":"object","properties":{"value":{"type":"integer","format":"int32"}}}'
+scripts:
+  - type: afterResponse
+    code: |-
+      function getBearerToken() {
+          const authorization = pm.request.headers.get("Authorization") || "";
+          const match = authorization.match(/^Bearer\s+(\S+)$/i);
+          return match ? match[1] : null;
+      }
+
+      function decodeBase64Url(segment) {
+          const base64 = segment.replace(/-/g, "+").replace(/_/g, "/");
+          const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, "=");
+          return JSON.parse(atob(padded));
+      }
+
+      pm.test("[JWT] Authorization contains a well-formed Bearer token", () => {
+          const token = getBearerToken();
+          pm.expect(token, "Bearer token").to.be.a("string");
+          pm.expect(token).to.match(/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/);
+      });
+
+      pm.test("[JWT] Token declares RS256, a key ID, an identity and a valid expiry", () => {
+          const token = getBearerToken();
+          pm.expect(token, "Bearer token").to.be.a("string");
+
+          const parts = token.split(".");
+          pm.expect(parts).to.have.lengthOf(3);
+
+          const header = decodeBase64Url(parts[0]);
+          const payload = decodeBase64Url(parts[1]);
+
+          pm.expect(header.alg).to.equal("RS256");
+          pm.expect(header.kid, "kid").to.be.a("string").and.not.be.empty;
+          pm.expect(payload.sub || payload.client_id, "sub or client_id")
+              .to.be.a("string").and.not.be.empty;
+          pm.expect(payload.exp, "exp")
+              .to.be.a("number").and.to.be.above(Math.floor(Date.now() / 1000));
+      });
+
+      pm.test("Response status code is 200", () => {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Response contains 25 beers", () => {
+          const page = pm.response.json();
+          pm.expect(page.content).to.be.an("array").with.lengthOf(25);
+      });
+
+      pm.test("Response page index is 2 for requested page 3", () => {
+          const page = pm.response.json();
+          pm.expect(page.number).to.equal(2);
+      });
+
+      pm.test("Every beer has the expected fields", () => {
+          const page = pm.response.json();
+          pm.expect(page.content).to.be.an("array").and.not.be.empty;
+
+          page.content.forEach((beer, index) => {
+              pm.expect(beer, `content[${index}]`).to.have.all.keys(
+                  "id", "version", "createdDate", "updateDate",
+                  "beerName", "beerStyle", "upc", "price", "quantityOnHand"
+              );
+          });
+      });
+
+      pm.test("Every beer has a non-negative stock quantity and price", () => {
+          const page = pm.response.json();
+          pm.expect(page.content).to.be.an("array").and.not.be.empty;
+
+          page.content.forEach((beer, index) => {
+              pm.expect(beer.quantityOnHand, `content[${index}].quantityOnHand`)
+                  .to.satisfy(value => Number.isInteger(value) && value >= 0);
+              pm.expect(beer.price, `content[${index}].price`)
+                  .to.be.a("number").and.to.be.at.least(0);
+          });
+      });
+    language: 'text/javascript'
