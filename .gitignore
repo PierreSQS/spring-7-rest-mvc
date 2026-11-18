@@ -37,6 +37,14 @@ build/
 .env
 # Postman secret values - never commit them, the template is postman/environments/local-example.environment.yaml
 postman/environments/local.environment.yaml
+# Postman globals of My Workspace (all my courses), copied here by the app - may hold secrets one day,
+# and anyone can read this GitHub repository
+postman/globals/
+
+### Postman agent skills ###
+# copies installed by the Postman CLI (`postman skills update`), they follow its version
+.postman/skills.json
+postman/skills/
 
 ### Local debug settings ###
 # my own Spring Boot overrides (read after src/main/resources), never committed
