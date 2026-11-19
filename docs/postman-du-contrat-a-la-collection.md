@@ -213,7 +213,8 @@ postman/
 - **utiliser** la collection du dépôt (la lancer avec le Postman CLI, la ramener dans l'application, y revenir après
   une modification) : issue #59 ;
 - **éviter la copie à la main** : l'application Postman propose « Work in Git » / « Connect local Git repo »
-  (fenêtre d'import, en bas), qui relie Postman au dossier du dépôt. Pas encore essayé : issue #58.
+  (fenêtre d'import, en bas), qui relie Postman au dossier du dépôt. Essayé et adopté dans #59
+  (la « vue Local Git ») ; reste #58 : mettre à jour la spec sans copie à la main.
 
   ![Work in Git](images/postman-56/05-work-in-git.png)
 
