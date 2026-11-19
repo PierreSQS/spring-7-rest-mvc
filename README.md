@@ -19,7 +19,7 @@ JT's original README stays on every lesson branch.
 | **lesson branch** | One branch per lecture of the course, named after JT's branch for that lecture plus a suffix, e.g. `127-springdoc-security-cfg-jt-sb412`. Never merged into `master`. The number at the start (here 127) is **JT's branch index**, not a chapter number. "Branch 127" is short for that branch. |
 | **`-sbNNN` suffix** | The Spring Boot version of the branch: `-sb411` = Boot 4.1.1, `-sb412` = Boot 4.1.2. |
 | **my own branches** ("mes branches") | The chain where my own improvements live, each branch started from my previous one. The last one is branch 109, `109-lock-demo-optimistic-sb411` (Sections 13-18). It will be brought up to the current lecture later (#34). |
-| **training branch** | A lesson branch with `-jt-` in its name: it **restarted from JT's original code**, and I improve that code by hand, issue by issue. Two chains: branches 110 to 125 (Sections 22-38, restarted from JT's branch 110) and branches 126 to 127 (Section 40, restarted from JT's branch 126). |
+| **training branch** | A lesson branch with `-jt-` in its name: it **restarted from JT's original code**, and I improve that code by hand, issue by issue. Two chains: branches 110 to 125 (Sections 22-38, restarted from JT's branch 110) and branches 126 to 128 (Section 40, restarted from JT's branch 126). |
 | **frozen copy** | Some documents of `notes` also exist, in an older version, on lesson branches: `docs/regles-a-retenir.md` is on branches 116, 121 and 125. Those copies show the state of their branch and are **never updated**: the version on `notes` is the right one. |
 | **SHA** | The identifier of a commit, e.g. `a79dc240`. A link with a SHA opens a file exactly as it was at that commit, even if the branch changes later. |
 
@@ -32,8 +32,8 @@ Links to a document of `notes` open its latest version. Links to a document of a
 | Document | Why |
 |---|---|
 | [`docs/regles-a-retenir.md`](docs/regles-a-retenir.md) | Every rule learned in the project (R1-R30), with example and proof. |
-| [`docs/procedures-tickets-et-ci.md`](https://github.com/PierreSQS/spring-7-rest-mvc/blob/3e69640c740599b152599428462a75cb1484296d/docs/procedures-tickets-et-ci.md) (branch 127) | How issues and the CI work, from an issue to its closing. |
-| [`CLAUDE.md`](https://github.com/PierreSQS/spring-7-rest-mvc/blob/3e69640c740599b152599428462a75cb1484296d/CLAUDE.md) (branch 127) | What the code of the current lesson branch does, and the rules Claude follows on it. |
+| [`docs/procedures-tickets-et-ci.md`](https://github.com/PierreSQS/spring-7-rest-mvc/blob/b80e4aff3325650c1cd825e7c01d7d86c4d93c39/docs/procedures-tickets-et-ci.md) (branch 128) | How issues and the CI work, from an issue to its closing. |
+| [`CLAUDE.md`](https://github.com/PierreSQS/spring-7-rest-mvc/blob/b80e4aff3325650c1cd825e7c01d7d86c4d93c39/CLAUDE.md) (branch 128) | What the code of the current lesson branch does, and the rules Claude follows on it. |
 | [Open issues](https://github.com/PierreSQS/spring-7-rest-mvc/issues) | What is left to do. |
 
 ---
@@ -51,17 +51,18 @@ Links to a document of `notes` open its latest version. Links to a document of a
 
 ---
 
-## On the current lesson branch: branch 127, `127-springdoc-security-cfg-jt-sb412` (`3e69640c`)
+## On the current lesson branch: branch 128, `128-springdoc-maven-plugin-jt-sb412` (`b80e4aff`)
 
-Training branch, Section 40 (OpenAPI). These documents describe the code of their branch, so they stay there.
+Training branch, last branch of Section 40 (OpenAPI). These documents describe the code of their branch, so they stay there.
+Its companion `128-springdoc-maven-plugin-jt-sb412-postman` holds the Postman experiments (the `postman/` folder).
 Every lesson branch has its own version of `CLAUDE.md`, describing its own code.
 
 | Document | What it is for | When to read it |
 |---|---|---|
-| [`CLAUDE.md`](https://github.com/PierreSQS/spring-7-rest-mvc/blob/3e69640c740599b152599428462a75cb1484296d/CLAUDE.md) | Guide of the branch: stack, build and test commands, architecture, security, gotchas of Boot 4.1 / Spring 7 / Jackson 3. | To know how the branch is built, tested and organised. |
-| [`.claude/rules/database.md`](https://github.com/PierreSQS/spring-7-rest-mvc/blob/3e69640c740599b152599428462a75cb1484296d/.claude/rules/database.md) | H2, Compose MySQL and `MySqlIT`: profiles, Compose lifecycle, migration rule (#17). | Before touching `compose.yaml`, `src/main/resources` or a Flyway migration. |
-| [`.claude/rules/testing.md`](https://github.com/PierreSQS/spring-7-rest-mvc/blob/3e69640c740599b152599428462a75cb1484296d/.claude/rules/testing.md) | Test classes and their setup, seeded data, flush/clear, `MySqlIT` (#17). | Before writing or changing a test. |
-| [`docs/procedures-tickets-et-ci.md`](https://github.com/PierreSQS/spring-7-rest-mvc/blob/3e69640c740599b152599428462a75cb1484296d/docs/procedures-tickets-et-ci.md) | Issues (content, labels, closing) and the CI pipeline; traps already met (broken `mvnw`, run stuck in *Queued*). French. | When an issue is created or closed, or when the CI behaves strangely. |
+| [`CLAUDE.md`](https://github.com/PierreSQS/spring-7-rest-mvc/blob/b80e4aff3325650c1cd825e7c01d7d86c4d93c39/CLAUDE.md) | Guide of the branch: stack, build and test commands, architecture, security, gotchas of Boot 4.1 / Spring 7 / Jackson 3. | To know how the branch is built, tested and organised. |
+| [`.claude/rules/database.md`](https://github.com/PierreSQS/spring-7-rest-mvc/blob/b80e4aff3325650c1cd825e7c01d7d86c4d93c39/.claude/rules/database.md) | H2, Compose MySQL and `MySqlIT`: profiles, Compose lifecycle, migration rule (#17). | Before touching `compose.yaml`, `src/main/resources` or a Flyway migration. |
+| [`.claude/rules/testing.md`](https://github.com/PierreSQS/spring-7-rest-mvc/blob/b80e4aff3325650c1cd825e7c01d7d86c4d93c39/.claude/rules/testing.md) | Test classes and their setup, seeded data, flush/clear, `MySqlIT` (#17). | Before writing or changing a test. |
+| [`docs/procedures-tickets-et-ci.md`](https://github.com/PierreSQS/spring-7-rest-mvc/blob/b80e4aff3325650c1cd825e7c01d7d86c4d93c39/docs/procedures-tickets-et-ci.md) | Issues (content, labels, closing) and the CI pipeline; traps already met (broken `mvnw`, run stuck in *Queued*). French. | When an issue is created or closed, or when the CI behaves strangely. |
 
 ---
 
