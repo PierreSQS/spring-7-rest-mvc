@@ -20,7 +20,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * Created by Pierrot on 02-11-2026
- * Modified by Pierrot on 16-11-2026
+ * Modified by Pierrot on 22-11-2026
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -75,16 +75,16 @@ class SpringSecConfigIT {
     }
 
     @Test
-    void testApiDocsDeclareBearerJwt() throws Exception {
-        // GET /v3/api-docs -> a Bearer JWT security scheme, required by every operation (Authorize button, #27)
+    void testApiDocsDeclareOAuth2ClientCredentials() throws Exception {
+        // GET /v3/api-docs -> an OAuth2 Client Credentials scheme with a global security requirement (#32)
         mockMvc.perform(get("/v3/api-docs"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.components.securitySchemes.bearerAuth.type").value("http"))
-                .andExpect(jsonPath("$.components.securitySchemes.bearerAuth.scheme").value("bearer"))
-                .andExpect(jsonPath("$.components.securitySchemes.bearerAuth.bearerFormat").value("JWT"))
-                .andExpect(jsonPath("$.components.securitySchemes.bearerAuth.description",
-                        containsString("http://localhost:9000/oauth2/token")))
-                .andExpect(jsonPath("$.security[0].bearerAuth").exists());
+                .andExpect(jsonPath("$.components.securitySchemes.oauth2CC.type").value("oauth2"))
+                .andExpect(jsonPath("$.components.securitySchemes.oauth2CC.flows.clientCredentials.tokenUrl")
+                        .value("http://localhost:9000/oauth2/token"))
+                .andExpect(jsonPath("$.components.securitySchemes.oauth2CC.description",
+                        containsString("Enter your client ID and client secret.")))
+                .andExpect(jsonPath("$.security[0].oauth2CC").exists());
     }
 
     @Test
