@@ -3,6 +3,8 @@ package guru.springframework.spring7restmvc.config;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.security.OAuthFlow;
+import io.swagger.v3.oas.annotations.security.OAuthFlows;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.annotations.servers.Server;
@@ -17,10 +19,10 @@ import java.time.format.DateTimeFormatter;
 
 /**
  * Created by Pierrot on 02-11-2026
- * Modified by Pierrot on 16-11-2026
+ * Modified by Pierrot on 20-11-2026
  * <p>
- * Tells the OpenAPI documentation that every operation needs a Bearer JWT,
- * so Swagger UI shows an "Authorize" button and sends the token (#27).
+ * Declares the oauth2CC Client Credentials scheme for all operations.
+ * Swagger UI obtains an access token from the authorization server and sends it as a Bearer token (#32).
  * Documentation only: the real security is in {@link SpringSecConfig}.
  * {@code info} is mandatory in OpenAPI: once this annotation exists, springdoc no longer fills its default title.
  * {@code info.version} is the version of the API contract ("v1", as in /api/v1), written by hand on purpose:
@@ -33,11 +35,16 @@ import java.time.format.DateTimeFormatter;
  * so target/oa3.yml gave an address where nothing runs (#54).
  */
 @Configuration
-@SecurityScheme(name = "bearerAuth", type = SecuritySchemeType.HTTP, scheme = "bearer", bearerFormat = "JWT",
-        description = "Get a token from the authorization server http://localhost:9000/oauth2/token (client credentials), then paste it here.")
+@SecurityScheme(name = "oauth2CC", type = SecuritySchemeType.OAUTH2,
+        flows = @OAuthFlows(
+                clientCredentials = @OAuthFlow(
+                        tokenUrl = "http://localhost:9000/oauth2/token"
+                )
+        ),
+        description = "Enter your client ID and client secret. Swagger UI requests an access token from the authorization server.")
 @OpenAPIDefinition(
         info = @Info(title = "Beer and Customer API", version = "v1"),
-        security = @SecurityRequirement(name = "bearerAuth"),
+        security = @SecurityRequirement(name = "oauth2CC"),
         servers = {
                 @Server(url = "http://localhost:8080", description = "H2 (profile default)"),
                 @Server(url = "http://localhost:8081", description = "MySQL (profile localmysql)")
