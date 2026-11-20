@@ -20,7 +20,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * Created by Pierrot on 02-11-2026
- * Modified by Pierrot on 16-11-2026
+ * Modified by Pierrot on 20-11-2026
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -85,6 +85,18 @@ class SpringSecConfigIT {
                 .andExpect(jsonPath("$.components.securitySchemes.bearerAuth.description",
                         containsString("http://localhost:9000/oauth2/token")))
                 .andExpect(jsonPath("$.security[0].bearerAuth").exists());
+    }
+
+    @Test
+    void testApiDocsDeclareOAuth2ClientCredentials() throws Exception {
+        // GET /v3/api-docs -> a second scheme, OAuth2 client credentials: Swagger UI fetches the token itself
+        // from the authorization server; either scheme is enough, bearerAuth (copy-paste) or oauth2CC (#32)
+        mockMvc.perform(get("/v3/api-docs"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.components.securitySchemes.oauth2CC.type").value("oauth2"))
+                .andExpect(jsonPath("$.components.securitySchemes.oauth2CC.flows.clientCredentials.tokenUrl")
+                        .value("http://localhost:9000/oauth2/token"))
+                .andExpect(jsonPath("$.security[1].oauth2CC").exists());
     }
 
     @Test
