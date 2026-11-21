@@ -108,7 +108,7 @@ Le résultat s'affiche sur le commit : ✅ (tout est vert) ou ❌ (au moins un t
 
 | Bloc du fichier | Ce qu'il fait |
 |---|---|
-| `on: push` / `workflow_dispatch` | démarre à chaque push, ou à la main avec le bouton « Run workflow » de l'onglet *Actions* |
+| `on: push` | démarre à chaque push (le déclenchement à la main, `workflow_dispatch`, est désactivé : voir la ligne « relancer la pipeline » de la section 5) |
 | `paths-ignore` | **sauf** si le push ne change **que** de la documentation (`docs/**`, `**/*.md`) : pas de run. Dès qu'un autre fichier change (code, `pom.xml`, `.properties`, `mvnw`…), le run a lieu |
 | `runs-on: ubuntu-latest` | une machine Linux de GitHub, avec Docker (nécessaire pour `MySqlIT` et Testcontainers) |
 | `actions/checkout@v7` | télécharge le commit poussé |
@@ -156,7 +156,7 @@ ne compte pas, même si les tests sont verts en local : la condition 1 manque.
 | voir les derniers runs de ma branche | `gh run list --branch 126-springdoc-maven-jt-sb412 --limit 5` |
 | suivre un run en direct | `gh run watch <id>` |
 | lire uniquement l'erreur d'un run rouge | `gh run view <id> --log-failed` |
-| relancer la pipeline sans nouveau commit | `gh workflow run build.yml --ref 126-springdoc-maven-jt-sb412` (ou le bouton « Run workflow ») |
+| relancer la pipeline sans nouveau commit | `gh run rerun <id>` (ou le bouton « Re-run all jobs » sur la page du run). Pas de bouton « Run workflow » : GitHub ne l'accepte que si `build.yml` est sur la branche par défaut, `master`, qui n'en a pas |
 | ouvrir le dépôt dans le navigateur | `gh browse` |
 
 `<id>` = le numéro du run, affiché par `gh run list` (par exemple `40497620678`).
