@@ -152,6 +152,7 @@ ne compte pas, même si les tests sont verts en local : la condition 1 manque.
 |---|---|
 | voir les tickets ouverts | `gh issue list` |
 | voir les tickets d'une section | `gh issue list --label sec40` |
+| voir les tickets modifiés depuis une date | `gh issue list --state all --search "updated:>=2026-11-21 sort:updated-desc"` |
 | lire un ticket | `gh issue view 2` |
 | voir les derniers runs de ma branche | `gh run list --branch 126-springdoc-maven-jt-sb412 --limit 5` |
 | suivre un run en direct | `gh run watch <id>` |
@@ -160,6 +161,18 @@ ne compte pas, même si les tests sont verts en local : la condition 1 manque.
 | ouvrir le dépôt dans le navigateur | `gh browse` |
 
 `<id>` = le numéro du run, affiché par `gh run list` (par exemple `40497620678`).
+
+**Les mêmes recherches dans le navigateur** : onglet *Issues* du dépôt, barre de recherche.
+
+| Je veux… | À taper |
+|---|---|
+| les tickets modifiés depuis une date, le plus récent en premier | `is:issue updated:>=2026-11-21 sort:updated-desc` |
+| les tickets créés depuis une date | `is:issue created:>=2026-11-21` |
+| les tickets fermés depuis une date | `is:issue closed:>=2026-11-16` |
+| les tickets modifiés entre deux dates | `is:issue updated:2026-11-18..2026-11-21` |
+| les tickets hard-core ouverts | `is:issue is:open label:hard-core` |
+
+Les critères se combinent : `is:issue is:open label:sec40 updated:>=2026-11-20`.
 
 **Vérifier `build.yml` avant de le pousser : `actionlint`.**
 Un outil qui relit les fichiers de `.github/workflows/` : la syntaxe YAML **et** les règles de GitHub Actions
