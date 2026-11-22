@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Beer and Customer API
-  description: "Build 0.0.1-SNAPSHOT, built 2026-11-16 03:56 UTC"
+  description: "Build 0.0.1-SNAPSHOT, built 2026-11-22 16:42 UTC"
   version: v1
   x-build-version: 0.0.1-SNAPSHOT
 servers:
@@ -10,7 +10,7 @@ servers:
 - url: http://localhost:8081
   description: MySQL (profile localmysql)
 security:
-- bearerAuth: []
+- oauth2CC: []
 paths:
   /api/v1/customer/{customerId}:
     get:
@@ -380,9 +380,11 @@ components:
         unsorted:
           type: boolean
   securitySchemes:
-    bearerAuth:
-      type: http
-      description: "Get a token from the authorization server http://localhost:9000/oauth2/token\
-        \ (client credentials), then paste it here."
-      scheme: bearer
-      bearerFormat: JWT
+    oauth2CC:
+      type: oauth2
+      description: Enter your client ID and client secret. Swagger UI requests an
+        access token from the authorization server.
+      flows:
+        clientCredentials:
+          tokenUrl: http://localhost:9000/oauth2/token
+          scopes: {}

@@ -186,7 +186,8 @@
                 </configuration>
             </plugin>
             <!-- Chap376: fetches /v3/api-docs.yaml from the running application and writes it to
-                 target/oa3.yml. Its generate goal is bound to integration-test by default, so it runs
+                 postman/specs/Beer and Customer API/oa3.yml, the spec the Postman app reads (#58).
+                 Its generate goal is bound to integration-test by default, so it runs
                  between the start and the stop above. -->
             <plugin>
                 <groupId>org.springdoc</groupId>
@@ -195,6 +196,7 @@
                 <configuration>
                     <apiDocsUrl>http://localhost:8099/v3/api-docs.yaml</apiDocsUrl>
                     <outputFileName>oa3.yml</outputFileName>
+                    <outputDir>${project.basedir}/postman/specs/Beer and Customer API</outputDir>
                     <failOnError>true</failOnError>
                     <skip>${skipITs}</skip>
                 </configuration>

@@ -4,4 +4,4 @@ workspace:
 
 localResources:
   specs:
-    - ../target/oa3.yml
+    - ../postman/specs/Beer and Customer API/oa3.yml
