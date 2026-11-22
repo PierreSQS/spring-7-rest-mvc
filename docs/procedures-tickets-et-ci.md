@@ -108,7 +108,7 @@ Le résultat s'affiche sur le commit : ✅ (tout est vert) ou ❌ (au moins un t
 
 | Bloc du fichier | Ce qu'il fait |
 |---|---|
-| `on: push` / `workflow_dispatch` | démarre à chaque push, ou à la main avec le bouton « Run workflow » de l'onglet *Actions* |
+| `on: push` | démarre à chaque push (le déclenchement à la main, `workflow_dispatch`, est désactivé : voir la ligne « relancer la pipeline » de la section 5) |
 | `paths-ignore` | **sauf** si le push ne change **que** de la documentation (`docs/**`, `**/*.md`) ou la collection Postman (`postman/**`, #39) : pas de run. Dès qu'un autre fichier change (code, `pom.xml`, `.properties`, `mvnw`…), le run a lieu |
 | `runs-on: ubuntu-latest` | une machine Linux de GitHub, avec Docker (nécessaire pour `MySqlIT` et Testcontainers) |
 | `actions/checkout@v7` | télécharge le commit poussé |
@@ -152,14 +152,27 @@ ne compte pas, même si les tests sont verts en local : la condition 1 manque.
 |---|---|
 | voir les tickets ouverts | `gh issue list` |
 | voir les tickets d'une section | `gh issue list --label sec40` |
+| voir les tickets modifiés depuis une date | `gh issue list --state all --search "updated:>=2026-11-21 sort:updated-desc"` |
 | lire un ticket | `gh issue view 2` |
 | voir les derniers runs de ma branche | `gh run list --branch 126-springdoc-maven-jt-sb412 --limit 5` |
 | suivre un run en direct | `gh run watch <id>` |
 | lire uniquement l'erreur d'un run rouge | `gh run view <id> --log-failed` |
-| relancer la pipeline sans nouveau commit | `gh workflow run build.yml --ref 126-springdoc-maven-jt-sb412` (ou le bouton « Run workflow ») |
+| relancer la pipeline sans nouveau commit | `gh run rerun <id>` (ou le bouton « Re-run all jobs » sur la page du run). Pas de bouton « Run workflow » : GitHub ne l'accepte que si `build.yml` est sur la branche par défaut, `master`, qui n'en a pas |
 | ouvrir le dépôt dans le navigateur | `gh browse` |
 
 `<id>` = le numéro du run, affiché par `gh run list` (par exemple `40497620678`).
+
+**Les mêmes recherches dans le navigateur** : onglet *Issues* du dépôt, barre de recherche.
+
+| Je veux… | À taper |
+|---|---|
+| les tickets modifiés depuis une date, le plus récent en premier | `is:issue updated:>=2026-11-21 sort:updated-desc` |
+| les tickets créés depuis une date | `is:issue created:>=2026-11-21` |
+| les tickets fermés depuis une date | `is:issue closed:>=2026-11-16` |
+| les tickets modifiés entre deux dates | `is:issue updated:2026-11-18..2026-11-21` |
+| les tickets hard-core ouverts | `is:issue is:open label:hard-core` |
+
+Les critères se combinent : `is:issue is:open label:sec40 updated:>=2026-11-20`.
 
 **Vérifier `build.yml` avant de le pousser : `actionlint`.**
 Un outil qui relit les fichiers de `.github/workflows/` : la syntaxe YAML **et** les règles de GitHub Actions
