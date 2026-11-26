@@ -28,6 +28,21 @@ constants (336 beers named `IPA`, 572 of style `IPA`, 324 both). A change to `be
 `entityManager.flush()` and `clear()` before re-reading what was written (rules R6, R9).
 **No `@Rollback`:** Spring rolls back `@Transactional` tests by default.
 
+## Lessons learned in this project
+
+Each one comes from a real mistake or review on an earlier branch.
+
+| Topic | Rule |
+|---|---|
+| Validation tests | A test expecting `400` from `@Validated` on the `@RequestBody` needs **no `given(...)`**: the body is rejected before the handler runs, so the mocked service is never called. Mockito's strict stubs do not catch it (they only police `@Mock`, not Spring's `@MockitoBean`). Leave a short comment saying why there is no stubbing. |
+| `JsonMapper` import | Import `tools.jackson.databind.json.JsonMapper`. IntelliJ may offer Testcontainers' shaded copy `org.testcontainers.shaded.com.fasterxml.jackson.databind.json.JsonMapper`: no Spring bean has that type. |
+| Changing a response | Before predicting green after changing a status or a body (error handler, ...), search the tests that assert the **old** response (`content().string("")`, the old status), not only the new case (issue #9: predicted green, CI red). |
+| Helper names | Test helpers take the `get` prefix (`getFirstBeer()`, not `firstBeer()`). |
+| Status constants | `HttpStatus.NO_CONTENT` / `HttpStatus.CREATED`, not `HttpStatusCode.valueOf(204)`. |
+| Lambdas | Extract a local before the lambda: `UUID beerId = UUID.randomUUID(); assertThatThrownBy(() -> beerService.deleteById(beerId))`. |
+| `BeerControllerIT.testPatchBeerBadName` | `patchBeerById` has no `@Validated`, so the too-long name only fails at the JPA commit (`TransactionSystemException` -> `400`). The test cannot move to `@WebMvcTest`, and `BeerControllerIT` must not get a class-level `@Transactional` (the commit would never happen). |
+| `id` / `version` in an update DTO | The update and patch mappers ignore them (rule R1), so setting them to `null` in a test is dead code. |
+
 ## MySQL integration test
 
 - `MySqlIT` declares its own `static` container with `@Container` and `@ServiceConnection`; it runs Flyway and `BootstrapData`.
