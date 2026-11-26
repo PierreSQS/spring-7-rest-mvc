@@ -106,8 +106,8 @@ The last of my own branches ("mes branches"). The documents keep their original 
 
 ### Lesson reviews (5)
 
-Snapshots: each one reviews a lesson as the code stood then and is never updated (#20). English.
-They are being rewritten on `notes`, in French, with the same facts (#20): a rewritten one links to its version on `notes`.
+Snapshots: each one reviews a lesson as the code stood then and is never updated (#20).
+All five were rewritten on `notes` in November 2026, in French, with the same facts (#20); each row links to the English original on branch 109.
 Their unfinished ideas are parked in #66.
 
 | Document | Lesson |
@@ -116,7 +116,7 @@ Their unfinished ideas are parked in #66.
 | [`docs/sec13-chap143-service-connection-improvements.md`](docs/sec13-chap143-service-connection-improvements.md) - **rewritten on `notes`**, French ([original](https://github.com/PierreSQS/spring-7-rest-mvc/blob/69f0a32bf8d3106c74140b1bc49e9c5c8dc4a7c9/docs/sec13-chap143-service-connection-improvements.md)) | Section 13, Chap143: `@ServiceConnection`. |
 | [`docs/sec13-chap144-maven-failsafe-improvements.md`](docs/sec13-chap144-maven-failsafe-improvements.md) - **rewritten on `notes`**, French ([original](https://github.com/PierreSQS/spring-7-rest-mvc/blob/69f0a32bf8d3106c74140b1bc49e9c5c8dc4a7c9/docs/sec13-chap144-maven-failsafe-improvements.md)) | Section 13, Chap144: the Failsafe plugin, `MySqlTest` renamed `MySqlIT`. |
 | [`docs/sec14-csv-improvements.md`](docs/sec14-csv-improvements.md) - **rewritten on `notes`**, French ([original](https://github.com/PierreSQS/spring-7-rest-mvc/blob/69f0a32bf8d3106c74140b1bc49e9c5c8dc4a7c9/docs/sec14-csv-improvements.md)) | Section 14, Chap147-153: CSV import. |
-| [`docs/sec16-paging-improvements.md`](https://github.com/PierreSQS/spring-7-rest-mvc/blob/69f0a32bf8d3106c74140b1bc49e9c5c8dc4a7c9/docs/sec16-paging-improvements.md) | Section 16, Chap166-169: paging and sorting. |
+| [`docs/sec16-paging-improvements.md`](docs/sec16-paging-improvements.md) - **rewritten on `notes`**, French ([original](https://github.com/PierreSQS/spring-7-rest-mvc/blob/69f0a32bf8d3106c74140b1bc49e9c5c8dc4a7c9/docs/sec16-paging-improvements.md)) | Section 16, Chap166-169: paging and sorting. |
 
 No lesson review exists yet for Sections 17 to 38 (#20); the one for Section 40 is on this branch, `docs/sec40-openapi-improvements.md`.
 
