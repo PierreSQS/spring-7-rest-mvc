@@ -49,6 +49,7 @@ Links to a document of `notes` open its latest version. Links to a document of a
 | [`docs/sauvegardes-de-branches.md`](docs/sauvegardes-de-branches.md) | My branch backups: when a branch is deleted, a backup ref `refs/backup/<name>` keeps its commit. How to list them (that list **is** the list of deleted branches), read one, restore a branch, and delete a branch safely. French. | When a deleted branch is needed again, or before deleting one. |
 | [`docs/postman-avec-claude-code.md`](docs/postman-avec-claude-code.md) | Exploring Postman with Claude Code, step by step: how Claude reaches my Postman collection (CLI, plugin, access key, commands), then each step with goal, command, result and what it proves (#39), then the collection of the Git repository in the Postman app (#40, section 7). French. | Before working with Postman from the CLI, or to redo the steps alone. |
 | [`docs/postman-du-contrat-a-la-collection.md`](docs/postman-du-contrat-a-la-collection.md) | From the contract the build generates (`target/oa3.yml`) to a Postman collection, kept in Git: import, `baseUrl` and the token script, environment vs collection, several servers, what the `postman/` folder holds (#56). French, with screenshots in `docs/images/postman-56/`. | Before importing a new contract into Postman, or to understand the `postman/` folder. |
+| [`docs/sec40-openapi-improvements.md`](docs/sec40-openapi-improvements.md) | Lesson review of Section 40 (OpenAPI with springdoc, Chap374-376): the three lessons of JT, then what we did better than JT and what we added, each with the problem, the before/after code side by side and the why (#20). Snapshot of 26-11-2026, never updated. French. | To remember what Section 40 changed, and why. |
 | [`skills/project-documentation/SKILL.md`](skills/project-documentation/SKILL.md) | **Backup** of the skill `project-documentation`: the rules Claude and Codex follow when writing these notes (French, problem / change with its commit / why, before-after side by side in colour). The live copy is in the project folder, `.claude/skills/project-documentation/` (not in Git); `.agents/skills/project-documentation` is a Windows junction to it, so Codex reads the same file. Update this backup whenever the skill changes. English. | When a note does not follow these rules, or to restore the skill on another PC. |
 
 ---
@@ -115,7 +116,7 @@ Snapshots: each one reviews a lesson as the code stood then and is never updated
 | [`docs/sec14-csv-improvements.md`](https://github.com/PierreSQS/spring-7-rest-mvc/blob/69f0a32bf8d3106c74140b1bc49e9c5c8dc4a7c9/docs/sec14-csv-improvements.md) | Section 14, Chap147-153: CSV import. |
 | [`docs/sec16-paging-improvements.md`](https://github.com/PierreSQS/spring-7-rest-mvc/blob/69f0a32bf8d3106c74140b1bc49e9c5c8dc4a7c9/docs/sec16-paging-improvements.md) | Section 16, Chap166-169: paging and sorting. |
 
-No lesson review exists yet for Section 17 and later (#20).
+No lesson review exists yet for Sections 17 to 38 (#20); the one for Section 40 is on this branch, `docs/sec40-openapi-improvements.md`.
 
 ---
 
