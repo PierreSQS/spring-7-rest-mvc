@@ -82,8 +82,8 @@ When the document explains how to do something (install, configure, use a tool),
 
 ### 3.5 Ideas not done
 
-Ideas that were **not** implemented go at the end, under `## Idées non réalisées`, as a short list:
-one line each, without the full structure. Never mix them with the changes that were made.
+Do **not** list ideas that were not implemented: they live as GitHub issues
+(`PierreSQS/spring-7-rest-mvc`), not in the notes. A document describes only what was done.
 
 ## 4. Before / after
 
@@ -155,7 +155,7 @@ Check:
 - [ ] every code block comes from Git, cuts are marked `// ...`;
 - [ ] every branch cited is pushed and written in full;
 - [ ] no unexplained technical term or variable, no "le dossier", every abstract sentence has its example;
-- [ ] ideas not done are separate, at the end;
+- [ ] no list of ideas not done (they are GitHub issues);
 - [ ] new document on `notes` -> line in `README.md`.
 
 Show the document to Pierrot before any commit.
