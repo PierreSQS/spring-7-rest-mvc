@@ -15,7 +15,7 @@ Loaded with `CLAUDE.md` when Claude reads or edits a file under `src/test/`. The
 | `*RepositoryTest`, `BootstrapDataTest` | `@DataJpaTest` | Surefire | No |
 | `BeerCsvServiceImplTest` | plain unit test | Surefire | No |
 | `*ControllerIT` | `@SpringBootTest` + `@AutoConfigureMockMvc`, H2. **Every test goes through `MockMvc`** with `.with(BeerControllerTest.jwtRequestPostProcessor)` (the 18 direct controller calls were rewritten, issue #11): a missing entity expects `404`, not an exception, and a `PUT`/`POST` body must be valid or the answer is `400`. Data-changing tests are `@Transactional` and call `entityManager.flush()` + `clear()` before reading the row back (R6). | Failsafe (`verify`) | No |
-| `BeerControllerRestAssuredTest` | `@SpringBootTest(webEnvironment = RANDOM_PORT)`: REST Assured calls the API on a **real port**, without MockMvc. It sends no token yet, so it gets `401` until Chap376 (Section 41). | Surefire | No |
+| `BeerControllerRestAssuredTest` | `@SpringBootTest(webEnvironment = RANDOM_PORT)`: REST Assured calls the API on a **real port**, without MockMvc. Security is off for it (Chap376): `@ActiveProfiles("test")` skips `SpringSecConfig`, and its nested `TestSecurityConfig` permits every request. `@Import` + `@ComponentScan` are both required, see the comment in the class. | Surefire | No |
 | `Spring7RestMvcApplicationTests` | `@SpringBootTest` context check | Surefire | No |
 | `MySqlIT` | `@SpringBootTest` + `@Testcontainers` + `@ActiveProfiles("localmysql")` | Failsafe | Yes |
 
