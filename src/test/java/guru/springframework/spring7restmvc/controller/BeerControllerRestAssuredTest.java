@@ -1,5 +1,7 @@
 package guru.springframework.spring7restmvc.controller;
 
+import com.atlassian.oai.validator.OpenApiInteractionValidator;
+import com.atlassian.oai.validator.restassured.OpenApiValidationFilter;
 import io.restassured.RestAssured;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,12 +24,16 @@ import static io.restassured.RestAssured.given;
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 // Both annotations are needed, because of the nested @Configuration class below:
-// - a nested @Configuration makes @SpringBootTest stop looking for Spring7RestMvcApplication;
-// - @Import makes Spring Boot register this test class itself as configuration, so its annotations count;
+// - the nested configuration class makes Spring Boot stop looking for Spring7RestMvcApplication.
+// - @Import makes Spring Boot register this test class itself as configuration, so its annotations count.
 // - @ComponentScan (active thanks to @Import) then finds Spring7RestMvcApplication again.
 @Import(BeerControllerRestAssuredTest.TestSecurityConfig.class)
 @ComponentScan(basePackages = {"guru.springframework.spring7restmvc"})
 public class BeerControllerRestAssuredTest {
+
+    OpenApiValidationFilter validationFilter = new OpenApiValidationFilter(OpenApiInteractionValidator
+            .createForSpecificationUrl("oa3.yml")
+            .build());
 
     // Add local Configuration class to disable security for RestAssured tests
     @Configuration
@@ -53,6 +59,7 @@ public class BeerControllerRestAssuredTest {
     void testListBeers() {
         given().contentType("application/json")
                 .when()
+                .filter(validationFilter)
                 .get("/api/v1/beer")
                 .then()
                 .statusCode(200);
