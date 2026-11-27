@@ -10,9 +10,9 @@ Créé le 17-10-2026.
 
 ## Table des matières
 
-30 règles, numérotées R1 à R30 dans l'ordre où elles ont été apprises - donc pas dans
+31 règles, numérotées R1 à R31 dans l'ordre où elles ont été apprises - donc pas dans
 l'ordre des sections : R19 est rangée avec les fichiers, R20-R21 avec les lambdas, R22-R23 avec Hibernate,
-R24 avec PUT et PATCH, R25-R26 avec la base de données, R27 et R30 avec Spring Security, R28-R29 avec les tests.
+R24 avec PUT et PATCH, R25-R26 avec la base de données, R27 et R30 avec Spring Security, R28-R29 et R31 avec les tests.
 
 
 **1. MapStruct et DTO**
@@ -42,6 +42,7 @@ R24 avec PUT et PATCH, R25-R26 avec la base de données, R27 et R30 avec Spring 
 - [R11 — `@WebMvcTest` ne charge que la couche web](#r11--webmvctest-ne-charge-que-la-couche-web)
 - [R28 — Un test qui dépend d'un fichier fabriqué par le build : l'ignorer, pas le laisser rouge](#r28--un-test-qui-dépend-dun-fichier-fabriqué-par-le-build--lignorer-pas-le-laisser-rouge)
 - [R29 — Dans un test, un DTO d'exemple joue deux rôles : ce qu'on envoie et ce qui revient](#r29--dans-un-test-un-dto-dexemple-joue-deux-rôles--ce-quon-envoie-et-ce-qui-revient)
+- [R31 — Une classe `@Configuration` imbriquée dans un test remplace l'application : `@Import` + `@ComponentScan` la ramènent](#r31--une-classe-configuration-imbriquée-dans-un-test-remplace-lapplication--import--componentscan-la-ramènent)
 
 **5. Spring Security**
 
@@ -555,6 +556,59 @@ Deux pièges rencontrés en appliquant la règle :
 et `src/test/java/guru/springframework/spring7restmvc/controller/CustomerControllerTest.java:193`
 (branche `127-springdoc-security-cfg-jt-sb412`, commit `7f8b6132`, issue #53). La même convention est notée
 dans `.claude/rules/testing.md` de cette branche.
+
+### R31 — Une classe `@Configuration` imbriquée dans un test remplace l'application : `@Import` + `@ComponentScan` la ramènent
+
+**Le contexte.** Un test `@SpringBootTest` charge normalement toute l'application Spring Boot
+spring-7-rest-mvc : il cherche tout seul la classe marquée `@SpringBootApplication`, ici
+`Spring7RestMvcApplication`. Pour couper la sécurité dans **un seul** test, on y déclare sa propre
+configuration : une classe `static` annotée `@Configuration`, **imbriquée** (écrite à l'intérieur de la
+classe de test), qui fournit une chaîne de filtres laissant tout passer. Le vrai `SpringSecConfig` porte
+`@Profile("!test")` et le test `@ActiveProfiles("test")`, pour que les deux chaînes ne se battent pas.
+
+**Le piège.** Dès qu'une classe de test contient une classe `@Configuration` imbriquée, `@SpringBootTest`
+la prend pour **la** configuration du test et **arrête de chercher** `Spring7RestMvcApplication`.
+Le contexte ne contient alors que cette petite classe : pas de contrôleurs, pas de serveur web.
+Le test plante au démarrage : `Unable to start web server` (`MissingWebServerFactoryBeanException`).
+
+**La règle : trois annotations qui travaillent ensemble.**
+
+| Annotation | Son rôle ici |
+|---|---|
+| `@Configuration` imbriquée (`TestSecurityConfig`) | apporte la chaîne de filtres de test, mais **coupe** la recherche de l'application |
+| `@Import(TestSecurityConfig.class)` sur la classe de test | Spring Boot enregistre **la classe de test elle-même** comme configuration : ses annotations deviennent actives. Sans `@Import`, une annotation posée sur une classe de test est ignorée |
+| `@ComponentScan(basePackages = "guru.springframework.spring7restmvc")` | active grâce à `@Import`, elle parcourt le package racine et **retrouve** `Spring7RestMvcApplication`, donc toute l'application |
+
+En une phrase : la classe imbriquée **casse** la recherche, `@Import` **réveille** les annotations du test,
+`@ComponentScan` **répare** la recherche.
+
+```java
+@ActiveProfiles("test")
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@Import(BeerControllerRestAssuredTest.TestSecurityConfig.class)
+@ComponentScan(basePackages = {"guru.springframework.spring7restmvc"})
+public class BeerControllerRestAssuredTest {
+
+    @Configuration
+    static class TestSecurityConfig {
+        @Bean
+        public SecurityFilterChain filterChain(HttpSecurity http) {
+            http.authorizeHttpRequests(authorize ->
+                    authorize.anyRequest().permitAll());
+            return http.build();
+        }
+    }
+    // ...
+}
+```
+
+**Preuve :** le 27-11-2026, dans une copie jetable de la branche, chaque annotation a été retirée à tour de
+rôle : sans `@ComponentScan`, puis sans `@Import`, le test plante avec `Unable to start web server` ;
+avec les deux, il est vert (`200` sur `GET /api/v1/beer`).
+
+**Exemple dans le projet :** `src/test/java/guru/springframework/spring7restmvc/controller/BeerControllerRestAssuredTest.java:22`
+(Sec41_Chap376, commit `70e3e9b1` pour le test, commit `7446a837` pour son commentaire ;
+branche `132-restassured-swagger-validation-jt-sb412`).
 
 ---
 
