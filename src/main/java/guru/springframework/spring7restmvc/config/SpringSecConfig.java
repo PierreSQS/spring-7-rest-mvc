@@ -2,6 +2,7 @@ package guru.springframework.spring7restmvc.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -9,8 +10,9 @@ import org.springframework.security.web.SecurityFilterChain;
 
 /**
  * Created by jt, Spring Framework Guru.
- * Modified by Pierrot on 11-11-2026
+ * Modified by Pierrot on 27-11-2026
  */
+@Profile("!test")
 @Configuration
 @EnableWebSecurity
 public class SpringSecConfig {
