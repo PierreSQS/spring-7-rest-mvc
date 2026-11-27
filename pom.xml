@@ -128,6 +128,18 @@
             <artifactId>spring-boot-starter-security-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>io.rest-assured</groupId>
+            <artifactId>rest-assured</artifactId>
+            <version>6.3.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.atlassian.oai</groupId>
+            <artifactId>openapi-request-validator-restassured</artifactId>
+            <version>3.0.0</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
