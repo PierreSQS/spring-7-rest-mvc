@@ -2,6 +2,7 @@ package guru.springframework.spring7restmvc.controller;
 
 import com.atlassian.oai.validator.OpenApiInteractionValidator;
 import com.atlassian.oai.validator.restassured.OpenApiValidationFilter;
+import com.atlassian.oai.validator.whitelist.ValidationErrorsWhitelist;
 import io.restassured.RestAssured;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,6 +16,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.context.ActiveProfiles;
 
+import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.messageHasKey;
 import static io.restassured.RestAssured.given;
 
 /**
@@ -33,6 +35,9 @@ public class BeerControllerRestAssuredTest {
 
     OpenApiValidationFilter validationFilter = new OpenApiValidationFilter(OpenApiInteractionValidator
             .createForSpecificationUrl("oa3.yml")
+            .withWhitelist(ValidationErrorsWhitelist.create()
+                    .withRule("ignore.date-time-format",
+                            messageHasKey("validation.response.body.schema.format.date-time")))
             .build());
 
     // Add local Configuration class to disable security for RestAssured tests
