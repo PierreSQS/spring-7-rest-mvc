@@ -17,7 +17,7 @@ A beer and customer REST API built alongside John Thompson's **Spring Framework 
 | Entry point | `Spring7RestMvcApplication` |
 | Branches | One per lesson, named after JT's branch plus a suffix: this one is `133-restassured-val-whitelist-jt-sb412` (Chap378, the last lesson of Section 41, JT's `133-restassured-val-whitelist`), created from `132-restassured-swagger-validation-jt-sb412` (Chap374 to Chap377, JT's `129` to `132`; 129 to 131 were local names, never pushed), itself from `128-springdoc-maven-plugin-jt-sb412` (the last branch of Section 40), itself from `127-springdoc-security-cfg-jt-sb412` and `126-springdoc-maven-jt-sb412`. On Udemy, each lecture's "Resources" menu links JT's start and end branches ("Starting Source", "Ending Source"). Branches are **never merged into `master`**: each documents an improved variant of JT's lecture (`-sbNNN` = Boot version). 126 was upgraded to Boot 4.1.2 and merged into 127 (issue #13). |
 | Commits | Prefix with section and chapter: `Sec41_Chap378: ...`; `-X` for own additions, `-NOK` when tests are knowingly left red. `#N` in a message refers to GitHub issue N. **Udemy renumbers lectures silently**, so older prefixes can be off; they are kept as they are. Read on 2026-11-26: our `Sec40_Chap374/375/376` = Udemy 370/371/372, our `Sec38_Chap363/364` = Udemy 359/360. |
-| Open work | GitHub issues of `PierreSQS/spring-7-rest-mvc` (label `sec40`); every `gh` command takes `-R PierreSQS/spring-7-rest-mvc`. |
+| Open work | GitHub issues of `PierreSQS/spring-7-rest-mvc` (label `sec41`); every `gh` command takes `-R PierreSQS/spring-7-rest-mvc`. |
 
 ### Documentation
 
