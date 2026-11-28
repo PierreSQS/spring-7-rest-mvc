@@ -606,9 +606,9 @@ public class BeerControllerRestAssuredTest {
 rôle : sans `@ComponentScan`, puis sans `@Import`, le test plante avec `Unable to start web server` ;
 avec les deux, il est vert (`200` sur `GET /api/v1/beer`).
 
-**Exemple dans le projet :** `src/test/java/guru/springframework/spring7restmvc/controller/BeerControllerRestAssuredTest.java:22`
+**Exemple dans le projet :** `src/test/java/guru/springframework/spring7restmvc/controller/BeerControllerRestAssuredTest.java:26`
 (Sec41_Chap376, commit `70e3e9b1` pour le test, commit `7446a837` pour son commentaire ;
-branche `132-restassured-swagger-validation-jt-sb412`).
+branche `133-restassured-val-whitelist-jt-sb412`, la dernière de la Section 41).
 
 ---
 
